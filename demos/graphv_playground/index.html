@@ -674,8 +674,8 @@ let _ =
 
             if clear.line <= 0. then (
                 state := Border {
-                    side = Top;
-                    value = 0.;
+                    side = Bottom;
+                    value = win_w;
                 }
             )
 
@@ -709,9 +709,25 @@ let _ =
             fill vg;
 
             if border.value >= win_h then (
-                state := Border {
-                    side = Bottom;
-                    value = win_w;
+                let x = Random.float (win_w *. 0.8) +. (win_w*.0.1) in
+                let x =
+                    let x = int_of_float x in
+                    (x / sz_i * sz_i |> float) +. mx *. 0.5
+                in
+
+                let y = Random.float (win_h *. 0.8) +. (win_h*.0.1) in
+                let y =
+                    let y = int_of_float y in
+                    (y / sz_i * sz_i |> float) +. my *. 0.5
+                in
+
+                state := Drawing {
+                    x;
+                    y;
+                    dx = Random.bool();
+                    dy = Random.bool();
+                    change = Random.float 1000. +. 500.;
+                    time = now +. 20000.;
                 }
             )
 
@@ -745,26 +761,11 @@ let _ =
             fill vg;
 
             if border.value <= 0. then (
-                let x = Random.float (win_w *. 0.8) +. (win_w*.0.1) in
-                let x =
-                    let x = int_of_float x in
-                    (x / sz_i * sz_i |> float) +. mx *. 0.5
-                in
-
-                let y = Random.float (win_h *. 0.8) +. (win_h*.0.1) in
-                let y =
-                    let y = int_of_float y in
-                    (y / sz_i * sz_i |> float) +. my *. 0.5
-                in
-
-                state := Drawing {
-                    x;
-                    y;
-                    dx = Random.bool();
-                    dy = Random.bool();
-                    change = Random.float 1000. +. 500.;
-                    time = now +. 20000.;
+                state := Border {
+                    side = Top;
+                    value = 0.;
                 }
+                
             )
         end;
 
