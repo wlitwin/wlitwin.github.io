@@ -2330,7 +2330,7 @@
                caml_string_of_jsbytes(") (gh "),
                [4,0,0,0,[11,caml_string_of_jsbytes(")\nscale "),partial]]]]]]]]]]],
      params$0=[0,2048,2048],
-     empty$3=[0,0,0,0,0],
+     empty$4=[0,0,0,0,0],
      init$1=[0,0,0,0,0],
      empty_path=[0,0,0,0,0],
      empty_row=[0,0,0,0.,0.,0.,0],
@@ -2496,8 +2496,8 @@
      _br_=caml_string_of_jsbytes("Hashtbl: unsupported hash table format"),
      _bq_=[0,0],
      _bp_=[0,caml_string_of_jsbytes("hashtbl.ml"),102,23],
-     _cF_=caml_string_of_jsbytes("OCAMLRUNPARAM"),
-     _cD_=caml_string_of_jsbytes("CAMLRUNPARAM"),
+     _cE_=caml_string_of_jsbytes("OCAMLRUNPARAM"),
+     _cC_=caml_string_of_jsbytes("CAMLRUNPARAM"),
      _bn_=caml_string_of_jsbytes(""),
      _bs_=caml_string_of_jsbytes("Js_of_ocaml__Js.Error"),
      _bt_=caml_string_of_jsbytes("jsError"),
@@ -2909,104 +2909,101 @@
        12,
        12,
        12],
-     _bC_=caml_string_of_jsbytes("failed to compile vertex shader"),
-     _bD_=caml_string_of_jsbytes("failed to compile fragment shader"),
-     _bE_=caml_string_of_jsbytes("Failed to link program"),
-     _bH_=[0,0,0],
-     _bF_=
+     _bE_=caml_string_of_jsbytes("Unimplemented"),
+     _bD_=caml_string_of_jsbytes("12px "),
+     _bC_=[0,2146,-555,0],
+     _bF_=caml_string_of_jsbytes("failed to compile vertex shader"),
+     _bG_=caml_string_of_jsbytes("failed to compile fragment shader"),
+     _bH_=caml_string_of_jsbytes("Failed to link program"),
+     _bL_=[0,0,0],
+     _bI_=
+      [0,
+       [11,caml_string_of_jsbytes("Alignment "),[4,0,0,0,[12,10,[10,0]]]],
+       caml_string_of_jsbytes("Alignment %d\n%!")],
+     _bJ_=
       [0,
        [11,
-        caml_string_of_jsbytes
-         ("Error: non-power of two texture, repeat X/Y unsupported\n"),
-        [10,0]],
-       caml_string_of_jsbytes
-        ("Error: non-power of two texture, repeat X/Y unsupported\n%!")],
-     _bG_=
+        caml_string_of_jsbytes("Frag size before "),
+        [4,0,0,0,[12,10,[10,0]]]],
+       caml_string_of_jsbytes("Frag size before %d\n%!")],
+     _bK_=
       [0,
-       [11,
-        caml_string_of_jsbytes
-         ("Error: non-power of two texture, mipmaps unsupported\n"),
-        [10,0]],
-       caml_string_of_jsbytes
-        ("Error: non-power of two texture, mipmaps unsupported\n%!")],
-     _bK_=caml_string_of_jsbytes("Unimplemented"),
-     _bJ_=caml_string_of_jsbytes("12px "),
-     _bI_=[0,2146,-555,0],
-     _bO_=caml_string_of_jsbytes("Couldn't create font texture"),
-     _bN_=[0,caml_string_of_jsbytes("graphv/common/graphv_core.ml"),1227,16],
-     _bM_=caml_string_of_jsbytes("expected some"),
-     _bL_=[0,caml_string_of_jsbytes("graphv/common/graphv_core.ml"),90,12],
-     _bR_=caml_string_of_jsbytes("Expected context"),
-     _bP_=caml_string_of_jsbytes("canvas"),
-     _b9_=caml_string_of_jsbytes("Login"),
-     _b__=caml_string_of_jsbytes("Email"),
-     _b$_=caml_string_of_jsbytes("Password"),
-     _ca_=caml_string_of_jsbytes("Sign In"),
-     _cb_=caml_string_of_jsbytes("Diameter"),
-     _cc_=caml_string_of_jsbytes("Delete"),
-     _cd_=caml_string_of_jsbytes("Cancel"),
-     _b7_=caml_string_of_jsbytes("sans"),
-     _b8_=[0,[4,0,0,0,0],caml_string_of_jsbytes("%d")],
-     _b5_=caml_string_of_jsbytes("sans"),
-     _b6_=caml_string_of_jsbytes("icons"),
-     _b2_=caml_string_of_jsbytes("sans-bold"),
-     _b3_=caml_string_of_jsbytes("icons"),
-     _b4_=caml_string_of_jsbytes("sans-bold"),
-     _b0_=caml_string_of_jsbytes("sans"),
-     _b1_=caml_string_of_jsbytes("sans"),
+       [11,caml_string_of_jsbytes("Frag size "),[4,0,0,0,[12,10,[10,0]]]],
+       caml_string_of_jsbytes("Frag size %d\n%!")],
+     _bP_=caml_string_of_jsbytes("Couldn't create font texture"),
+     _bO_=[0,caml_string_of_jsbytes("graphv/common/graphv_core.ml"),1227,16],
+     _bN_=caml_string_of_jsbytes("expected some"),
+     _bM_=[0,caml_string_of_jsbytes("graphv/common/graphv_core.ml"),90,12],
+     _bQ_=caml_string_of_jsbytes("canvas"),
+     _b8_=caml_string_of_jsbytes("Login"),
+     _b9_=caml_string_of_jsbytes("Email"),
+     _b__=caml_string_of_jsbytes("Password"),
+     _b$_=caml_string_of_jsbytes("Sign In"),
+     _ca_=caml_string_of_jsbytes("Diameter"),
+     _cb_=caml_string_of_jsbytes("Delete"),
+     _cc_=caml_string_of_jsbytes("Cancel"),
+     _b6_=caml_string_of_jsbytes("sans"),
+     _b7_=[0,[4,0,0,0,0],caml_string_of_jsbytes("%d")],
+     _b4_=caml_string_of_jsbytes("sans"),
+     _b5_=caml_string_of_jsbytes("icons"),
+     _b1_=caml_string_of_jsbytes("sans-bold"),
+     _b2_=caml_string_of_jsbytes("icons"),
+     _b3_=caml_string_of_jsbytes("sans-bold"),
      _bZ_=caml_string_of_jsbytes("sans"),
+     _b0_=caml_string_of_jsbytes("sans"),
      _bY_=caml_string_of_jsbytes("sans"),
-     _bW_=caml_string_of_jsbytes("sans"),
-     _bX_=caml_string_of_jsbytes("icons"),
-     _bT_=caml_string_of_jsbytes("icons"),
-     _bU_=caml_string_of_jsbytes("sans"),
-     _bV_=caml_string_of_jsbytes("icons"),
-     _bS_=caml_string_of_jsbytes("sans-bold"),
-     _ce_=caml_string_of_jsbytes("mono"),
-     _cf_=
+     _bX_=caml_string_of_jsbytes("sans"),
+     _bV_=caml_string_of_jsbytes("sans"),
+     _bW_=caml_string_of_jsbytes("icons"),
+     _bS_=caml_string_of_jsbytes("icons"),
+     _bT_=caml_string_of_jsbytes("sans"),
+     _bU_=caml_string_of_jsbytes("icons"),
+     _bR_=caml_string_of_jsbytes("sans-bold"),
+     _cd_=caml_string_of_jsbytes("mono"),
+     _ce_=
       [0,
        [8,[0,0,0],0,[0,2],[11,caml_string_of_jsbytes(" FPS"),0]],
        caml_string_of_jsbytes("%.2f FPS")],
-     _cg_=
+     _cf_=
       [0,
        [8,[0,0,0],0,[0,2],[11,caml_string_of_jsbytes(" ms"),0]],
        caml_string_of_jsbytes("%.2f ms")],
+     _ck_=
+      [0,
+       [8,[0,0,0],0,[0,2],[11,caml_string_of_jsbytes("px"),0]],
+       caml_string_of_jsbytes("%.2fpx")],
      _cl_=
       [0,
        [8,[0,0,0],0,[0,2],[11,caml_string_of_jsbytes("px"),0]],
        caml_string_of_jsbytes("%.2fpx")],
-     _cm_=
-      [0,
-       [8,[0,0,0],0,[0,2],[11,caml_string_of_jsbytes("px"),0]],
-       caml_string_of_jsbytes("%.2fpx")],
-     _ci_=caml_string_of_jsbytes("img"),
-     _cj_=
+     _ch_=caml_string_of_jsbytes("img"),
+     _ci_=
       [0,
        [11,
         caml_string_of_jsbytes("../assets/images/image"),
         [4,0,0,0,[11,caml_string_of_jsbytes(".jpg"),0]]],
        caml_string_of_jsbytes("../assets/images/image%d.jpg")],
-     _ck_=
+     _cj_=
       [0,
        [11,caml_string_of_jsbytes("img"),[4,0,0,0,0]],
        caml_string_of_jsbytes("img%d")],
-     _ch_=caml_string_of_jsbytes("Frame Time"),
+     _cg_=caml_string_of_jsbytes("Frame Time"),
+     _cm_=caml_string_of_jsbytes("mono"),
      _cn_=caml_string_of_jsbytes("mono"),
-     _co_=caml_string_of_jsbytes("mono"),
+     _co_=caml_string_of_jsbytes("icons"),
      _cp_=caml_string_of_jsbytes("icons"),
-     _cq_=caml_string_of_jsbytes("icons"),
+     _cq_=caml_string_of_jsbytes("arial"),
      _cr_=caml_string_of_jsbytes("arial"),
-     _cs_=caml_string_of_jsbytes("arial"),
-     _ct_=caml_string_of_jsbytes("Roboto"),
-     _cu_=caml_string_of_jsbytes("sans"),
-     _cv_=caml_string_of_jsbytes("Roboto-Bold"),
-     _cw_=caml_string_of_jsbytes("sans-bold"),
-     _cx_=caml_string_of_jsbytes("Emoji"),
+     _cs_=caml_string_of_jsbytes("Roboto"),
+     _ct_=caml_string_of_jsbytes("sans"),
+     _cu_=caml_string_of_jsbytes("Roboto-Bold"),
+     _cv_=caml_string_of_jsbytes("sans-bold"),
+     _cw_=caml_string_of_jsbytes("Emoji"),
+     _cx_=caml_string_of_jsbytes("emoji"),
      _cy_=caml_string_of_jsbytes("emoji"),
-     _cz_=caml_string_of_jsbytes("emoji"),
-     _cA_=caml_string_of_jsbytes("sans"),
-     _cB_=caml_string_of_jsbytes("emoji"),
-     _cC_=caml_string_of_jsbytes("sans-bold");
+     _cz_=caml_string_of_jsbytes("sans"),
+     _cA_=caml_string_of_jsbytes("emoji"),
+     _cB_=caml_string_of_jsbytes("sans-bold");
     function erase_rel(param)
      {if(typeof param === "number")
        return 0;
@@ -3152,10 +3149,10 @@
            {var l=param$0[2],a=param$0[1];
             try
              {caml_ml_flush(a)}
-            catch(_nL_)
-             {_nL_ = caml_wrap_exception(_nL_);
-              if(_nL_[1] !== Sys_error)throw _nL_;
-              var _nK_=_nL_}
+            catch(_nE_)
+             {_nE_ = caml_wrap_exception(_nE_);
+              if(_nE_[1] !== Sys_error)throw _nE_;
+              var _nD_=_nE_}
             var param$0=l;
             continue}
           return 0}}
@@ -3178,20 +3175,20 @@
             return new_exit},
          new_exit=new_exit$0(f_yet_to_run,old_exit),
          success=compare_and_set(exit_function,old_exit,new_exit),
-         _nJ_=1 - success;
-        if(_nJ_)continue;
-        return _nJ_}}
+         _nC_=1 - success;
+        if(_nC_)continue;
+        return _nC_}}
     function do_at_exit(param){return caml_call1(exit_function[1],0)}
     if(caml_sys_const_naked_pointers_checked(0))
-     at_exit(function(_nI_){return caml_gc_major(_nI_)});
+     at_exit(function(_nB_){return caml_gc_major(_nB_)});
     function map(f,seq,param)
      {var match=caml_call1(seq,0);
       if(match)
        {var
          next=match[2],
          x=match[1],
-         _nG_=function(_nH_){return map(f,next,_nH_)};
-        return [0,caml_call1(f,x),_nG_]}
+         _nz_=function(_nA_){return map(f,next,_nA_)};
+        return [0,caml_call1(f,x),_nz_]}
       return 0}
     function iter(f,seq)
      {var seq$0=seq;
@@ -3222,10 +3219,10 @@
        (0 <= ofs && 0 <= len && ! ((caml_ml_bytes_length(b) - len | 0) < ofs))
        {var r=caml_create_bytes(len);
         caml_blit_bytes(b,ofs,r,0,len);
-        var _nF_=r;
+        var _ny_=r;
         switch$0 = 1}
-      if(! switch$0)var _nF_=invalid_arg(_l_);
-      return caml_string_of_bytes(_nF_)}
+      if(! switch$0)var _ny_=invalid_arg(_l_);
+      return caml_string_of_bytes(_ny_)}
     function blit(s1,ofs1,s2,ofs2,len)
      {if
        (0
@@ -3279,34 +3276,34 @@
      {var l=caml_ml_string_length(s);
       if(0 <= i && ! (l < i))
        try
-        {index_rec(s,l,i,c);var _nD_=1;return _nD_}
-       catch(_nE_)
-        {_nE_ = caml_wrap_exception(_nE_);
-         if(_nE_ === Not_found)return 0;
-         throw _nE_}
+        {index_rec(s,l,i,c);var _nw_=1;return _nw_}
+       catch(_nx_)
+        {_nx_ = caml_wrap_exception(_nx_);
+         if(_nx_ === Not_found)return 0;
+         throw _nx_}
       return invalid_arg(_o_)}
     function contains(s,c){return contains_from(s,0,c)}
     function init(l,f)
      {if(0 === l)return [0];
       if(0 <= l)
-       {var res=caml_make_vect(l,caml_call1(f,0)),_nB_=l - 1 | 0,_nA_=1;
-        if(! (_nB_ < 1))
-         {var i=_nA_;
+       {var res=caml_make_vect(l,caml_call1(f,0)),_nu_=l - 1 | 0,_nt_=1;
+        if(! (_nu_ < 1))
+         {var i=_nt_;
           for(;;)
            {res[1 + i] = caml_call1(f,i);
-            var _nC_=i + 1 | 0;
-            if(_nB_ !== i){var i=_nC_;continue}
+            var _nv_=i + 1 | 0;
+            if(_nu_ !== i){var i=_nv_;continue}
             break}}
         return res}
       return invalid_arg(_p_)}
     function iter$0(f,a)
-     {var _ny_=a.length - 1 - 1 | 0,_nx_=0;
-      if(! (_ny_ < 0))
-       {var i=_nx_;
+     {var _nr_=a.length - 1 - 1 | 0,_nq_=0;
+      if(! (_nr_ < 0))
+       {var i=_nq_;
         for(;;)
          {caml_call1(f,a[1 + i]);
-          var _nz_=i + 1 | 0;
-          if(_ny_ !== i){var i=_nz_;continue}
+          var _ns_=i + 1 | 0;
+          if(_nr_ !== i){var i=_ns_;continue}
           break}}
       return 0}
     caml_fresh_oo_id(0);
@@ -3359,17 +3356,17 @@
      {var
        len=caml_ml_bytes_length(buf[2]),
        min_len=buf[1] + overhead | 0,
-       _nv_=len < min_len?1:0;
-      if(_nv_)
+       _no_=len < min_len?1:0;
+      if(_no_)
        {var
          new_len=max(len * 2 | 0,min_len),
          new_str=caml_create_bytes(new_len);
         blit(buf[2],0,new_str,0,len);
         buf[2] = new_str;
-        var _nw_=0}
+        var _np_=0}
       else
-       var _nw_=_nv_;
-      return _nw_}
+       var _np_=_no_;
+      return _np_}
     function buffer_add_char(buf,c)
      {buffer_check_size(buf,1);
       caml_bytes_set(buf[2],buf[1],c);
@@ -3510,10 +3507,10 @@
     function fmtty_rel_det(param)
      {if(typeof param === "number")
        {var
-         _m9_=function(param){return 0},
-         _m__=function(param){return 0},
-         _m$_=function(param){return 0};
-        return [0,function(param){return 0},_m$_,_m__,_m9_]}
+         _m2_=function(param){return 0},
+         _m3_=function(param){return 0},
+         _m4_=function(param){return 0};
+        return [0,function(param){return 0},_m4_,_m3_,_m2_]}
       else
        switch(param[0])
         {case 0:
@@ -3524,8 +3521,8 @@
            ed=match[3],
            af=match[2],
            fa=match[1],
-           _na_=function(param){caml_call1(af,0);return 0};
-          return [0,function(param){caml_call1(fa,0);return 0},_na_,ed,de];
+           _m5_=function(param){caml_call1(af,0);return 0};
+          return [0,function(param){caml_call1(fa,0);return 0},_m5_,ed,de];
          case 1:
           var
            rest$0=param[1],
@@ -3534,10 +3531,10 @@
            ed$0=match$0[3],
            af$0=match$0[2],
            fa$0=match$0[1],
-           _nb_=function(param){caml_call1(af$0,0);return 0};
+           _m6_=function(param){caml_call1(af$0,0);return 0};
           return [0,
                   function(param){caml_call1(fa$0,0);return 0},
-                  _nb_,
+                  _m6_,
                   ed$0,
                   de$0];
          case 2:
@@ -3548,10 +3545,10 @@
            ed$1=match$1[3],
            af$1=match$1[2],
            fa$1=match$1[1],
-           _nc_=function(param){caml_call1(af$1,0);return 0};
+           _m7_=function(param){caml_call1(af$1,0);return 0};
           return [0,
                   function(param){caml_call1(fa$1,0);return 0},
-                  _nc_,
+                  _m7_,
                   ed$1,
                   de$1];
          case 3:
@@ -3562,10 +3559,10 @@
            ed$2=match$2[3],
            af$2=match$2[2],
            fa$2=match$2[1],
-           _nd_=function(param){caml_call1(af$2,0);return 0};
+           _m8_=function(param){caml_call1(af$2,0);return 0};
           return [0,
                   function(param){caml_call1(fa$2,0);return 0},
-                  _nd_,
+                  _m8_,
                   ed$2,
                   de$2];
          case 4:
@@ -3576,10 +3573,10 @@
            ed$3=match$3[3],
            af$3=match$3[2],
            fa$3=match$3[1],
-           _ne_=function(param){caml_call1(af$3,0);return 0};
+           _m9_=function(param){caml_call1(af$3,0);return 0};
           return [0,
                   function(param){caml_call1(fa$3,0);return 0},
-                  _ne_,
+                  _m9_,
                   ed$3,
                   de$3];
          case 5:
@@ -3590,10 +3587,10 @@
            ed$4=match$4[3],
            af$4=match$4[2],
            fa$4=match$4[1],
-           _nf_=function(param){caml_call1(af$4,0);return 0};
+           _m__=function(param){caml_call1(af$4,0);return 0};
           return [0,
                   function(param){caml_call1(fa$4,0);return 0},
-                  _nf_,
+                  _m__,
                   ed$4,
                   de$4];
          case 6:
@@ -3604,10 +3601,10 @@
            ed$5=match$5[3],
            af$5=match$5[2],
            fa$5=match$5[1],
-           _ng_=function(param){caml_call1(af$5,0);return 0};
+           _m$_=function(param){caml_call1(af$5,0);return 0};
           return [0,
                   function(param){caml_call1(fa$5,0);return 0},
-                  _ng_,
+                  _m$_,
                   ed$5,
                   de$5];
          case 7:
@@ -3618,10 +3615,10 @@
            ed$6=match$6[3],
            af$6=match$6[2],
            fa$6=match$6[1],
-           _nh_=function(param){caml_call1(af$6,0);return 0};
+           _na_=function(param){caml_call1(af$6,0);return 0};
           return [0,
                   function(param){caml_call1(fa$6,0);return 0},
-                  _nh_,
+                  _na_,
                   ed$6,
                   de$6];
          case 8:
@@ -3632,10 +3629,10 @@
            ed$7=match$7[3],
            af$7=match$7[2],
            fa$7=match$7[1],
-           _ni_=function(param){caml_call1(af$7,0);return 0};
+           _nb_=function(param){caml_call1(af$7,0);return 0};
           return [0,
                   function(param){caml_call1(fa$7,0);return 0},
-                  _ni_,
+                  _nb_,
                   ed$7,
                   de$7];
          case 9:
@@ -3654,15 +3651,15 @@
            dj=match$9[3],
            ga=match$9[2],
            ag=match$9[1],
-           _nj_=function(param){caml_call1(jd,0);caml_call1(de$8,0);return 0},
-           _nk_=function(param){caml_call1(ed$8,0);caml_call1(dj,0);return 0},
-           _nl_=function(param){caml_call1(ga,0);caml_call1(af$8,0);return 0};
+           _nc_=function(param){caml_call1(jd,0);caml_call1(de$8,0);return 0},
+           _nd_=function(param){caml_call1(ed$8,0);caml_call1(dj,0);return 0},
+           _ne_=function(param){caml_call1(ga,0);caml_call1(af$8,0);return 0};
           return [0,
                   function(param)
                    {caml_call1(fa$8,0);caml_call1(ag,0);return 0},
-                  _nl_,
-                  _nk_,
-                  _nj_];
+                  _ne_,
+                  _nd_,
+                  _nc_];
          case 10:
           var
            rest$9=param[1],
@@ -3671,10 +3668,10 @@
            ed$9=match$10[3],
            af$9=match$10[2],
            fa$9=match$10[1],
-           _nm_=function(param){caml_call1(af$9,0);return 0};
+           _nf_=function(param){caml_call1(af$9,0);return 0};
           return [0,
                   function(param){caml_call1(fa$9,0);return 0},
-                  _nm_,
+                  _nf_,
                   ed$9,
                   de$9];
          case 11:
@@ -3685,10 +3682,10 @@
            ed$10=match$11[3],
            af$10=match$11[2],
            fa$10=match$11[1],
-           _nn_=function(param){caml_call1(af$10,0);return 0};
+           _ng_=function(param){caml_call1(af$10,0);return 0};
           return [0,
                   function(param){caml_call1(fa$10,0);return 0},
-                  _nn_,
+                  _ng_,
                   ed$10,
                   de$10];
          case 12:
@@ -3699,10 +3696,10 @@
            ed$11=match$12[3],
            af$11=match$12[2],
            fa$11=match$12[1],
-           _no_=function(param){caml_call1(af$11,0);return 0};
+           _nh_=function(param){caml_call1(af$11,0);return 0};
           return [0,
                   function(param){caml_call1(fa$11,0);return 0},
-                  _no_,
+                  _nh_,
                   ed$11,
                   de$11];
          case 13:
@@ -3713,14 +3710,14 @@
            ed$12=match$13[3],
            af$12=match$13[2],
            fa$12=match$13[1],
-           _np_=function(param){caml_call1(de$12,0);return 0},
-           _nq_=function(param){caml_call1(ed$12,0);return 0},
-           _nr_=function(param){caml_call1(af$12,0);return 0};
+           _ni_=function(param){caml_call1(de$12,0);return 0},
+           _nj_=function(param){caml_call1(ed$12,0);return 0},
+           _nk_=function(param){caml_call1(af$12,0);return 0};
           return [0,
                   function(param){caml_call1(fa$12,0);return 0},
-                  _nr_,
-                  _nq_,
-                  _np_];
+                  _nk_,
+                  _nj_,
+                  _ni_];
          default:
           var
            rest$13=param[1],
@@ -3729,14 +3726,14 @@
            ed$13=match$14[3],
            af$13=match$14[2],
            fa$13=match$14[1],
-           _ns_=function(param){caml_call1(de$13,0);return 0},
-           _nt_=function(param){caml_call1(ed$13,0);return 0},
-           _nu_=function(param){caml_call1(af$13,0);return 0};
+           _nl_=function(param){caml_call1(de$13,0);return 0},
+           _nm_=function(param){caml_call1(ed$13,0);return 0},
+           _nn_=function(param){caml_call1(af$13,0);return 0};
           return [0,
                   function(param){caml_call1(fa$13,0);return 0},
-                  _nu_,
-                  _nt_,
-                  _ns_]}}
+                  _nn_,
+                  _nm_,
+                  _nl_]}}
     function trans(ty1,match)
      {var switch$0=0;
       if(typeof ty1 === "number")
@@ -3755,10 +3752,10 @@
       else
        switch(ty1[0])
         {case 0:
-          var switch$1=0,_mQ_=ty1[1];
+          var switch$1=0,_mJ_=ty1[1];
           if(typeof match !== "number")
            switch(match[0])
-            {case 0:var rest2=match[1];return [0,trans(_mQ_,rest2)];
+            {case 0:var rest2=match[1];return [0,trans(_mJ_,rest2)];
              case 8:switch$0 = 5;switch$1 = 1;break;
              case 9:switch$0 = 6;switch$1 = 1;break;
              case 10:switch$1 = 1;break;
@@ -3770,10 +3767,10 @@
           if(! switch$1)switch$0 = 7;
           break;
          case 1:
-          var switch$2=0,_mR_=ty1[1];
+          var switch$2=0,_mK_=ty1[1];
           if(typeof match !== "number")
            switch(match[0])
-            {case 1:var rest2$0=match[1];return [1,trans(_mR_,rest2$0)];
+            {case 1:var rest2$0=match[1];return [1,trans(_mK_,rest2$0)];
              case 8:switch$0 = 5;switch$2 = 1;break;
              case 9:switch$0 = 6;switch$2 = 1;break;
              case 10:switch$2 = 1;break;
@@ -3785,12 +3782,12 @@
           if(! switch$2)switch$0 = 7;
           break;
          case 2:
-          var switch$3=0,_mS_=ty1[1];
+          var switch$3=0,_mL_=ty1[1];
           if(typeof match === "number")
            switch$3 = 1;
           else
            switch(match[0])
-            {case 2:var rest2$1=match[1];return [2,trans(_mS_,rest2$1)];
+            {case 2:var rest2$1=match[1];return [2,trans(_mL_,rest2$1)];
              case 8:switch$0 = 5;break;
              case 9:switch$0 = 6;break;
              case 10:break;
@@ -3802,12 +3799,12 @@
           if(switch$3)switch$0 = 7;
           break;
          case 3:
-          var switch$4=0,_mT_=ty1[1];
+          var switch$4=0,_mM_=ty1[1];
           if(typeof match === "number")
            switch$4 = 1;
           else
            switch(match[0])
-            {case 3:var rest2$2=match[1];return [3,trans(_mT_,rest2$2)];
+            {case 3:var rest2$2=match[1];return [3,trans(_mM_,rest2$2)];
              case 8:switch$0 = 5;break;
              case 9:switch$0 = 6;break;
              case 10:break;
@@ -3819,12 +3816,12 @@
           if(switch$4)switch$0 = 7;
           break;
          case 4:
-          var switch$5=0,_mU_=ty1[1];
+          var switch$5=0,_mN_=ty1[1];
           if(typeof match === "number")
            switch$5 = 1;
           else
            switch(match[0])
-            {case 4:var rest2$3=match[1];return [4,trans(_mU_,rest2$3)];
+            {case 4:var rest2$3=match[1];return [4,trans(_mN_,rest2$3)];
              case 8:switch$0 = 5;break;
              case 9:switch$0 = 6;break;
              case 10:break;
@@ -3836,12 +3833,12 @@
           if(switch$5)switch$0 = 7;
           break;
          case 5:
-          var switch$6=0,_mV_=ty1[1];
+          var switch$6=0,_mO_=ty1[1];
           if(typeof match === "number")
            switch$6 = 1;
           else
            switch(match[0])
-            {case 5:var rest2$4=match[1];return [5,trans(_mV_,rest2$4)];
+            {case 5:var rest2$4=match[1];return [5,trans(_mO_,rest2$4)];
              case 8:switch$0 = 5;break;
              case 9:switch$0 = 6;break;
              case 10:break;
@@ -3853,12 +3850,12 @@
           if(switch$6)switch$0 = 7;
           break;
          case 6:
-          var switch$7=0,_mW_=ty1[1];
+          var switch$7=0,_mP_=ty1[1];
           if(typeof match === "number")
            switch$7 = 1;
           else
            switch(match[0])
-            {case 6:var rest2$5=match[1];return [6,trans(_mW_,rest2$5)];
+            {case 6:var rest2$5=match[1];return [6,trans(_mP_,rest2$5)];
              case 8:switch$0 = 5;break;
              case 9:switch$0 = 6;break;
              case 10:break;
@@ -3870,12 +3867,12 @@
           if(switch$7)switch$0 = 7;
           break;
          case 7:
-          var switch$8=0,_mX_=ty1[1];
+          var switch$8=0,_mQ_=ty1[1];
           if(typeof match === "number")
            switch$8 = 1;
           else
            switch(match[0])
-            {case 7:var rest2$6=match[1];return [7,trans(_mX_,rest2$6)];
+            {case 7:var rest2$6=match[1];return [7,trans(_mQ_,rest2$6)];
              case 8:switch$0 = 5;break;
              case 9:switch$0 = 6;break;
              case 10:break;
@@ -3887,14 +3884,14 @@
           if(switch$8)switch$0 = 7;
           break;
          case 8:
-          var switch$9=0,_mY_=ty1[2],_mZ_=ty1[1];
+          var switch$9=0,_mR_=ty1[2],_mS_=ty1[1];
           if(typeof match === "number")
            switch$9 = 1;
           else
            switch(match[0])
             {case 8:
-              var rest2$7=match[2],ty2=match[1],_m0_=trans(_mY_,rest2$7);
-              return [8,trans(_mZ_,ty2),_m0_];
+              var rest2$7=match[2],ty2=match[1],_mT_=trans(_mR_,rest2$7);
+              return [8,trans(_mS_,ty2),_mT_];
              case 10:break;
              case 11:switch$0 = 1;break;
              case 12:switch$0 = 2;break;
@@ -3904,7 +3901,7 @@
           if(switch$9)throw [0,Assert_failure,_ab_];
           break;
          case 9:
-          var switch$10=0,_m1_=ty1[3],_m2_=ty1[2],_m3_=ty1[1];
+          var switch$10=0,_mU_=ty1[3],_mV_=ty1[2],_mW_=ty1[1];
           if(typeof match === "number")
            switch$10 = 1;
           else
@@ -3915,13 +3912,13 @@
                rest2$8=match[3],
                ty22=match[2],
                ty21=match[1],
-               ty=trans(symm(_m2_),ty21),
+               ty=trans(symm(_mV_),ty21),
                match$0=fmtty_rel_det(ty),
                f4=match$0[4],
                f2=match$0[2];
               caml_call1(f2,0);
               caml_call1(f4,0);
-              return [9,_m3_,ty22,trans(_m1_,rest2$8)];
+              return [9,_mW_,ty22,trans(_mU_,rest2$8)];
              case 10:break;
              case 11:switch$0 = 1;break;
              case 12:switch$0 = 2;break;
@@ -3931,35 +3928,35 @@
           if(switch$10)throw [0,Assert_failure,_ac_];
           break;
          case 10:
-          var _m4_=ty1[1];
+          var _mX_=ty1[1];
           if(typeof match !== "number" && 10 === match[0])
-           {var rest2$9=match[1];return [10,trans(_m4_,rest2$9)]}
+           {var rest2$9=match[1];return [10,trans(_mX_,rest2$9)]}
           throw [0,Assert_failure,_ad_];
          case 11:
-          var switch$11=0,_m5_=ty1[1];
+          var switch$11=0,_mY_=ty1[1];
           if(typeof match === "number")
            switch$11 = 1;
           else
            switch(match[0])
             {case 10:break;
-             case 11:var rest2$10=match[1];return [11,trans(_m5_,rest2$10)];
+             case 11:var rest2$10=match[1];return [11,trans(_mY_,rest2$10)];
              default:switch$11 = 1}
           if(switch$11)throw [0,Assert_failure,_ae_];
           break;
          case 12:
-          var switch$12=0,_m6_=ty1[1];
+          var switch$12=0,_mZ_=ty1[1];
           if(typeof match === "number")
            switch$12 = 1;
           else
            switch(match[0])
             {case 10:break;
              case 11:switch$0 = 1;break;
-             case 12:var rest2$11=match[1];return [12,trans(_m6_,rest2$11)];
+             case 12:var rest2$11=match[1];return [12,trans(_mZ_,rest2$11)];
              default:switch$12 = 1}
           if(switch$12)throw [0,Assert_failure,_af_];
           break;
          case 13:
-          var switch$13=0,_m7_=ty1[1];
+          var switch$13=0,_m0_=ty1[1];
           if(typeof match === "number")
            switch$13 = 1;
           else
@@ -3967,12 +3964,12 @@
             {case 10:break;
              case 11:switch$0 = 1;break;
              case 12:switch$0 = 2;break;
-             case 13:var rest2$12=match[1];return [13,trans(_m7_,rest2$12)];
+             case 13:var rest2$12=match[1];return [13,trans(_m0_,rest2$12)];
              default:switch$13 = 1}
           if(switch$13)throw [0,Assert_failure,_ag_];
           break;
          default:
-          var switch$14=0,_m8_=ty1[1];
+          var switch$14=0,_m1_=ty1[1];
           if(typeof match === "number")
            switch$14 = 1;
           else
@@ -3981,7 +3978,7 @@
              case 11:switch$0 = 1;break;
              case 12:switch$0 = 2;break;
              case 13:switch$0 = 3;break;
-             case 14:var rest2$13=match[1];return [14,trans(_m8_,rest2$13)];
+             case 14:var rest2$13=match[1];return [14,trans(_m1_,rest2$13)];
              default:switch$14 = 1}
           if(switch$14)throw [0,Assert_failure,_ah_]}
       switch(switch$0)
@@ -4007,9 +4004,9 @@
      {var match=type_padding(pad,fmtty);
       if(typeof prec === "number")
        {if(prec)
-         {var _mP_=match[2];
-          if(typeof _mP_ !== "number" && 2 === _mP_[0])
-           {var rest=_mP_[1],pad$0=match[1];return [0,pad$0,1,rest]}
+         {var _mI_=match[2];
+          if(typeof _mI_ !== "number" && 2 === _mI_[0])
+           {var rest=_mI_[1],pad$0=match[1];return [0,pad$0,1,rest]}
           throw Type_mismatch}
         var rest$0=match[2],pad$1=match[1];
         return [0,pad$1,0,rest$0]}
@@ -4141,11 +4138,11 @@
              sub_fmtty_rest$17=sub_fmtty[3],
              sub2_fmtty$2=sub_fmtty[2],
              sub1_fmtty$0=sub_fmtty[1],
-             _mN_=[0,erase_rel(sub1_fmtty)];
-            if(caml_notequal([0,erase_rel(sub1_fmtty$0)],_mN_))
+             _mG_=[0,erase_rel(sub1_fmtty)];
+            if(caml_notequal([0,erase_rel(sub1_fmtty$0)],_mG_))
              throw Type_mismatch;
-            var _mO_=[0,erase_rel(sub2_fmtty$1)];
-            if(caml_notequal([0,erase_rel(sub2_fmtty$2)],_mO_))
+            var _mH_=[0,erase_rel(sub2_fmtty$1)];
+            if(caml_notequal([0,erase_rel(sub2_fmtty$2)],_mH_))
              throw Type_mismatch;
             var
              sub_fmtty$0=trans(symm(sub1_fmtty),sub2_fmtty$1),
@@ -4244,30 +4241,30 @@
            fmt_rest$1=fmt[2],
            pad=fmt[1],
            match$1=type_padding(pad,fmtty),
-           _mw_=match$1[2],
-           _mv_=match$1[1];
-          if(typeof _mw_ !== "number" && 1 === _mw_[0])
+           _mp_=match$1[2],
+           _mo_=match$1[1];
+          if(typeof _mp_ !== "number" && 1 === _mp_[0])
            {var
-             fmtty_rest$1=_mw_[1],
+             fmtty_rest$1=_mp_[1],
              match$2=type_format_gen(fmt_rest$1,fmtty_rest$1),
              fmtty$2=match$2[2],
              fmt$2=match$2[1];
-            return [0,[2,_mv_,fmt$2],fmtty$2]}
+            return [0,[2,_mo_,fmt$2],fmtty$2]}
           throw Type_mismatch;
          case 3:
           var
            fmt_rest$2=fmt[2],
            pad$0=fmt[1],
            match$3=type_padding(pad$0,fmtty),
-           _my_=match$3[2],
-           _mx_=match$3[1];
-          if(typeof _my_ !== "number" && 1 === _my_[0])
+           _mr_=match$3[2],
+           _mq_=match$3[1];
+          if(typeof _mr_ !== "number" && 1 === _mr_[0])
            {var
-             fmtty_rest$2=_my_[1],
+             fmtty_rest$2=_mr_[1],
              match$4=type_format_gen(fmt_rest$2,fmtty_rest$2),
              fmtty$3=match$4[2],
              fmt$3=match$4[1];
-            return [0,[3,_mx_,fmt$3],fmtty$3]}
+            return [0,[3,_mq_,fmt$3],fmtty$3]}
           throw Type_mismatch;
          case 4:
           var
@@ -4276,16 +4273,16 @@
            pad$1=fmt[2],
            iconv=fmt[1],
            match$5=type_padprec(pad$1,prec,fmtty),
-           _mA_=match$5[3],
-           _mz_=match$5[1];
-          if(typeof _mA_ !== "number" && 2 === _mA_[0])
+           _mt_=match$5[3],
+           _ms_=match$5[1];
+          if(typeof _mt_ !== "number" && 2 === _mt_[0])
            {var
-             fmtty_rest$3=_mA_[1],
+             fmtty_rest$3=_mt_[1],
              prec$0=match$5[2],
              match$6=type_format_gen(fmt_rest$3,fmtty_rest$3),
              fmtty$4=match$6[2],
              fmt$4=match$6[1];
-            return [0,[4,iconv,_mz_,prec$0,fmt$4],fmtty$4]}
+            return [0,[4,iconv,_ms_,prec$0,fmt$4],fmtty$4]}
           throw Type_mismatch;
          case 5:
           var
@@ -4294,16 +4291,16 @@
            pad$2=fmt[2],
            iconv$0=fmt[1],
            match$7=type_padprec(pad$2,prec$1,fmtty),
-           _mC_=match$7[3],
-           _mB_=match$7[1];
-          if(typeof _mC_ !== "number" && 3 === _mC_[0])
+           _mv_=match$7[3],
+           _mu_=match$7[1];
+          if(typeof _mv_ !== "number" && 3 === _mv_[0])
            {var
-             fmtty_rest$4=_mC_[1],
+             fmtty_rest$4=_mv_[1],
              prec$2=match$7[2],
              match$8=type_format_gen(fmt_rest$4,fmtty_rest$4),
              fmtty$5=match$8[2],
              fmt$5=match$8[1];
-            return [0,[5,iconv$0,_mB_,prec$2,fmt$5],fmtty$5]}
+            return [0,[5,iconv$0,_mu_,prec$2,fmt$5],fmtty$5]}
           throw Type_mismatch;
          case 6:
           var
@@ -4312,16 +4309,16 @@
            pad$3=fmt[2],
            iconv$1=fmt[1],
            match$9=type_padprec(pad$3,prec$3,fmtty),
-           _mE_=match$9[3],
-           _mD_=match$9[1];
-          if(typeof _mE_ !== "number" && 4 === _mE_[0])
+           _mx_=match$9[3],
+           _mw_=match$9[1];
+          if(typeof _mx_ !== "number" && 4 === _mx_[0])
            {var
-             fmtty_rest$5=_mE_[1],
+             fmtty_rest$5=_mx_[1],
              prec$4=match$9[2],
              match$10=type_format_gen(fmt_rest$5,fmtty_rest$5),
              fmtty$6=match$10[2],
              fmt$6=match$10[1];
-            return [0,[6,iconv$1,_mD_,prec$4,fmt$6],fmtty$6]}
+            return [0,[6,iconv$1,_mw_,prec$4,fmt$6],fmtty$6]}
           throw Type_mismatch;
          case 7:
           var
@@ -4330,16 +4327,16 @@
            pad$4=fmt[2],
            iconv$2=fmt[1],
            match$11=type_padprec(pad$4,prec$5,fmtty),
-           _mG_=match$11[3],
-           _mF_=match$11[1];
-          if(typeof _mG_ !== "number" && 5 === _mG_[0])
+           _mz_=match$11[3],
+           _my_=match$11[1];
+          if(typeof _mz_ !== "number" && 5 === _mz_[0])
            {var
-             fmtty_rest$6=_mG_[1],
+             fmtty_rest$6=_mz_[1],
              prec$6=match$11[2],
              match$12=type_format_gen(fmt_rest$6,fmtty_rest$6),
              fmtty$7=match$12[2],
              fmt$7=match$12[1];
-            return [0,[7,iconv$2,_mF_,prec$6,fmt$7],fmtty$7]}
+            return [0,[7,iconv$2,_my_,prec$6,fmt$7],fmtty$7]}
           throw Type_mismatch;
          case 8:
           var
@@ -4348,31 +4345,31 @@
            pad$5=fmt[2],
            fconv=fmt[1],
            match$13=type_padprec(pad$5,prec$7,fmtty),
-           _mI_=match$13[3],
-           _mH_=match$13[1];
-          if(typeof _mI_ !== "number" && 6 === _mI_[0])
+           _mB_=match$13[3],
+           _mA_=match$13[1];
+          if(typeof _mB_ !== "number" && 6 === _mB_[0])
            {var
-             fmtty_rest$7=_mI_[1],
+             fmtty_rest$7=_mB_[1],
              prec$8=match$13[2],
              match$14=type_format_gen(fmt_rest$7,fmtty_rest$7),
              fmtty$8=match$14[2],
              fmt$8=match$14[1];
-            return [0,[8,fconv,_mH_,prec$8,fmt$8],fmtty$8]}
+            return [0,[8,fconv,_mA_,prec$8,fmt$8],fmtty$8]}
           throw Type_mismatch;
          case 9:
           var
            fmt_rest$8=fmt[2],
            pad$6=fmt[1],
            match$15=type_padding(pad$6,fmtty),
-           _mK_=match$15[2],
-           _mJ_=match$15[1];
-          if(typeof _mK_ !== "number" && 7 === _mK_[0])
+           _mD_=match$15[2],
+           _mC_=match$15[1];
+          if(typeof _mD_ !== "number" && 7 === _mD_[0])
            {var
-             fmtty_rest$8=_mK_[1],
+             fmtty_rest$8=_mD_[1],
              match$16=type_format_gen(fmt_rest$8,fmtty_rest$8),
              fmtty$9=match$16[2],
              fmt$9=match$16[1];
-            return [0,[9,_mJ_,fmt$9],fmtty$9]}
+            return [0,[9,_mC_,fmt$9],fmtty$9]}
           throw Type_mismatch;
          case 10:
           var
@@ -4421,8 +4418,8 @@
              fmt_rest$13=fmt[3],
              sub_fmtty$1=fmt[2],
              pad_opt$0=fmt[1],
-             _mL_=[0,erase_rel(sub_fmtty1)];
-            if(caml_notequal([0,erase_rel(sub_fmtty$1)],_mL_))
+             _mE_=[0,erase_rel(sub_fmtty1)];
+            if(caml_notequal([0,erase_rel(sub_fmtty$1)],_mE_))
              throw Type_mismatch;
             var
              match$21=type_format_gen(fmt_rest$13,erase_rel(fmtty_rest$10)),
@@ -4550,11 +4547,11 @@
               var
                sub_fmtty$3=ign[2],
                pad_opt$2=ign[1],
-               _mM_=type_ignored_format_substituti(sub_fmtty$3,rest,fmtty),
-               match$35=_mM_[2],
+               _mF_=type_ignored_format_substituti(sub_fmtty$3,rest,fmtty),
+               match$35=_mF_[2],
                fmtty$22=match$35[2],
                fmt$22=match$35[1],
-               sub_fmtty$4=_mM_[1];
+               sub_fmtty$4=_mF_[1];
               return [0,[23,[9,pad_opt$2,sub_fmtty$4],fmt$22],fmtty$22];
              case 10:return type_ignored_param_one(ign,rest,fmtty);
              default:return type_ignored_param_one(ign,rest,fmtty)}
@@ -4569,7 +4566,7 @@
        padty$0=0 <= width?padty:0,
        width$0=abs(width);
       if(width$0 <= len)return str;
-      var _mu_=2 === padty$0?48:32,res=make(width$0,_mu_);
+      var _mn_=2 === padty$0?48:32,res=make(width$0,_mn_);
       switch(padty$0)
        {case 0:blit$0(str,0,res,0,len);break;
         case 1:blit$0(str,0,res,width$0 - len | 0,len);break;
@@ -4678,48 +4675,48 @@
         else
          {var
            match$0=caml_string_unsafe_get(str,i$1),
-           _ms_=match$0 - 32 | 0,
+           _ml_=match$0 - 32 | 0,
            switch$0=0;
-          if(59 < _ms_ >>> 0)
-           {if(33 < (_ms_ - 61 | 0) >>> 0)switch$0 = 1}
+          if(59 < _ml_ >>> 0)
+           {if(33 < (_ml_ - 61 | 0) >>> 0)switch$0 = 1}
           else
-           if(2 === _ms_)switch$0 = 1;
+           if(2 === _ml_)switch$0 = 1;
           if(! switch$0){var i$2=i$1 + 1 | 0,i$1=i$2;continue}
           var
            s$0=caml_bytes_of_string(str),
            n=[0,0],
-           _ml_=caml_ml_bytes_length(s$0) - 1 | 0,
-           _mk_=0;
-          if(! (_ml_ < 0))
-           {var i$0=_mk_;
+           _me_=caml_ml_bytes_length(s$0) - 1 | 0,
+           _md_=0;
+          if(! (_me_ < 0))
+           {var i$0=_md_;
             for(;;)
              {var match=caml_bytes_unsafe_get(s$0,i$0),switch$1=0;
               if(32 <= match)
-               {var _mp_=match - 34 | 0,switch$2=0;
-                if(58 < _mp_ >>> 0)
-                 {if(93 <= _mp_)switch$2 = 1}
+               {var _mi_=match - 34 | 0,switch$2=0;
+                if(58 < _mi_ >>> 0)
+                 {if(93 <= _mi_)switch$2 = 1}
                 else
-                 if(56 < (_mp_ - 1 | 0) >>> 0){switch$1 = 1;switch$2 = 1}
-                if(! switch$2){var _mq_=1;switch$1 = 2}}
+                 if(56 < (_mi_ - 1 | 0) >>> 0){switch$1 = 1;switch$2 = 1}
+                if(! switch$2){var _mj_=1;switch$1 = 2}}
               else
                if(11 <= match)
                 {if(13 === match)switch$1 = 1}
                else
                 if(8 <= match)switch$1 = 1;
               switch(switch$1)
-               {case 0:var _mq_=4;break;case 1:var _mq_=2;break}
-              n[1] = n[1] + _mq_ | 0;
-              var _mr_=i$0 + 1 | 0;
-              if(_ml_ !== i$0){var i$0=_mr_;continue}
+               {case 0:var _mj_=4;break;case 1:var _mj_=2;break}
+              n[1] = n[1] + _mj_ | 0;
+              var _mk_=i$0 + 1 | 0;
+              if(_me_ !== i$0){var i$0=_mk_;continue}
               break}}
           if(n[1] === caml_ml_bytes_length(s$0))
-           var _mt_=copy(s$0);
+           var _mm_=copy(s$0);
           else
            {var s=caml_create_bytes(n[1]);
             n[1] = 0;
-            var _mn_=caml_ml_bytes_length(s$0) - 1 | 0,_mm_=0;
-            if(! (_mn_ < 0))
-             {var i=_mm_;
+            var _mg_=caml_ml_bytes_length(s$0) - 1 | 0,_mf_=0;
+            if(! (_mg_ < 0))
+             {var i=_mf_;
               for(;;)
                {var c=caml_bytes_unsafe_get(s$0,i),switch$3=0;
                 if(35 <= c)
@@ -4775,11 +4772,11 @@
                   case 3:caml_bytes_unsafe_set(s,n[1],c);break
                   }
                 n[1]++;
-                var _mo_=i + 1 | 0;
-                if(_mn_ !== i){var i=_mo_;continue}
+                var _mh_=i + 1 | 0;
+                if(_mg_ !== i){var i=_mh_;continue}
                 break}}
-            var _mt_=s}
-          var str$0=caml_string_of_bytes(_mt_)}
+            var _mm_=s}
+          var str$0=caml_string_of_bytes(_mm_)}
         var l=caml_ml_string_length(str$0),res=make(l + 2 | 0,34);
         caml_blit_string(str$0,0,res,1,l);
         return caml_string_of_bytes(res)}}
@@ -4809,14 +4806,14 @@
       return buffer_contents(buf)}
     function transform_int_alt(iconv,s)
      {if(13 <= iconv)
-       {var n=[0,0],_mf_=caml_ml_string_length(s) - 1 | 0,_me_=0;
-        if(! (_mf_ < 0))
-         {var i$0=_me_;
+       {var n=[0,0],_l__=caml_ml_string_length(s) - 1 | 0,_l9_=0;
+        if(! (_l__ < 0))
+         {var i$0=_l9_;
           for(;;)
            {var match=caml_string_unsafe_get(s,i$0),switcher$0=match - 48 | 0;
             if(! (9 < switcher$0 >>> 0))n[1]++;
-            var _mj_=i$0 + 1 | 0;
-            if(_mf_ !== i$0){var i$0=_mj_;continue}
+            var _mc_=i$0 + 1 | 0;
+            if(_l__ !== i$0){var i$0=_mc_;continue}
             break}}
         var
          digits=n[1],
@@ -4826,93 +4823,93 @@
          pos=[0,0],
          put=function(c){caml_bytes_set(buf,pos[1],c);pos[1]++;return 0},
          left=[0,((digits - 1 | 0) % 3 | 0) + 1 | 0],
-         _mh_=caml_ml_string_length(s) - 1 | 0,
-         _mg_=0;
-        if(! (_mh_ < 0))
-         {var i=_mg_;
+         _ma_=caml_ml_string_length(s) - 1 | 0,
+         _l$_=0;
+        if(! (_ma_ < 0))
+         {var i=_l$_;
           for(;;)
            {var c=caml_string_unsafe_get(s,i),switcher=c - 48 | 0;
             if(9 < switcher >>> 0)
              put(c);
             else
              {if(0 === left[1]){put(95);left[1] = 3}left[1] += -1;put(c)}
-            var _mi_=i + 1 | 0;
-            if(_mh_ !== i){var i=_mi_;continue}
+            var _mb_=i + 1 | 0;
+            if(_ma_ !== i){var i=_mb_;continue}
             break}}
         return caml_string_of_bytes(buf)}
       return s}
     function convert_int(iconv,n)
      {switch(iconv)
-       {case 1:var _md_=_ak_;break;
-        case 2:var _md_=_al_;break;
-        case 4:var _md_=_an_;break;
-        case 5:var _md_=_ao_;break;
-        case 6:var _md_=_ap_;break;
-        case 7:var _md_=_aq_;break;
-        case 8:var _md_=_ar_;break;
-        case 9:var _md_=_as_;break;
-        case 10:var _md_=_at_;break;
-        case 11:var _md_=_au_;break;
+       {case 1:var _l8_=_ak_;break;
+        case 2:var _l8_=_al_;break;
+        case 4:var _l8_=_an_;break;
+        case 5:var _l8_=_ao_;break;
+        case 6:var _l8_=_ap_;break;
+        case 7:var _l8_=_aq_;break;
+        case 8:var _l8_=_ar_;break;
+        case 9:var _l8_=_as_;break;
+        case 10:var _l8_=_at_;break;
+        case 11:var _l8_=_au_;break;
         case 0:
-        case 13:var _md_=_aj_;break;
+        case 13:var _l8_=_aj_;break;
         case 3:
-        case 14:var _md_=_am_;break;
-        default:var _md_=_av_}
-      return transform_int_alt(iconv,caml_format_int(_md_,n))}
+        case 14:var _l8_=_am_;break;
+        default:var _l8_=_av_}
+      return transform_int_alt(iconv,caml_format_int(_l8_,n))}
     function convert_int32(iconv,n)
      {switch(iconv)
-       {case 1:var _mc_=_aK_;break;
-        case 2:var _mc_=_aL_;break;
-        case 4:var _mc_=_aN_;break;
-        case 5:var _mc_=_aO_;break;
-        case 6:var _mc_=_aP_;break;
-        case 7:var _mc_=_aQ_;break;
-        case 8:var _mc_=_aR_;break;
-        case 9:var _mc_=_aS_;break;
-        case 10:var _mc_=_aT_;break;
-        case 11:var _mc_=_aU_;break;
+       {case 1:var _l7_=_aK_;break;
+        case 2:var _l7_=_aL_;break;
+        case 4:var _l7_=_aN_;break;
+        case 5:var _l7_=_aO_;break;
+        case 6:var _l7_=_aP_;break;
+        case 7:var _l7_=_aQ_;break;
+        case 8:var _l7_=_aR_;break;
+        case 9:var _l7_=_aS_;break;
+        case 10:var _l7_=_aT_;break;
+        case 11:var _l7_=_aU_;break;
         case 0:
-        case 13:var _mc_=_aJ_;break;
+        case 13:var _l7_=_aJ_;break;
         case 3:
-        case 14:var _mc_=_aM_;break;
-        default:var _mc_=_aV_}
-      return transform_int_alt(iconv,caml_format_int(_mc_,n))}
+        case 14:var _l7_=_aM_;break;
+        default:var _l7_=_aV_}
+      return transform_int_alt(iconv,caml_format_int(_l7_,n))}
     function convert_nativeint(iconv,n)
      {switch(iconv)
-       {case 1:var _mb_=_aX_;break;
-        case 2:var _mb_=_aY_;break;
-        case 4:var _mb_=_a0_;break;
-        case 5:var _mb_=_a1_;break;
-        case 6:var _mb_=_a2_;break;
-        case 7:var _mb_=_a3_;break;
-        case 8:var _mb_=_a4_;break;
-        case 9:var _mb_=_a5_;break;
-        case 10:var _mb_=_a6_;break;
-        case 11:var _mb_=_a7_;break;
+       {case 1:var _l6_=_aX_;break;
+        case 2:var _l6_=_aY_;break;
+        case 4:var _l6_=_a0_;break;
+        case 5:var _l6_=_a1_;break;
+        case 6:var _l6_=_a2_;break;
+        case 7:var _l6_=_a3_;break;
+        case 8:var _l6_=_a4_;break;
+        case 9:var _l6_=_a5_;break;
+        case 10:var _l6_=_a6_;break;
+        case 11:var _l6_=_a7_;break;
         case 0:
-        case 13:var _mb_=_aW_;break;
+        case 13:var _l6_=_aW_;break;
         case 3:
-        case 14:var _mb_=_aZ_;break;
-        default:var _mb_=_a8_}
-      return transform_int_alt(iconv,caml_format_int(_mb_,n))}
+        case 14:var _l6_=_aZ_;break;
+        default:var _l6_=_a8_}
+      return transform_int_alt(iconv,caml_format_int(_l6_,n))}
     function convert_int64(iconv,n)
      {switch(iconv)
-       {case 1:var _ma_=_ax_;break;
-        case 2:var _ma_=_ay_;break;
-        case 4:var _ma_=_aA_;break;
-        case 5:var _ma_=_aB_;break;
-        case 6:var _ma_=_aC_;break;
-        case 7:var _ma_=_aD_;break;
-        case 8:var _ma_=_aE_;break;
-        case 9:var _ma_=_aF_;break;
-        case 10:var _ma_=_aG_;break;
-        case 11:var _ma_=_aH_;break;
+       {case 1:var _l5_=_ax_;break;
+        case 2:var _l5_=_ay_;break;
+        case 4:var _l5_=_aA_;break;
+        case 5:var _l5_=_aB_;break;
+        case 6:var _l5_=_aC_;break;
+        case 7:var _l5_=_aD_;break;
+        case 8:var _l5_=_aE_;break;
+        case 9:var _l5_=_aF_;break;
+        case 10:var _l5_=_aG_;break;
+        case 11:var _l5_=_aH_;break;
         case 0:
-        case 13:var _ma_=_aw_;break;
+        case 13:var _l5_=_aw_;break;
         case 3:
-        case 14:var _ma_=_az_;break;
-        default:var _ma_=_aI_}
-      return transform_int_alt(iconv,caml_int64_format(_ma_,n))}
+        case 14:var _l5_=_az_;break;
+        default:var _l5_=_aI_}
+      return transform_int_alt(iconv,caml_int64_format(_l5_,n))}
     function convert_float(fconv,prec,x)
      {function hex(param)
        {switch(fconv[1])
@@ -4931,40 +4928,40 @@
           i$0=0;
          for(;;)
           {if(i$0 === len)
-            var _l__=0;
+            var _l3_=0;
            else
             {var
               match=caml_string_get(str,i$0),
-              _l9_=match - 46 | 0,
+              _l2_=match - 46 | 0,
               switch$0=0;
-             if(23 < _l9_ >>> 0)
-              {if(55 === _l9_)switch$0 = 1}
+             if(23 < _l2_ >>> 0)
+              {if(55 === _l2_)switch$0 = 1}
              else
-              if(21 < (_l9_ - 1 | 0) >>> 0)switch$0 = 1;
+              if(21 < (_l2_ - 1 | 0) >>> 0)switch$0 = 1;
              if(! switch$0){var i$1=i$0 + 1 | 0,i$0=i$1;continue}
-             var _l__=1}
-           var _l$_=_l__?str:symbol(str,_a9_);
-           return caml_special_val(_l$_)}
+             var _l3_=1}
+           var _l4_=_l3_?str:symbol(str,_a9_);
+           return caml_special_val(_l4_)}
         case 6:return hex(0);
         case 7:
          var s$0=hex(0),s=caml_bytes_of_string(s$0),l=caml_ml_bytes_length(s);
          if(0 === l)
-          var _l8_=s;
+          var _l1_=s;
          else
-          {var r=caml_create_bytes(l),_l5_=l - 1 | 0,_l4_=0;
-           if(! (_l5_ < 0))
-            {var i=_l4_;
+          {var r=caml_create_bytes(l),_lY_=l - 1 | 0,_lX_=0;
+           if(! (_lY_ < 0))
+            {var i=_lX_;
              for(;;)
               {var
                 c=caml_bytes_unsafe_get(s,i),
                 switcher=c - 97 | 0,
-                _l6_=25 < switcher >>> 0?c:c - 32 | 0;
-               caml_bytes_unsafe_set(r,i,_l6_);
-               var _l7_=i + 1 | 0;
-               if(_l5_ !== i){var i=_l7_;continue}
+                _lZ_=25 < switcher >>> 0?c:c - 32 | 0;
+               caml_bytes_unsafe_set(r,i,_lZ_);
+               var _l0_=i + 1 | 0;
+               if(_lY_ !== i){var i=_l0_;continue}
                break}}
-           var _l8_=r}
-         return caml_string_of_bytes(_l8_);
+           var _l1_=r}
+         return caml_string_of_bytes(_l1_);
         case 8:return caml_special_val(hex(0));
         default:return caml_format_float(format_of_fconv(fconv,prec),x)}}
     function make_printf$0(counter,k,acc,fmt)
@@ -5072,35 +5069,35 @@
                return make_printf(k$0,[4,acc$0,str],rest$7)}}
            else
             {if(0 === pad$5[0])
-              {var _l0_=pad$5[2],_l1_=pad$5[1];
+              {var _lT_=pad$5[2],_lU_=pad$5[1];
                if(typeof prec$3 === "number")
                 return prec$3
                         ?function(p,x)
-                          {var str=fix_padding(_l1_,_l0_,convert_float(fconv,p,x));
+                          {var str=fix_padding(_lU_,_lT_,convert_float(fconv,p,x));
                            return make_printf(k$0,[4,acc$0,str],rest$7)}
                         :function(x)
                           {var
                             str=convert_float(fconv,default_float_precision(fconv),x),
-                            str$0=fix_padding(_l1_,_l0_,str);
+                            str$0=fix_padding(_lU_,_lT_,str);
                            return make_printf(k$0,[4,acc$0,str$0],rest$7)};
                var p$0=prec$3[1];
                return function(x)
-                {var str=fix_padding(_l1_,_l0_,convert_float(fconv,p$0,x));
+                {var str=fix_padding(_lU_,_lT_,convert_float(fconv,p$0,x));
                  return make_printf(k$0,[4,acc$0,str],rest$7)}}
-             var _l2_=pad$5[1];
+             var _lV_=pad$5[1];
              if(typeof prec$3 === "number")
               return prec$3
                       ?function(w,p,x)
-                        {var str=fix_padding(_l2_,w,convert_float(fconv,p,x));
+                        {var str=fix_padding(_lV_,w,convert_float(fconv,p,x));
                          return make_printf(k$0,[4,acc$0,str],rest$7)}
                       :function(w,x)
                         {var
                           str=convert_float(fconv,default_float_precision(fconv),x),
-                          str$0=fix_padding(_l2_,w,str);
+                          str$0=fix_padding(_lV_,w,str);
                          return make_printf(k$0,[4,acc$0,str$0],rest$7)};
              var p$1=prec$3[1];
              return function(w,x)
-              {var str=fix_padding(_l2_,w,convert_float(fconv,p$1,x));
+              {var str=fix_padding(_lV_,w,convert_float(fconv,p$1,x));
                return make_printf(k$0,[4,acc$0,str],rest$7)}}
           case 9:
            var rest$8=fmt$0[2],pad$6=fmt$0[1];
@@ -5135,9 +5132,9 @@
             {var
               fmt$0=param[1],
               fmtty$0=erase_rel(symm(fmtty)),
-              _l3_=type_format_gen(fmt$0,fmtty$0);
-             if(typeof _l3_[2] === "number")
-              {var fmt=_l3_[1];
+              _lW_=type_format_gen(fmt$0,fmtty$0);
+             if(typeof _lW_[2] === "number")
+              {var fmt=_lW_[1];
                return make_printf(k$0,acc$0,concat_fmt(fmt,rest$10))}
              throw Type_mismatch};
           case 15:
@@ -5159,11 +5156,11 @@
             fmt$0=fmt$4;
            continue;
           case 18:
-           var _lY_=fmt$0[1];
-           if(0 === _lY_[0])
+           var _lR_=fmt$0[1];
+           if(0 === _lR_[0])
             {var
               rest$13=fmt$0[2],
-              match=_lY_[1],
+              match=_lR_[1],
               fmt$5=match[1],
               k$3=
                function(acc,k,rest)
@@ -5177,7 +5174,7 @@
              continue}
            var
             rest$14=fmt$0[2],
-            match$0=_lY_[1],
+            match$0=_lR_[1],
             fmt$6=match$0[1],
             k$4=
              function(acc,k,rest)
@@ -5305,12 +5302,12 @@
             rest$19=fmt$0[3],
             f=fmt$0[2],
             arity=fmt$0[1],
-            _lZ_=caml_call1(f,0);
+            _lS_=caml_call1(f,0);
            if(counter < 50)
             {var counter$0=counter + 1 | 0;
-             return make_custom$0(counter$0,k$0,acc$0,rest$19,arity,_lZ_)}
+             return make_custom$0(counter$0,k$0,acc$0,rest$19,arity,_lS_)}
            return caml_trampoline_return
-                   (make_custom$0,[0,k$0,acc$0,rest$19,arity,_lZ_])}}
+                   (make_custom$0,[0,k$0,acc$0,rest$19,arity,_lS_])}}
     function make_from_fmtty$0(counter,k,acc,fmtty,fmt)
      {if(typeof fmtty === "number")
        {if(counter < 50)
@@ -5356,7 +5353,7 @@
            {return make_from_fmtty(k,acc,concat_fmtty(ty,rest$8),fmt)};
          case 10:
           var rest$9=fmtty[1];
-          return function(param,_lX_)
+          return function(param,_lQ_)
            {return make_from_fmtty(k,acc,rest$9,fmt)};
          case 11:
           var rest$10=fmtty[1];
@@ -5367,21 +5364,21 @@
          case 13:throw [0,Assert_failure,_bf_];
          default:throw [0,Assert_failure,_bg_]}}
     function make_invalid_arg(counter,k,acc,fmt)
-     {var _lW_=[8,acc,_bh_];
+     {var _lP_=[8,acc,_bh_];
       if(counter < 50)
        {var counter$0=counter + 1 | 0;
-        return make_printf$0(counter$0,k,_lW_,fmt)}
-      return caml_trampoline_return(make_printf$0,[0,k,_lW_,fmt])}
+        return make_printf$0(counter$0,k,_lP_,fmt)}
+      return caml_trampoline_return(make_printf$0,[0,k,_lP_,fmt])}
     function make_custom$0(counter,k,acc,rest,arity,f)
      {if(arity)
        {var arity$0=arity[1];
         return function(x)
          {return make_custom(k,acc,rest,arity$0,caml_call1(f,x))}}
-      var _lV_=[4,acc,f];
+      var _lO_=[4,acc,f];
       if(counter < 50)
        {var counter$0=counter + 1 | 0;
-        return make_printf$0(counter$0,k,_lV_,rest)}
-      return caml_trampoline_return(make_printf$0,[0,k,_lV_,rest])}
+        return make_printf$0(counter$0,k,_lO_,rest)}
+      return caml_trampoline_return(make_printf$0,[0,k,_lO_,rest])}
     function make_printf(k,acc,fmt)
      {return caml_trampoline(make_printf$0(0,k,acc,fmt))}
     function make_from_fmtty(k,acc,fmtty,fmt)
@@ -5419,43 +5416,43 @@
           return make_printf(k,[4,acc,str],fmt)}}
       else
        {if(0 === pad[0])
-         {var _lS_=pad[2],_lT_=pad[1];
+         {var _lL_=pad[2],_lM_=pad[1];
           if(typeof match === "number")
            return match
                    ?function(p,x)
                      {var
                        str=
                         fix_padding
-                         (_lT_,_lS_,fix_int_precision(p,caml_call2(trans,iconv,x)));
+                         (_lM_,_lL_,fix_int_precision(p,caml_call2(trans,iconv,x)));
                       return make_printf(k,[4,acc,str],fmt)}
                    :function(x)
-                     {var str=fix_padding(_lT_,_lS_,caml_call2(trans,iconv,x));
+                     {var str=fix_padding(_lM_,_lL_,caml_call2(trans,iconv,x));
                       return make_printf(k,[4,acc,str],fmt)};
           var p$0=match[1];
           return function(x)
            {var
              str=
               fix_padding
-               (_lT_,_lS_,fix_int_precision(p$0,caml_call2(trans,iconv,x)));
+               (_lM_,_lL_,fix_int_precision(p$0,caml_call2(trans,iconv,x)));
             return make_printf(k,[4,acc,str],fmt)}}
-        var _lU_=pad[1];
+        var _lN_=pad[1];
         if(typeof match === "number")
          return match
                  ?function(w,p,x)
                    {var
                      str=
                       fix_padding
-                       (_lU_,w,fix_int_precision(p,caml_call2(trans,iconv,x)));
+                       (_lN_,w,fix_int_precision(p,caml_call2(trans,iconv,x)));
                     return make_printf(k,[4,acc,str],fmt)}
                  :function(w,x)
-                   {var str=fix_padding(_lU_,w,caml_call2(trans,iconv,x));
+                   {var str=fix_padding(_lN_,w,caml_call2(trans,iconv,x));
                     return make_printf(k,[4,acc,str],fmt)};
         var p$1=match[1];
         return function(w,x)
          {var
            str=
             fix_padding
-             (_lU_,w,fix_int_precision(p$1,caml_call2(trans,iconv,x)));
+             (_lN_,w,fix_int_precision(p$1,caml_call2(trans,iconv,x)));
           return make_printf(k,[4,acc,str],fmt)}}}
     function output_acc(o,acc)
      {var acc$0=acc;
@@ -5472,15 +5469,15 @@
            output_acc(o,p);
            return output_string(o,s);
           case 1:
-           var _lQ_=acc$0[2],_lR_=acc$0[1];
-           if(0 === _lQ_[0])
-            {var acc$1=_lQ_[1];
-             output_acc(o,_lR_);
+           var _lJ_=acc$0[2],_lK_=acc$0[1];
+           if(0 === _lJ_[0])
+            {var acc$1=_lJ_[1];
+             output_acc(o,_lK_);
              output_string(o,_bi_);
              var acc$0=acc$1;
              continue}
-           var acc$2=_lQ_[1];
-           output_acc(o,_lR_);
+           var acc$2=_lJ_[1];
+           output_acc(o,_lK_);
            output_string(o,_bj_);
            var acc$0=acc$2;
            continue;
@@ -5517,15 +5514,15 @@
            strput_acc(b,p);
            return add_string(b,s);
           case 1:
-           var _lO_=acc$0[2],_lP_=acc$0[1];
-           if(0 === _lO_[0])
-            {var acc$1=_lO_[1];
-             strput_acc(b,_lP_);
+           var _lH_=acc$0[2],_lI_=acc$0[1];
+           if(0 === _lH_[0])
+            {var acc$1=_lH_[1];
+             strput_acc(b,_lI_);
              add_string(b,_bk_);
              var acc$0=acc$1;
              continue}
-           var acc$2=_lO_[1];
-           strput_acc(b,_lP_);
+           var acc$2=_lH_[1];
+           strput_acc(b,_lI_);
            add_string(b,_bl_);
            var acc$0=acc$2;
            continue;
@@ -5552,8 +5549,8 @@
            b[2] = pos + 1 | 0;
            return 0}}
     function printf(fmt$0)
-     {var fmt=fmt$0[1],_lN_=0;
-      return make_printf(function(acc){output_acc(oc,acc);return 0},_lN_,fmt)}
+     {var fmt=fmt$0[1],_lG_=0;
+      return make_printf(function(acc){output_acc(oc,acc);return 0},_lG_,fmt)}
     function sprintf(fmt$0)
      {var fmt=fmt$0[1];
       function k(acc)
@@ -5572,29 +5569,29 @@
          old_printers=printers[1],
          new_printers=[0,fn,old_printers],
          success=compare_and_set(printers,old_printers,new_printers),
-         _lM_=1 - success;
-        if(_lM_)continue;
-        return _lM_}}
+         _lF_=1 - success;
+        if(_lF_)continue;
+        return _lF_}}
     function ongoing_traversal(h)
-     {var _lK_=h.length - 1 < 4?1:0,_lL_=_lK_ || (h[4] < 0?1:0);return _lL_}
+     {var _lD_=h.length - 1 < 4?1:0,_lE_=_lD_ || (h[4] < 0?1:0);return _lE_}
     function flip_ongoing_traversal(h){h[4] = - h[4] | 0;return 0}
     try
-     {var _cG_=caml_sys_getenv(_cF_),params=_cG_}
-    catch(_lI_)
-     {_lI_ = caml_wrap_exception(_lI_);
-      if(_lI_ !== Not_found)throw _lI_;
+     {var _cF_=caml_sys_getenv(_cE_),params=_cF_}
+    catch(_lB_)
+     {_lB_ = caml_wrap_exception(_lB_);
+      if(_lB_ !== Not_found)throw _lB_;
       try
-       {var _cE_=caml_sys_getenv(_cD_),_bo_=_cE_}
-      catch(_lJ_)
-       {_lJ_ = caml_wrap_exception(_lJ_);
-        if(_lJ_ !== Not_found)throw _lJ_;
+       {var _cD_=caml_sys_getenv(_cC_),_bo_=_cD_}
+      catch(_lC_)
+       {_lC_ = caml_wrap_exception(_lC_);
+        if(_lC_ !== Not_found)throw _lC_;
         var _bo_=_bn_}
       var params=_bo_}
     var
      randomized_default=contains(params,82),
      prng=
       [246,
-       function(_lH_)
+       function(_lA_)
         {var
           seed$0=caml_sys_random_seed(0),
           result=[0,caml_make_vect(55,0),0],
@@ -5603,11 +5600,11 @@
           i$0=0;
          for(;;)
           {caml_check_bound(result[1],i$0)[1 + i$0] = i$0;
-           var _lG_=i$0 + 1 | 0;
-           if(54 !== i$0){var i$0=_lG_;continue}
-           var accu=[0,_bm_],_lC_=54 + max(55,l) | 0,_lB_=0;
-           if(! (_lC_ < 0))
-            {var i=_lB_;
+           var _lz_=i$0 + 1 | 0;
+           if(54 !== i$0){var i$0=_lz_;continue}
+           var accu=[0,_bm_],_lv_=54 + max(55,l) | 0,_lu_=0;
+           if(! (_lv_ < 0))
+            {var i=_lu_;
              for(;;)
               {var
                 j=i % 55 | 0,
@@ -5616,23 +5613,23 @@
                 str=symbol(accu[1],caml_string_of_jsbytes("" + x));
                accu[1] = caml_md5_string(str,0,caml_ml_string_length(str));
                var
-                _lD_=accu[1],
-                _lx_=caml_string_get(_lD_,3) << 24,
-                _ly_=caml_string_get(_lD_,2) << 16,
-                _lz_=caml_string_get(_lD_,1) << 8,
-                _lA_=
-                 ((caml_string_get(_lD_,0) + _lz_ | 0) + _ly_ | 0)
+                _lw_=accu[1],
+                _lq_=caml_string_get(_lw_,3) << 24,
+                _lr_=caml_string_get(_lw_,2) << 16,
+                _ls_=caml_string_get(_lw_,1) << 8,
+                _lt_=
+                 ((caml_string_get(_lw_,0) + _ls_ | 0) + _lr_ | 0)
                  +
-                 _lx_
+                 _lq_
                  |
                  0,
-                _lE_=
-                 (caml_check_bound(result[1],j)[1 + j] ^ _lA_)
+                _lx_=
+                 (caml_check_bound(result[1],j)[1 + j] ^ _lt_)
                  &
                  1073741823;
-               caml_check_bound(result[1],j)[1 + j] = _lE_;
-               var _lF_=i + 1 | 0;
-               if(_lC_ !== i){var i=_lF_;continue}
+               caml_check_bound(result[1],j)[1 + j] = _lx_;
+               var _ly_=i + 1 | 0;
+               if(_lv_ !== i){var i=_ly_;continue}
                break}}
            result[2] = 0;
            return result}}];
@@ -5644,35 +5641,35 @@
          {var x$0=x * 2 | 0,x=x$0;continue}
         if(random)
          {var
-           _lv_=caml_obj_tag(prng),
-           _lw_=250 === _lv_?prng[1]:246 === _lv_?force_lazy_block(prng):prng;
-          _lw_[2] = (_lw_[2] + 1 | 0) % 55 | 0;
+           _lo_=caml_obj_tag(prng),
+           _lp_=250 === _lo_?prng[1]:246 === _lo_?force_lazy_block(prng):prng;
+          _lp_[2] = (_lp_[2] + 1 | 0) % 55 | 0;
           var
-           _ls_=_lw_[2],
-           curval=caml_check_bound(_lw_[1],_ls_)[1 + _ls_],
-           _lt_=(_lw_[2] + 24 | 0) % 55 | 0,
+           _ll_=_lp_[2],
+           curval=caml_check_bound(_lp_[1],_ll_)[1 + _ll_],
+           _lm_=(_lp_[2] + 24 | 0) % 55 | 0,
            newval=
-            caml_check_bound(_lw_[1],_lt_)[1 + _lt_]
+            caml_check_bound(_lp_[1],_lm_)[1 + _lm_]
             +
             (curval ^ (curval >>> 25 | 0) & 31)
             |
             0,
            newval30=newval & 1073741823,
-           _lu_=_lw_[2];
-          caml_check_bound(_lw_[1],_lu_)[1 + _lu_] = newval30;
+           _ln_=_lp_[2];
+          caml_check_bound(_lp_[1],_ln_)[1 + _ln_] = newval30;
           var seed=newval30}
         else
          var seed=0;
         return [0,0,caml_make_vect(x,0),seed,x]}}
     function clear(h)
-     {var _lq_=0 < h[1]?1:0;
-      if(_lq_)
+     {var _lj_=0 < h[1]?1:0;
+      if(_lj_)
        {h[1] = 0;
-        var len=h[2].length - 1,_lr_=h[2];
-        if(0 <= len && ! ((_lr_.length - 1 - len | 0) < 0))
-         return caml_array_fill(_lr_,0,len,0);
+        var len=h[2].length - 1,_lk_=h[2];
+        if(0 <= len && ! ((_lk_.length - 1 - len | 0) < 0))
+         return caml_array_fill(_lk_,0,len,0);
         return invalid_arg(_q_)}
-      return _lq_}
+      return _lj_}
     function reset(h)
      {var len=h[2].length - 1;
       if(4 <= h.length - 1 && len !== abs(h[4]))
@@ -5699,38 +5696,38 @@
           return prec$0}}
       return 0}
     function copy$0(h)
-     {var _lo_=h[2],l=_lo_.length - 1,_lm_=h[4],_ln_=h[3];
+     {var _lh_=h[2],l=_lh_.length - 1,_lf_=h[4],_lg_=h[3];
       if(0 === l)
-       var _lp_=[0];
+       var _li_=[0];
       else
-       {var r=caml_make_vect(l,f(_lo_[1])),_lk_=l - 1 | 0,_lj_=1;
-        if(! (_lk_ < 1))
-         {var i=_lj_;
+       {var r=caml_make_vect(l,f(_lh_[1])),_ld_=l - 1 | 0,_lc_=1;
+        if(! (_ld_ < 1))
+         {var i=_lc_;
           for(;;)
-           {r[1 + i] = f(_lo_[1 + i]);
-            var _ll_=i + 1 | 0;
-            if(_lk_ !== i){var i=_ll_;continue}
+           {r[1 + i] = f(_lh_[1 + i]);
+            var _le_=i + 1 | 0;
+            if(_ld_ !== i){var i=_le_;continue}
             break}}
-        var _lp_=r}
-      return [0,h[1],_lp_,_ln_,_lm_]}
+        var _li_=r}
+      return [0,h[1],_li_,_lg_,_lf_]}
     function length(h){return h[1]}
     function resize$0(indexfun,h)
      {var
        odata=h[2],
        osize=odata.length - 1,
        nsize$0=osize * 2 | 0,
-       _li_=nsize$0 < max_array_length?1:0;
-      if(_li_)
+       _lb_=nsize$0 < max_array_length?1:0;
+      if(_lb_)
        {var ndata=caml_make_vect(nsize$0,0),inplace=1 - ongoing_traversal(h);
         h[2] = ndata;
         var
          indexfun$0=caml_call1(indexfun,h),
          nsize=ndata.length - 1,
          ndata_tail=caml_make_vect(nsize,0),
-         _lc_=odata.length - 1 - 1 | 0,
-         _lb_=0;
-        if(! (_lc_ < 0))
-         {var i$0=_lb_;
+         _k7_=odata.length - 1 - 1 | 0,
+         _k6_=0;
+        if(! (_k7_ < 0))
+         {var i$0=_k6_;
           a:
           for(;;)
            {var cell$1=caml_check_bound(odata,i$0)[1 + i$0],cell=cell$1;
@@ -5750,25 +5747,25 @@
                 caml_check_bound(ndata_tail,nidx)[1 + nidx] = cell$0;
                 var cell=next;
                 continue}
-              var _lh_=i$0 + 1 | 0;
-              if(_lc_ !== i$0){var i$0=_lh_;continue a}
+              var _la_=i$0 + 1 | 0;
+              if(_k7_ !== i$0){var i$0=_la_;continue a}
               break}
             break}}
         if(inplace)
-         {var _le_=nsize - 1 | 0,_ld_=0;
-          if(! (_le_ < 0))
-           {var i=_ld_;
+         {var _k9_=nsize - 1 | 0,_k8_=0;
+          if(! (_k9_ < 0))
+           {var i=_k8_;
             for(;;)
              {var match$0=caml_check_bound(ndata_tail,i)[1 + i];
               if(match$0)match$0[3] = 0;
-              var _lg_=i + 1 | 0;
-              if(_le_ !== i){var i=_lg_;continue}
+              var _k$_=i + 1 | 0;
+              if(_k9_ !== i){var i=_k$_;continue}
               break}}
-          var _lf_=0}
+          var _k__=0}
         else
-         var _lf_=inplace;
-        return _lf_}
-      return _li_}
+         var _k__=inplace;
+        return _k__}
+      return _lb_}
     function iter$1(f,h)
      {function do_bucket(param)
        {var param$0=param;
@@ -5782,16 +5779,16 @@
       var old_trav=ongoing_traversal(h);
       if(1 - old_trav)flip_ongoing_traversal(h);
       try
-       {var d=h[2],_k9_=d.length - 1 - 1 | 0,_k8_=0;
-        if(! (_k9_ < 0))
-         {var i=_k8_;
+       {var d=h[2],_k2_=d.length - 1 - 1 | 0,_k1_=0;
+        if(! (_k2_ < 0))
+         {var i=_k1_;
           for(;;)
            {do_bucket(caml_check_bound(d,i)[1 + i]);
-            var _la_=i + 1 | 0;
-            if(_k9_ !== i){var i=_la_;continue}
+            var _k5_=i + 1 | 0;
+            if(_k2_ !== i){var i=_k5_;continue}
             break}}
-        var _k__=1 - old_trav,_k$_=_k__?flip_ongoing_traversal(h):_k__;
-        return _k$_}
+        var _k3_=1 - old_trav,_k4_=_k3_?flip_ongoing_traversal(h):_k3_;
+        return _k4_}
       catch(exn)
        {exn = caml_wrap_exception(exn);
         if(old_trav)throw exn;
@@ -5825,16 +5822,16 @@
      {var d=h[2],old_trav=ongoing_traversal(h);
       if(1 - old_trav)flip_ongoing_traversal(h);
       try
-       {var _k4_=d.length - 1 - 1 | 0,_k3_=0;
-        if(! (_k4_ < 0))
-         {var i=_k3_;
+       {var _kX_=d.length - 1 - 1 | 0,_kW_=0;
+        if(! (_kX_ < 0))
+         {var i=_kW_;
           for(;;)
            {filter_map_inplace_bucket(f,h,i,0,caml_check_bound(h[2],i)[1 + i]);
-            var _k7_=i + 1 | 0;
-            if(_k4_ !== i){var i=_k7_;continue}
+            var _k0_=i + 1 | 0;
+            if(_kX_ !== i){var i=_k0_;continue}
             break}}
-        var _k5_=1 - old_trav,_k6_=_k5_?flip_ongoing_traversal(h):_k5_;
-        return _k6_}
+        var _kY_=1 - old_trav,_kZ_=_kY_?flip_ongoing_traversal(h):_kY_;
+        return _kZ_}
       catch(exn)
        {exn = caml_wrap_exception(exn);
         if(old_trav)throw exn;
@@ -5857,18 +5854,18 @@
       var old_trav=ongoing_traversal(h);
       if(1 - old_trav)flip_ongoing_traversal(h);
       try
-       {var d=h[2],accu=[0,init],_kZ_=d.length - 1 - 1 | 0,_kY_=0;
-        if(! (_kZ_ < 0))
-         {var i=_kY_;
+       {var d=h[2],accu=[0,init],_kS_=d.length - 1 - 1 | 0,_kR_=0;
+        if(! (_kS_ < 0))
+         {var i=_kR_;
           for(;;)
-           {var _k1_=accu[1];
-            accu[1] = do_bucket(caml_check_bound(d,i)[1 + i],_k1_);
-            var _k2_=i + 1 | 0;
-            if(_kZ_ !== i){var i=_k2_;continue}
+           {var _kU_=accu[1];
+            accu[1] = do_bucket(caml_check_bound(d,i)[1 + i],_kU_);
+            var _kV_=i + 1 | 0;
+            if(_kS_ !== i){var i=_kV_;continue}
             break}}
         if(1 - old_trav)flip_ongoing_traversal(h);
-        var _k0_=accu[1];
-        return _k0_}
+        var _kT_=accu[1];
+        return _kT_}
       catch(exn)
        {exn = caml_wrap_exception(exn);
         if(old_trav)throw exn;
@@ -5886,23 +5883,23 @@
           continue}
         return accu$0}}
     function stats(h)
-     {var _kW_=h[2],r=[0,0],_kS_=_kW_.length - 1 - 1 | 0,_kR_=0;
-      if(! (_kS_ < 0))
-       {var i=_kR_;
+     {var _kP_=h[2],r=[0,0],_kL_=_kP_.length - 1 - 1 | 0,_kK_=0;
+      if(! (_kL_ < 0))
+       {var i=_kK_;
         for(;;)
-         {var b=_kW_[1 + i],_kU_=r[1];
-          r[1] = max(_kU_,bucket_length(0,b));
-          var _kV_=i + 1 | 0;
-          if(_kS_ !== i){var i=_kV_;continue}
+         {var b=_kP_[1 + i],_kN_=r[1];
+          r[1] = max(_kN_,bucket_length(0,b));
+          var _kO_=i + 1 | 0;
+          if(_kL_ !== i){var i=_kO_;continue}
           break}}
-      var _kT_=r[1],histo=caml_make_vect(_kT_ + 1 | 0,0),_kX_=h[2];
+      var _kM_=r[1],histo=caml_make_vect(_kM_ + 1 | 0,0),_kQ_=h[2];
       iter$0
        (function(b)
          {var l=bucket_length(0,b);
           histo[1 + l] = caml_check_bound(histo,l)[1 + l] + 1 | 0;
           return 0},
-        _kX_);
-      return [0,h[1],h[2].length - 1,_kT_,histo]}
+        _kQ_);
+      return [0,h[1],h[2].length - 1,_kM_,histo]}
     function to_seq(tbl)
      {var tbl_data=tbl[2];
       function aux(i,buck,param)
@@ -5910,7 +5907,7 @@
         for(;;)
          {if(buck$0)
            {var key=buck$0[1],data=buck$0[2],next=buck$0[3];
-            return [0,[0,key,data],function(_kQ_){return aux(i$0,next,_kQ_)}]}
+            return [0,[0,key,data],function(_kJ_){return aux(i$0,next,_kJ_)}]}
           if(i$0 === tbl_data.length - 1)return 0;
           var
            buck$1=caml_check_bound(tbl_data,i$0)[1 + i$0],
@@ -5918,28 +5915,28 @@
            i$0=i$1,
            buck$0=buck$1;
           continue}}
-      var _kN_=0,_kO_=0;
-      return function(_kP_){return aux(_kO_,_kN_,_kP_)}}
+      var _kG_=0,_kH_=0;
+      return function(_kI_){return aux(_kH_,_kG_,_kI_)}}
     function to_seq_keys(m)
-     {var _kJ_=to_seq(m);
-      function _kK_(_kM_){return _kM_[1]}
-      return function(_kL_){return map(_kK_,_kJ_,_kL_)}}
+     {var _kC_=to_seq(m);
+      function _kD_(_kF_){return _kF_[1]}
+      return function(_kE_){return map(_kD_,_kC_,_kE_)}}
     function to_seq_values(m)
-     {var _kF_=to_seq(m);
-      function _kG_(_kI_){return _kI_[2]}
-      return function(_kH_){return map(_kG_,_kF_,_kH_)}}
+     {var _ky_=to_seq(m);
+      function _kz_(_kB_){return _kB_[2]}
+      return function(_kA_){return map(_kz_,_ky_,_kA_)}}
     function Make(H)
      {var equal=H[1];
       function key_index(h,x)
-       {var _kE_=h[2].length - 1 - 1 | 0;return caml_call1(H[2],x) & _kE_}
+       {var _kx_=h[2].length - 1 - 1 | 0;return caml_call1(H[2],x) & _kx_}
       function add(h,key,data)
        {var
          i=key_index(h,key),
          bucket=[0,key,data,caml_check_bound(h[2],i)[1 + i]];
         caml_check_bound(h[2],i)[1 + i] = bucket;
         h[1] = h[1] + 1 | 0;
-        var _kD_=h[2].length - 1 << 1 < h[1]?1:0;
-        return _kD_?resize$0(key_index,h):_kD_}
+        var _kw_=h[2].length - 1 << 1 < h[1]?1:0;
+        return _kw_?resize$0(key_index,h):_kw_}
       function remove(h,key)
        {var
          i=key_index(h,key),
@@ -5958,7 +5955,7 @@
             continue}
           return 0}}
       function find(h,key)
-       {var _kC_=key_index(h,key),match=caml_check_bound(h[2],_kC_)[1 + _kC_];
+       {var _kv_=key_index(h,key),match=caml_check_bound(h[2],_kv_)[1 + _kv_];
         if(match)
          {var k1=match[1],d1=match[2],next1=match[3];
           if(caml_call2(equal,key,k1))return d1;
@@ -5980,7 +5977,7 @@
           throw Not_found}
         throw Not_found}
       function find_opt(h,key)
-       {var _kB_=key_index(h,key),match=caml_check_bound(h[2],_kB_)[1 + _kB_];
+       {var _ku_=key_index(h,key),match=caml_check_bound(h[2],_ku_)[1 + _ku_];
         if(match)
          {var k1=match[1],d1=match[2],next1=match[3];
           if(caml_call2(equal,key,k1))return [0,d1];
@@ -6011,8 +6008,8 @@
               var param$0=next;
               continue}
             return 0}}
-        var _kA_=key_index(h,key);
-        return find_in_bucket(caml_check_bound(h[2],_kA_)[1 + _kA_])}
+        var _kt_=key_index(h,key);
+        return find_in_bucket(caml_check_bound(h[2],_kt_)[1 + _kt_])}
       function replace(h,key,data)
        {var
          i=key_index(h,key),
@@ -6024,27 +6021,27 @@
             if(! caml_call2(equal,k,key)){var param=next;continue}
             param[1] = key;
             param[2] = data;
-            var _kx_=0}
+            var _kq_=0}
           else
-           var _kx_=1;
-          if(_kx_)
+           var _kq_=1;
+          if(_kq_)
            {caml_check_bound(h[2],i)[1 + i] = [0,key,data,param$0];
             h[1] = h[1] + 1 | 0;
-            var _ky_=h[2].length - 1 << 1 < h[1]?1:0;
-            if(_ky_)return resize$0(key_index,h);
-            var _kz_=_ky_}
+            var _kr_=h[2].length - 1 << 1 < h[1]?1:0;
+            if(_kr_)return resize$0(key_index,h);
+            var _ks_=_kr_}
           else
-           var _kz_=_kx_;
-          return _kz_}}
+           var _ks_=_kq_;
+          return _ks_}}
       function mem(h,key)
        {var
-         _kw_=key_index(h,key),
-         param$0=caml_check_bound(h[2],_kw_)[1 + _kw_],
+         _kp_=key_index(h,key),
+         param$0=caml_check_bound(h[2],_kp_)[1 + _kp_],
          param=param$0;
         for(;;)
          {if(param)
-           {var k=param[1],next=param[3],_kv_=caml_call2(equal,k,key);
-            if(_kv_)return _kv_;
+           {var k=param[1],next=param[3],_ko_=caml_call2(equal,k,key);
+            if(_ko_)return _ko_;
             var param=next;
             continue}
           return 0}}
@@ -6091,12 +6088,8 @@
      {var slot=caml_obj_tag(exn) === 248?exn:exn[1];
       return caml_register_named_value(name,slot)}
     var window=joo_global_object,no_handler=null,undefined$0=undefined;
-    function test(x){return 1 - (x == no_handler?1:0)}
     function case$0(x,f,g)
      {return x == no_handler?caml_call1(f,0):caml_call1(g,x)}
-    function to_option(x)
-     {function _ku_(x){return [0,x]}
-      return case$0(x,function(param){return 0},_ku_)}
     var
      true$0=true,
      false$0=false,
@@ -6116,7 +6109,7 @@
                 :[0,caml_string_of_jsstring(e.toString())]});
     function handler(f)
      {return function(e)
-       {if(test(e))
+       {if(1 - (e == no_handler?1:0))
          {var res=caml_call1(f,e);
           if(1 - (res | 0))e.preventDefault();
           return res}
@@ -6130,8 +6123,8 @@
          ev="on".concat(typ),
          callback=
           function(e)
-           {var _kr_=[0,h,e,[0]];
-            return function(_ks_,_kt_){return caml_js_call(_kr_,_ks_,_kt_)}};
+           {var _kl_=[0,h,e,[0]];
+            return function(_km_,_kn_){return caml_js_call(_kl_,_km_,_kn_)}};
         e.attachEvent(ev,callback);
         return function(param){return e.detachEvent(ev,callback)}}
       var opts={};
@@ -6148,25 +6141,14 @@
      get=caml_js_get,
      document=window.document;
     function getElementById_exn(id)
-     {function _kp_(pnode){return pnode}
-      function _kq_(param){return failwith(caml_call1(sprintf(_bu_),id))}
+     {function _kj_(pnode){return pnode}
+      function _kk_(param){return failwith(caml_call1(sprintf(_bu_),id))}
       return case$0
-              (document.getElementById(caml_jsstring_of_string(id)),_kq_,_kp_)}
+              (document.getElementById(caml_jsstring_of_string(id)),_kk_,_kj_)}
     caml_fresh_oo_id(0);
     var html_element=window.HTMLElement;
     html_element === undefined$0;
-    ({"alpha":true$0,
-      "depth":true$0,
-      "stencil":false$0,
-      "antialias":true$0,
-      "premultipliedAlpha":false$0,
-      "preserveDrawingBuffer":false$0,
-      "preferLowPowerToHighPerformance":false$0,
-      "failIfMajorPerformanceCaveat":false$0});
     var overflow_limit=2147483000.;
-    function getContextWithAttributes(c,attribs)
-     {var ctx=c.getContext("webgl",attribs);
-      return test(ctx)?ctx:c.getContext("experimental-webgl",attribs)}
     function equal(a,b)
      {var switch$0=0;
       if(a){if(b)switch$0 = 1}else if(! b)switch$0 = 1;
@@ -6377,12 +6359,12 @@
     var antialias=1,stencil_strokes=2,tesselate_afd=8;
     function create$3(cap,value){return [0,value,caml_make_vect(cap,value),0]}
     function init$0(cap,f)
-     {var _kn_=0,_ko_=init(cap,function(param){return caml_call1(f,0)});
-      return [0,caml_call1(f,0),_ko_,_kn_]}
+     {var _kh_=0,_ki_=init(cap,function(param){return caml_call1(f,0)});
+      return [0,caml_call1(f,0),_ki_,_kh_]}
     function get$0(t,idx){return t[2][1 + idx]}
     function copy$3(t,copy)
-     {function _km_(idx){return caml_call1(copy,t[2][1 + idx])}
-      var arr=init(t[2].length - 1,_km_);
+     {function _kg_(idx){return caml_call1(copy,t[2][1 + idx])}
+      var arr=init(t[2].length - 1,_kg_);
       return [0,t[1],arr,t[3]]}
     function add(t,value)
      {var len$0=t[2].length - 1;
@@ -6412,13 +6394,13 @@
                         :caml_call1(create,0)});
         dst[2] = new_arr}
       else
-       {var _kj_=dst[3],_kk_=dst[3] + src[3] | 0;
-        if(! (_kk_ < _kj_))
-         {var i=_kj_;
+       {var _kd_=dst[3],_ke_=dst[3] + src[3] | 0;
+        if(! (_ke_ < _kd_))
+         {var i=_kd_;
           for(;;)
            {dst[2][1 + i] = src[2][1 + (i - dst[3] | 0)];
-            var _kl_=i + 1 | 0;
-            if(_kk_ !== i){var i=_kl_;continue}
+            var _kf_=i + 1 | 0;
+            if(_ke_ !== i){var i=_kf_;continue}
             break}}}
       dst[3] = dst[3] + src[3] | 0;
       return 0}
@@ -6437,13 +6419,13 @@
     function clear$0(opt,t)
      {if(opt)var sth=opt[1],free=sth;else var free=0;
       if(free)
-       {var _kh_=t[3] - 1 | 0,_kg_=0;
-        if(! (_kh_ < 0))
-         {var i=_kg_;
+       {var _kb_=t[3] - 1 | 0,_ka_=0;
+        if(! (_kb_ < 0))
+         {var i=_ka_;
           for(;;)
            {t[2][1 + i] = t[1];
-            var _ki_=i + 1 | 0;
-            if(_kh_ !== i){var i=_ki_;continue}
+            var _kc_=i + 1 | 0;
+            if(_kb_ !== i){var i=_kc_;continue}
             break}}}
       t[3] = 0;
       return 0}
@@ -6456,7 +6438,6 @@
      flip_y=8,
      premultiplied=16,
      nearest=32;
-    function remove$0(t,flag){return t & (flag ^ -1)}
     function has$0(t,flag){return 0 < (t & flag)?1:0}
     var left=1,center=2,right=4,top=8,middle=16,bottom=32,baseline=64;
     function v_align(t){return remove(t,7)}
@@ -6475,16 +6456,16 @@
     var optional=1,required=2;
     function to_pattern(param)
      {return 1 === param?0:2 === param?1:failwith(_by_)}
-    function remove$1(t,idx)
-     {var _kf_=t[3],_kd_=_kf_[3] - 2 | 0;
-      if(! (_kd_ < idx))
+    function remove$0(t,idx)
+     {var _j$_=t[3],_j9_=_j$_[3] - 2 | 0;
+      if(! (_j9_ < idx))
        {var i=idx;
         for(;;)
-         {_kf_[2][1 + i] = _kf_[2][1 + (i + 1 | 0)];
-          var _ke_=i + 1 | 0;
-          if(_kd_ !== i){var i=_ke_;continue}
+         {_j$_[2][1 + i] = _j$_[2][1 + (i + 1 | 0)];
+          var _j__=i + 1 | 0;
+          if(_j9_ !== i){var i=_j__;continue}
           break}}
-      _kf_[3] = max(_kf_[3] - 1 | 0,0);
+      _j$_[3] = max(_j$_[3] - 1 | 0,0);
       return 0}
     function add_rect(t,rw,rh)
      {var
@@ -6494,9 +6475,9 @@
        bestx=[0,-1],
        besty=[0,-1],
        len$0=t[3][3] - 1 | 0,
-       _j9_=0;
+       _j3_=0;
       if(! (len$0 < 0))
-       {var i$2=_j9_;
+       {var i$2=_j3_;
         for(;;)
          {var
            y$0=
@@ -6521,35 +6502,35 @@
            {var
              y$1=y$0[1],
              n$1=get$0(t[3],i$2),
-             _j$_=(y$1 + rh | 0) < besth[1]?1:0;
-            if(_j$_)
-             var _ka_=_j$_;
+             _j5_=(y$1 + rh | 0) < besth[1]?1:0;
+            if(_j5_)
+             var _j6_=_j5_;
             else
              var
-              _kc_=(y$1 + rh | 0) === besth[1]?1:0,
-              _ka_=_kc_?n$1[3] < bestw[1]?1:0:_kc_;
-            if(_ka_)
+              _j8_=(y$1 + rh | 0) === besth[1]?1:0,
+              _j6_=_j8_?n$1[3] < bestw[1]?1:0:_j8_;
+            if(_j6_)
              {besti[1] = i$2;
               bestw[1] = n$1[3];
               besth[1] = y$1 + rh | 0;
               bestx[1] = n$1[1];
               besty[1] = y$1}}
-          var _kb_=i$2 + 1 | 0;
-          if(len$0 !== i$2){var i$2=_kb_;continue}
+          var _j7_=i$2 + 1 | 0;
+          if(len$0 !== i$2){var i$2=_j7_;continue}
           break}}
       if(besti[1] === -1)return 0;
-      var _j__=besti[1],y=besty[1] + rh | 0,value=[0,bestx[1],y,rw],_j8_=t[3];
-      add(_j8_,value);
-      var _j5_=_j8_[3] - 1 | 0,_j6_=_j__ + 1 | 0;
-      if(! (_j5_ < _j6_))
-       {var i=_j5_;
+      var _j4_=besti[1],y=besty[1] + rh | 0,value=[0,bestx[1],y,rw],_j2_=t[3];
+      add(_j2_,value);
+      var _jZ_=_j2_[3] - 1 | 0,_j0_=_j4_ + 1 | 0;
+      if(! (_jZ_ < _j0_))
+       {var i=_jZ_;
         for(;;)
-         {_j8_[2][1 + i] = _j8_[2][1 + (i - 1 | 0)];
-          var _j7_=i - 1 | 0;
-          if(_j6_ !== i){var i=_j7_;continue}
+         {_j2_[2][1 + i] = _j2_[2][1 + (i - 1 | 0)];
+          var _j1_=i - 1 | 0;
+          if(_j0_ !== i){var i=_j1_;continue}
           break}}
-      _j8_[2][1 + _j__] = value;
-      var len=t[3][3],i$0=[0,_j__ + 1 | 0];
+      _j2_[2][1 + _j4_] = value;
+      var len=t[3][3],i$0=[0,_j4_ + 1 | 0];
       for(;;)
        {if(i$0[1] < len)
          {var n=get$0(t[3],i$0[1]),nlast=get$0(t[3],i$0[1] - 1 | 0);
@@ -6560,7 +6541,7 @@
             if(0 < n[3])
              i$0[1] = len;
             else
-             {remove$1(t,i$0[1]);i$0[1] = i$0[1] - 1 | 0}
+             {remove$0(t,i$0[1]);i$0[1] = i$0[1] - 1 | 0}
             i$0[1]++}
           else
            i$0[1] = len;
@@ -6570,7 +6551,7 @@
          {if(i$1[1] < (t[3][3] - 1 | 0))
            {var n$0=get$0(t[3],i$1[1]),n1=get$0(t[3],i$1[1] + 1 | 0);
             if(n$0[2] === n1[2])
-             {n$0[3] = n$0[3] + n1[3] | 0;remove$1(t,i$1[1] + 1 | 0)}
+             {n$0[3] = n$0[3] + n1[3] | 0;remove$0(t,i$1[1] + 1 | 0)}
             else
              i$1[1]++;
             continue}
@@ -6593,11 +6574,11 @@
        include=Make([0,equal,hash]),
        create=include[1],
        clear=include[2],
-       _jo_=include[8],
-       _jp_=include[10];
+       _ji_=include[8],
+       _jj_=include[10];
       function replace(t,c,s,b,v)
        {var lookup_key=[254,c,s * 10.,b];
-        return caml_call3(_jp_,t,lookup_key,v)}
+        return caml_call3(_jj_,t,lookup_key,v)}
       var lookup_key=[254,0.,0.,0.];
       function hash$0(v){return caml_hash(10,100,0,v)}
       var
@@ -6631,8 +6612,8 @@
            ?byte$0 & 63 | codep[1] << 6
            :(255 >>> typ | 0) & byte$0;
         codep[1] = value;
-        var _j4_=(256 + state[1] | 0) + typ | 0;
-        state[1] = caml_check_bound(utf8d,_j4_)[1 + _j4_];
+        var _jY_=(256 + state[1] | 0) + typ | 0;
+        state[1] = caml_check_bound(utf8d,_jY_)[1 + _jY_];
         return state[1]}
       function get_state(t){return last(t[11])}
       function reset_fallback(t,name)
@@ -6660,31 +6641,31 @@
       function create$4(param)
        {var
          base_state=create$2(0),
-         _jW_=create$3(1,create$2(0)),
-         _jX_=create$3(100,chr(0)),
-         _jZ_=params$0[1],
-         n0=[0,0,0,_jZ_],
-         _jY_=params$0[2],
+         _jQ_=create$3(1,create$2(0)),
+         _jR_=create$3(100,chr(0)),
+         _jT_=params$0[1],
+         n0=[0,0,0,_jT_],
+         _jS_=params$0[2],
          nodes=create$3(256,n0);
         add(nodes,n0);
         var
-         _j0_=caml_call1(create$0,4),
-         _j1_=caml_call1(create$1,4),
-         _j2_=[0,params$0[1],params$0[2],0,0],
-         _j3_=caml_call1(Impl[2][5],caml_mul(params$0[1],params$0[2])),
+         _jU_=caml_call1(create$0,4),
+         _jV_=caml_call1(create$1,4),
+         _jW_=[0,params$0[1],params$0[2],0,0],
+         _jX_=caml_call1(Impl[2][5],caml_mul(params$0[1],params$0[2])),
          t=
           [0,
            params$0,
            1. / params$0[1],
            1. / params$0[2],
-           _j3_,
-           _j2_,
-           _j1_,
-           _j0_,
-           0,
-           [0,_jZ_,_jY_,nodes],
            _jX_,
-           _jW_];
+           _jW_,
+           _jV_,
+           _jU_,
+           0,
+           [0,_jT_,_jS_,nodes],
+           _jR_,
+           _jQ_];
         add(t[11],base_state);
         return t}
       function add_font(t,name,path)
@@ -6704,7 +6685,7 @@
            font_id=t[8];
           t[8] = t[8] + 1 | 0;
           var
-           _jV_=create$3(10,-1),
+           _jP_=create$3(10,-1),
            f=
             [0,
              font_id,
@@ -6715,7 +6696,7 @@
              ascender - descender,
              create$3(10,empty),
              lut,
-             _jV_];
+             _jP_];
           caml_call3(replace$1,t[6],font_id,f);
           caml_call3(replace$0,t[7],name,f);
           return [0,font_id]}
@@ -6727,46 +6708,46 @@
          box=caml_call3(Impl[8],font,glyph,scale);
         return [0,scale,caml_call1(Impl[4][1],m),box]}
       function blur_cols(t,off,w,h,stride,alpha)
-       {var off$0=[0,off],_jO_=h - 1 | 0,_jN_=0;
-        if(! (_jO_ < 0))
-         {var for$0=_jN_;
+       {var off$0=[0,off],_jI_=h - 1 | 0,_jH_=0;
+        if(! (_jI_ < 0))
+         {var for$0=_jH_;
           for(;;)
-           {var z=[0,0],_jQ_=w - 1 | 0,_jP_=1;
-            if(! (_jQ_ < 1))
-             {var x$0=_jP_;
+           {var z=[0,0],_jK_=w - 1 | 0,_jJ_=1;
+            if(! (_jK_ < 1))
+             {var x$0=_jJ_;
               for(;;)
                {var
                  v$1=caml_call2(Impl[2][4],t[4],off$0[1] + x$0 | 0),
                  v$2=caml_mul(alpha,(v$1 << 7) - z[1] | 0) >> 16;
                 z[1] = z[1] + v$2 | 0;
                 caml_call3(Impl[2][1],t[4],off$0[1] + x$0 | 0,z[1] >> 7);
-                var _jU_=x$0 + 1 | 0;
-                if(_jQ_ !== x$0){var x$0=_jU_;continue}
+                var _jO_=x$0 + 1 | 0;
+                if(_jK_ !== x$0){var x$0=_jO_;continue}
                 break}}
             caml_call3(Impl[2][1],t[4],(off$0[1] + w | 0) - 1 | 0,0);
             z[1] = 0;
-            var _jR_=w - 2 | 0;
-            if(! (_jR_ < 0))
-             {var x=_jR_;
+            var _jL_=w - 2 | 0;
+            if(! (_jL_ < 0))
+             {var x=_jL_;
               for(;;)
                {var
                  v=caml_call2(Impl[2][4],t[4],off$0[1] + x | 0),
                  v$0=caml_mul(alpha,(v << 7) - z[1] | 0) >> 16;
                 z[1] = z[1] + v$0 | 0;
                 caml_call3(Impl[2][1],t[4],off$0[1] + x | 0,z[1] >> 7);
-                var _jT_=x - 1 | 0;
-                if(0 !== x){var x=_jT_;continue}
+                var _jN_=x - 1 | 0;
+                if(0 !== x){var x=_jN_;continue}
                 break}}
             caml_call3(Impl[2][1],t[4],off$0[1],0);
             off$0[1] = off$0[1] + stride | 0;
-            var _jS_=for$0 + 1 | 0;
-            if(_jO_ !== for$0){var for$0=_jS_;continue}
+            var _jM_=for$0 + 1 | 0;
+            if(_jI_ !== for$0){var for$0=_jM_;continue}
             break}}
         return 0}
       function blur_rows(t,off,w,h,stride,alpha)
-       {var off$0=[0,off],max=caml_mul(h,stride),_jL_=w - 1 | 0,_jK_=0;
-        if(! (_jL_ < 0))
-         {var for$0=_jK_;
+       {var off$0=[0,off],max=caml_mul(h,stride),_jF_=w - 1 | 0,_jE_=0;
+        if(! (_jF_ < 0))
+         {var for$0=_jE_;
           a:
           for(;;)
            {var z=[0,0],y=stride;
@@ -6794,15 +6775,15 @@
                   continue}
                 caml_call3(Impl[2][1],t[4],off$0[1],0);
                 off$0[1]++;
-                var _jM_=for$0 + 1 | 0;
-                if(_jL_ !== for$0){var for$0=_jM_;continue a}
+                var _jG_=for$0 + 1 | 0;
+                if(_jF_ !== for$0){var for$0=_jG_;continue a}
                 break}
               break}
             break}}
         return 0}
       function do_blur(t,off,w,h,width,blur)
-       {var _jJ_=0 < blur?1:0;
-        if(_jJ_)
+       {var _jD_=0 < blur?1:0;
+        if(_jD_)
          {var
            sigma=blur * 0.57735,
            alpha=65536 * (1. - Math.exp(-2.3 / (sigma + 1.))) | 0;
@@ -6810,7 +6791,7 @@
           blur_cols(t,off,w,h,width,alpha);
           blur_rows(t,off,w,h,width,alpha);
           return blur_cols(t,off,w,h,width,alpha)}
-        return _jJ_}
+        return _jD_}
       function build_glyph
        (t,codepoint,orig_font,font,stb_glyph,size,pad,blur,bitmap_option)
        {var
@@ -6818,12 +6799,12 @@
          box=match[3],
          advance=match[2],
          scale=match[1],
-         _ju_=caml_call1(Impl[7][1],box),
-         gw=(caml_call1(Impl[7][3],box) - _ju_ | 0) + (pad * 2 | 0) | 0,
-         _jv_=caml_call1(Impl[7][2],box),
-         gh=(caml_call1(Impl[7][4],box) - _jv_ | 0) + (pad * 2 | 0) | 0;
+         _jo_=caml_call1(Impl[7][1],box),
+         gw=(caml_call1(Impl[7][3],box) - _jo_ | 0) + (pad * 2 | 0) | 0,
+         _jp_=caml_call1(Impl[7][2],box),
+         gh=(caml_call1(Impl[7][4],box) - _jp_ | 0) + (pad * 2 | 0) | 0;
         function build_glyph(gx,gy)
-         {var _jI_=caml_call1(Impl[7][2],box) - pad | 0;
+         {var _jC_=caml_call1(Impl[7][2],box) - pad | 0;
           return [0,
                   codepoint,
                   size,
@@ -6834,7 +6815,7 @@
                   gy + gh | 0,
                   Math.floor(scale * advance * 10.),
                   caml_call1(Impl[7][1],box) - pad | 0,
-                  _jI_,
+                  _jC_,
                   stb_glyph]}
         var match$0=to_pattern(bitmap_option);
         if(match$0)
@@ -6855,36 +6836,36 @@
             try
              {caml_call7
                (Impl[12],font[2],t[4],t[1][1],t[1][2],scale,box$0,stb_glyph)}
-            catch(_jH_)
+            catch(_jB_)
              {var
-               _jw_=chr(new_glyph[1]),
-               _jx_=t[1][2],
-               _jy_=t[1][1],
+               _jq_=chr(new_glyph[1]),
+               _jr_=t[1][2],
+               _js_=t[1][1],
+               _jt_=caml_call1(Impl[7][2],box$0),
+               _ju_=caml_call1(Impl[7][4],box$0) - _jt_ | 0,
+               _jv_=caml_call1(Impl[7][1],box$0),
+               _jw_=caml_call1(Impl[7][3],box$0) - _jv_ | 0,
+               _jx_=caml_call1(Impl[7][4],box$0),
+               _jy_=caml_call1(Impl[7][3],box$0),
                _jz_=caml_call1(Impl[7][2],box$0),
-               _jA_=caml_call1(Impl[7][4],box$0) - _jz_ | 0,
-               _jB_=caml_call1(Impl[7][1],box$0),
-               _jC_=caml_call1(Impl[7][3],box$0) - _jB_ | 0,
-               _jD_=caml_call1(Impl[7][4],box$0),
-               _jE_=caml_call1(Impl[7][3],box$0),
-               _jF_=caml_call1(Impl[7][2],box$0),
-               _jG_=caml_call1(Impl[7][1],box$0);
+               _jA_=caml_call1(Impl[7][1],box$0);
               caml_call15
                (printf(_bA_),
-                _jG_,
-                _jF_,
-                _jE_,
-                _jD_,
-                _jC_,
                 _jA_,
+                _jz_,
+                _jy_,
+                _jx_,
+                _jw_,
+                _ju_,
                 gx,
                 gy,
                 gw,
                 gh,
                 scale,
-                _jy_,
-                _jx_,
+                _js_,
+                _jr_,
                 pad,
-                _jw_);
+                _jq_);
               failwith(_bB_)}
             if(0. < blur)
              {var
@@ -6912,11 +6893,11 @@
         var
          s=size * 0.1,
          blur$0=20. < blur?20.:Math.floor(blur),
-         _jt_=font$0[8];
+         _jn_=font$0[8];
         lookup_key[1] = codepoint;
         lookup_key[2] = s * 10.;
         lookup_key[3] = blur$0;
-        var glyph=caml_call2(_jo_,_jt_,lookup_key);
+        var glyph=caml_call2(_ji_,_jn_,lookup_key);
         if(glyph)
          {var g$2=glyph[1],switch$0=0;
           if(bitmap_option !== 1)
@@ -6936,8 +6917,8 @@
              var glyph_font=0;
             else
              {var
-               _js_=get$0(font$0[9],idx),
-               font=caml_call2(find$0,t[6],_js_),
+               _jm_=get$0(font$0[9],idx),
+               font=caml_call2(find$0,t[6],_jm_),
                g$0=caml_call2(Impl[14],font[2],codepoint);
               if(! g$0){var idx$0=idx + 1 | 0,idx=idx$0;continue}
               var g$1=g$0[1],glyph_font=[0,[0,font,g$1]]}
@@ -7088,19 +7069,19 @@
         else
          var end$0=len;
         var
-         _jq_=Math.floor(state[4]),
-         _jr_=state[5],
+         _jk_=Math.floor(state[4]),
+         _jl_=state[5],
          iter=
           [0,
            x$0,
            y$0,
            x$0,
            caml_call2(Impl[13],font[2],size / 10.),
-           _jr_,
+           _jl_,
            font,
            0,
            size,
-           _jq_,
+           _jk_,
            empty,
            str,
            start,
@@ -7191,33 +7172,128 @@
     function sub(t,start,len){return t.subarray(start,len)}
     function create$4(size){return new uint8Array(size)}
     var empty$1=create$4(0);
+    function Impl(P)
+     {var invalid_glyph=[0,"",-1];
+      function ascent(t){return t[1]}
+      function descent(t){return t[2]}
+      function line_gap(t){return t[3]}
+      var VMetrics=[0,ascent,descent,line_gap];
+      function advance_width(t){return t[1]}
+      function left_side_bearing(t){return t[2]}
+      var HMetrics=[0,advance_width,left_side_bearing];
+      function x0(t){return t[1]}
+      function y0(t){return t[2]}
+      function x1(t){return t[3]}
+      function y1(t){return t[4]}
+      function create(x0,y0,x1,y1){return [0,x0,y0,x1,y1]}
+      var Box=[0,x0,y0,x1,y1,create];
+      function vmetrics(font){return _bC_}
+      function hmetrics(font,glyph)
+       {var _jh_=caml_jsstring_of_string(symbol(_bD_,font[1]));
+        P[1].font = _jh_;
+        var m=P[1].measureText(glyph[1]);
+        return [0,m.width * 175. | 0,0]}
+      function get_glyph_bitmap_box(font,glyph,scale)
+       {var
+         height=scale * 2146.,
+         s=height.toString(),
+         _jg_=s.concat("px ",caml_jsstring_of_string(font[1]));
+        P[1].font = _jg_;
+        var
+         width=P[1].measureText(glyph[1]).width,
+         width$0=width * 1.2 | 0,
+         y=-0.8 * (scale * 2146.) | 0;
+        return caml_call4(Box[5],1,y,width$0,scale * 2146. * 0.22 | 0)}
+      function kern_advance(font,glyph1,glyph2){return 0}
+      function create_font(data){return failwith(_bE_)}
+      function load_font(name){return [0,[0,name]]}
+      function is_invalid_glyph(g){return g[2] === -1?1:0}
+      function make_glyph_bitmap(font,data,width,param,scale,box,glyph)
+       {var
+         font_height=scale * 2146.,
+         s=font_height.toString(),
+         _i$_=s.concat("px ",caml_jsstring_of_string(font[1]));
+        P[1].font = _i$_;
+        P[1].textBaseline = "top";
+        P[1].textAlign = "left";
+        var w=box[3] - box[1] | 0,h=box[4] - box[2] | 0;
+        P[1].clearRect(0.,0.,w,h);
+        P[1].fillText(glyph[1],0.,0.);
+        var
+         copy=P[1].getImageData(0.,0.,w,h),
+         x_off=box[1],
+         y_off=box[2],
+         _jb_=w - 1 | 0,
+         _ja_=0;
+        if(! (_jb_ < 0))
+         {var x=_ja_;
+          for(;;)
+           {var _jd_=h - 1 | 0,_jc_=0;
+            if(! (_jd_ < 0))
+             {var y=_jc_;
+              for(;;)
+               {var
+                 b=
+                  copy.data[((x * 4 | 0) + 3 | 0) + caml_mul(y * 4 | 0,w) | 0];
+                data[(x + x_off | 0) + caml_mul(y + y_off | 0,width) | 0] = b;
+                var _jf_=y + 1 | 0;
+                if(_jd_ !== y){var y=_jf_;continue}
+                break}}
+            var _je_=x + 1 | 0;
+            if(_jb_ !== x){var x=_je_;continue}
+            break}}
+        return 0}
+      function scale_for_mapping_em_to_pixels(font,scale)
+       {return scale / 2146.}
+      function find(font,codepoint)
+       {var str=String.fromCodePoint(codepoint);return [0,[0,str,codepoint]]}
+      return [0,
+              invalid_glyph,
+              [0,set,sub,length$0,get,create$4,empty$1],
+              VMetrics,
+              HMetrics,
+              vmetrics,
+              hmetrics,
+              Box,
+              get_glyph_bitmap_box,
+              kern_advance,
+              create_font,
+              is_invalid_glyph,
+              make_glyph_bitmap,
+              scale_for_mapping_em_to_pixels,
+              find,
+              load_font]}
     function length$1(t){return t.length}
+    function sub$0(t,start,len){return t.subarray(start,len)}
+    function create$5(size){return new uint8Array(size)}
+    var empty$2=create$5(0);
+    function length$2(t){return t.length}
     function zero(t)
-     {var len=t.length - 1 | 0,_jm_=0;
+     {var len=t.length - 1 | 0,_i9_=0;
       if(! (len < 0))
-       {var i=_jm_;
+       {var i=_i9_;
         for(;;)
          {t[i] = 0.;
-          var _jn_=i + 1 | 0;
-          if(len !== i){var i=_jn_;continue}
+          var _i__=i + 1 | 0;
+          if(len !== i){var i=_i__;continue}
           break}}
       return 0}
     function blit$1(src,s_off,dst,d_off,len)
-     {var len$0=len - 1 | 0,_jk_=0;
+     {var len$0=len - 1 | 0,_i7_=0;
       if(! (len$0 < 0))
-       {var i=_jk_;
+       {var i=_i7_;
         for(;;)
          {dst[d_off + i | 0] = src[s_off + i | 0];
-          var _jl_=i + 1 | 0;
-          if(len$0 !== i){var i=_jl_;continue}
+          var _i8_=i + 1 | 0;
+          if(len$0 !== i){var i=_i8_;continue}
           break}}
       return 0}
-    function create$5(size){return new float32Array(size)}
+    function create$6(size){return new float32Array(size)}
     function grow_vertex(t,idx)
      {var
        len=t[1].length,
        new_len=((len + (((idx + 1 | 0) << 4) - len | 0) | 0) * 3 | 0) / 2 | 0,
-       new_arr=create$5(new_len);
+       new_arr=create$6(new_len);
       blit$1(t[1],0,new_arr,0,len);
       t[1] = new_arr;
       return 0}
@@ -7246,13 +7322,28 @@
        u=t[1][(idx * 4 | 0) + 2 | 0],
        v=t[1][(idx * 4 | 0) + 3 | 0];
       return [0,x,y,u,v]}
-    function create$6(param){return [0,0,1,[0,create$5(1),0]]}
-    var empty$2=create$6(0),empty_sub=create$6(0);
-    function create$7(param){return [0,0,0,0,0,empty_sub,empty_sub,0,1]}
+    function create$7(param){return [0,0,1,[0,create$6(1),0]]}
+    var empty$3=create$7(0),empty_sub=create$7(0);
+    function create$8(param){return [0,0,0,0,0,empty_sub,empty_sub,0,1]}
     function copy$4(t){return [0,t[1],t[2],t[3],t[4],t[5],t[6],t[7],t[8]]}
-    function create$8(param){return create$5(44)}
-    function set_scissor_ext(t,a,b){t[32] = a;return t[33] = b}
-    function set_scissor_scale(t,a,b){t[34] = a;return t[35] = b}
+    var size=176;
+    function set$1(t,i,i2,v){var i$0=i + i2 | 0;return t[1][i$0] = v}
+    function set_scissor_ext(t,i,a,b){set$1(t,i,32,a);return set$1(t,i,33,b)}
+    function set_scissor_scale(t,i,a,b)
+     {set$1(t,i,34,a);return set$1(t,i,35,b)}
+    function set_stroke_thr(t,i,s){return set$1(t,i,41,s)}
+    function set_type(t,i,typ){return set$1(t,i,43,typ)}
+    function make_slot(t,num,align)
+     {var amount=caml_mul(num,align),len=t[1].length;
+      if(len <= (t[2] + amount | 0))
+       {var
+         new_len=(max(t[2] + amount | 0,len) * 3 | 0) / 2 | 0,
+         new_arr=create$6(new_len);
+        blit$1(t[1],0,new_arr,0,len);
+        t[1] = new_arr}
+      var offset=t[2];
+      t[2] = t[2] + amount | 0;
+      return offset}
     var
      zero$0=0,
      zero$1=0,
@@ -7268,7 +7359,6 @@
      dst_alpha=0x304,
      m=0xDE1,
      rgba$0=0x1908,
-     luminance=0x1909,
      unsigned_byte=0x1401,
      nearest_mipmap_nearest=0x2700,
      linear_mipmap_linear=0x2702,
@@ -7300,28 +7390,27 @@
      scissor_test=0xC11,
      t=0x84C0,
      float$0=0x1406,
-     b=0x8892,
+     array_buffer=0x8892,
+     target=0x8A11,
      triangles=0x4,
-     b$0=0x88E0;
+     stream_draw=0x88E0,
+     p=0x8A34,
+     unpack_row_length=0x0CF2,
+     unpack_skip_rows=0x0CF3,
+     unpack_skip_pixels=0x0CF4,
+     red=0x1903,
+     r8=0x8229;
     function blending_factor_equal(a,b){return a == b}
     function bind_texture(c,t,v)
      {if(v){var v$0=v[1];return c.bindTexture(t,v$0)}return 0}
     function vertex_attrib_pointer(c,a,b,g,d,e,f)
      {return c.vertexAttribPointer(a,b,g,! ! d,e,f)}
+    function buffer_data(c,t,buffer,size,b)
+     {return c.bufferData(t,buffer,b,0,size / 4 | 0)}
     var temp_array=caml_js_from_array([254,0.,0.]);
     function color_mask(c,a,b,z,d)
      {var a$0=! ! a,b$0=! ! b,z$0=! ! z,d$0=! ! d;
       return c.colorMask(a$0,b$0,z$0,d$0)}
-    function nearest_pow2(num)
-     {var
-       n=0 < num?num - 1 | 0:0,
-       n$0=n | n >>> 1 | 0,
-       n$1=n$0 | n$0 >>> 2 | 0,
-       n$2=n$1 | n$1 >>> 4 | 0,
-       n$3=n$2 | n$2 >>> 8 | 0,
-       n$4=n$3 | n$3 >>> 16 | 0,
-       n$5=n$4 + 1 | 0;
-      return n$5}
     function convert_blend_factor(param)
      {switch(param)
        {case 0:return zero$0;
@@ -7345,30 +7434,28 @@
       return 0}
     function of_composite_op_state(op)
      {var
-       _jh_=[0,convert_blend_factor(op[4])],
-       _ji_=[0,convert_blend_factor(op[3])],
-       _jj_=[0,convert_blend_factor(op[2])];
-      return [0,[0,convert_blend_factor(op[1])],_jj_,_ji_,_jh_]}
-    function empty$4(param)
-     {var _jf_=create$3(10,init$1),_jg_=create$8(0);
-      return [0,2,0,0,0,0,0,empty$3,create$8(0),_jg_,_jf_]}
+       _i4_=[0,convert_blend_factor(op[4])],
+       _i5_=[0,convert_blend_factor(op[3])],
+       _i6_=[0,convert_blend_factor(op[2])];
+      return [0,[0,convert_blend_factor(op[1])],_i6_,_i5_,_i4_]}
+    var fill_grad=0.,fill_img=1.,simple=2.,img=3.;
+    function empty$5(param)
+     {return [0,2,0,0,0,0,-1,empty$4,create$3(10,init$1)]}
     function reset$1(t,type)
      {t[1] = type;
       t[2] = 0;
       t[3] = 0;
       t[4] = 0;
       t[5] = 0;
-      t[6] = 0;
-      t[7] = empty$3;
-      zero(t[8]);
-      zero(t[9]);
-      return clear$0(0,t[10])}
+      t[6] = -1;
+      t[7] = empty$4;
+      return clear$0(0,t[8])}
     function find_texture_by_id(t)
-     {var _jd_=t[6];
+     {var _i2_=t[9];
       return function(key)
        {var
-         _je_=key_index(_jd_,key),
-         match=caml_check_bound(_jd_[2],_je_)[1 + _je_];
+         _i3_=key_index(_i2_,key),
+         match=caml_check_bound(_i2_[2],_i3_)[1 + _i3_];
         if(match)
          {var k1=match[1],d1=match[2],next1=match[3];
           if(0 === caml_compare(key,k1))return [0,d1];
@@ -7390,95 +7477,87 @@
           return 0}
         return 0}}
     function bind_texture$0(t,id)
-     {var _ja_=t[14],switch$0=0;
-      if(_ja_)
-       if(id)var b=id[1],a=_ja_[1],_jb_=a === b?1:0;else switch$0 = 1;
+     {var _iZ_=t[17],switch$0=0;
+      if(_iZ_)
+       if(id)var b=id[1],a=_iZ_[1],_i0_=a === b?1:0;else switch$0 = 1;
       else
-       if(id)switch$0 = 1;else var _jb_=1;
-      if(switch$0)var _jb_=0;
-      var _jc_=1 - _jb_;
-      return _jc_?(t[14] = id,bind_texture(t[1],m,id)):_jc_}
+       if(id)switch$0 = 1;else var _i0_=1;
+      if(switch$0)var _i0_=0;
+      var _i1_=1 - _i0_;
+      return _i1_?(t[17] = id,bind_texture(t[1],m,id)):_i1_}
     function stencil_mask(t,mask)
-     {var _i$_=t[15] !== mask?1:0;
-      return _i$_?(t[15] = mask,t[1].stencilMask(mask)):_i$_}
+     {var _iY_=t[18] !== mask?1:0;
+      return _iY_?(t[18] = mask,t[1].stencilMask(mask)):_iY_}
     function stencil_func(t,func,ref,mask)
-     {var _i8_=caml_notequal(t[16],func);
-      if(_i8_)
-       var _i9_=_i8_;
+     {var _iV_=caml_notequal(t[19],func);
+      if(_iV_)
+       var _iW_=_iV_;
       else
-       var _i__=t[17] !== ref?1:0,_i9_=_i__ || (t[18] !== mask?1:0);
-      return _i9_
-              ?(t[16]
+       var _iX_=t[20] !== ref?1:0,_iW_=_iX_ || (t[21] !== mask?1:0);
+      return _iW_
+              ?(t[19]
                 =
                 func,
-                t[17]
+                t[20]
                 =
                 ref,
-                t[18]
+                t[21]
                 =
                 mask,
                 t[1].stencilFunc(func,ref,mask))
-              :_i9_}
+              :_iW_}
     function create_texture(t,type,w,h,flags,data)
      {var tex=[0,0,0,0,0,912890036,no_flags$0];
-      t[7] = t[7] + 1 | 0;
-      tex[1] = t[7];
+      t[10] = t[10] + 1 | 0;
+      tex[1] = t[10];
       tex[2] = 0;
       tex[3] = 0;
       tex[4] = 0;
       tex[5] = 912890036;
       tex[6] = no_flags$0;
       var
-       _i0_=tex[1],
-       _i1_=t[6],
-       i=key_index(_i1_,_i0_),
-       param$0=caml_check_bound(_i1_[2],i)[1 + i],
+       _iR_=tex[1],
+       _iS_=t[9],
+       i=key_index(_iS_,_iR_),
+       param$0=caml_check_bound(_iS_[2],i)[1 + i],
        param=param$0;
       for(;;)
        {if(param)
          {var k=param[1],next=param[3];
-          if(0 !== caml_compare(k,_i0_)){var param=next;continue}
-          param[1] = _i0_;
+          if(0 !== caml_compare(k,_iR_)){var param=next;continue}
+          param[1] = _iR_;
           param[2] = tex;
-          var _iZ_=0}
+          var _iQ_=0}
         else
-         var _iZ_=1;
+         var _iQ_=1;
         var switch$0=0;
-        if(_iZ_)
-         {caml_check_bound(_i1_[2],i)[1 + i] = [0,_i0_,tex,param$0];
-          _i1_[1] = _i1_[1] + 1 | 0;
-          if(_i1_[2].length - 1 << 1 < _i1_[1])
-           {resize$0(key_index,_i1_);switch$0 = 1}}
+        if(_iQ_)
+         {caml_check_bound(_iS_[2],i)[1 + i] = [0,_iR_,tex,param$0];
+          _iS_[1] = _iS_[1] + 1 | 0;
+          if(_iS_[2].length - 1 << 1 < _iS_[1])
+           {resize$0(key_index,_iS_);switch$0 = 1}}
         tex[6] = flags;
         var
-         _i2_=nearest_pow2(w) !== w?1:0,
-         _i3_=_i2_ || (nearest_pow2(h) !== h?1:0);
-        if(_i3_)
-         {var _i4_=has$0(tex[6],repeat_x),_i5_=_i4_ || has$0(tex[6],repeat_y);
-          if(_i5_)
-           {printf(_bF_);
-            tex[6] = remove$0(tex[6],repeat_x);
-            tex[6] = remove$0(tex[6],repeat_y)}
-          if(has$0(tex[6],generate_mipmaps))
-           {printf(_bG_);tex[6] = remove$0(tex[6],generate_mipmaps)}}
-        var
-         _i6_=0,
+         _iT_=0,
          count=1,
-         _i7_=t[1],
+         _iU_=t[1],
          v=
           caml_check_bound
-            (init(count,function(param){return _i7_.createTexture()}),0)
-           [1 + _i6_];
+            (init(count,function(param){return _iU_.createTexture()}),0)
+           [1 + _iT_];
         tex[2] = [0,v];
         tex[3] = w;
         tex[4] = h;
         tex[5] = type;
         bind_texture$0(t,tex[2]);
         t[1].pixelStorei(unpack_alignment,1);
+        t[1].pixelStorei(unpack_row_length,tex[3]);
+        t[1].pixelStorei(unpack_skip_pixels,0);
+        t[1].pixelStorei(unpack_skip_rows,0);
         if(912890036 <= tex[5])
          t[1].texImage2D(m,0,rgba$0,w,h,0,rgba$0,unsigned_byte,data);
         else
-         t[1].texImage2D(m,0,luminance,w,h,0,luminance,unsigned_byte,data);
+         t[1].texImage2D(m,0,r8,w,h,0,red,unsigned_byte,data);
         var
          mipmaps=has$0(tex[6],generate_mipmaps),
          nearest$1=has$0(tex[6],nearest),
@@ -7496,88 +7575,96 @@
         var wrap_t=repeat_y$0?repeat:clamp_to_edge;
         t[1].texParameteri(m,texture_wrap_t,wrap_t);
         t[1].pixelStorei(unpack_alignment,4);
+        t[1].pixelStorei(unpack_row_length,0);
+        t[1].pixelStorei(unpack_skip_pixels,0);
+        t[1].pixelStorei(unpack_skip_rows,0);
         if(mipmaps)t[1].generateMipmap(m);
         bind_texture$0(t,0);
         return [0,tex[1]]}}
-    function update_texture(t,image,param,y,_iY_,h,data)
+    function update_texture(t,image,x,y,w,h,data)
      {var tex=caml_call1(find_texture_by_id(t),image);
       if(tex)
        {var tex$0=tex[1];
         bind_texture$0(t,tex$0[2]);
         t[1].pixelStorei(unpack_alignment,1);
-        var
-         index=
-          912890036 <= tex$0[5]
-           ?caml_mul(y,tex$0[3]) * 4 | 0
-           :caml_mul(y,tex$0[3]),
-         w=tex$0[3],
-         len=data.length - index | 0,
-         data$0=data.subarray(index,len);
+        t[1].pixelStorei(unpack_row_length,tex$0[3]);
+        t[1].pixelStorei(unpack_skip_pixels,x);
+        t[1].pixelStorei(unpack_skip_rows,y);
         if(912890036 <= tex$0[5])
-         t[1].texSubImage2D(m,0,0,y,w,h,rgba$0,unsigned_byte,data$0);
+         t[1].texSubImage2D(m,0,x,y,w,h,rgba$0,unsigned_byte,data);
         else
-         t[1].texSubImage2D(m,0,0,y,w,h,luminance,unsigned_byte,data$0);
+         t[1].texSubImage2D(m,0,x,y,w,h,red,unsigned_byte,data);
         t[1].pixelStorei(unpack_alignment,4);
+        t[1].pixelStorei(unpack_row_length,0);
+        t[1].pixelStorei(unpack_skip_pixels,0);
+        t[1].pixelStorei(unpack_skip_rows,0);
         bind_texture$0(t,0);
         return 1}
       return 0}
     function get_texture_size(t,image)
      {var match=caml_call1(find_texture_by_id(t),image);
       if(match){var tex=match[1];return [0,tex[3],tex[4]]}
-      return _bH_}
-    function cancel(t){clear$0(0,t[13]);return clear$0(0,t[12])}
+      return _bL_}
+    function cancel(t)
+     {clear$0(0,t[16]);
+      clear$0(0,t[15]);
+      var frag_arr=t[13][1];
+      zero(frag_arr);
+      t[13][2] = 0;
+      return 0}
     function convert_paint(t,frag,paint,scissor,width,fringe,stroke_thr)
-     {var ia=paint[14];
-      frag[24] = paint[11] * ia;
-      frag[25] = paint[12] * ia;
-      frag[26] = paint[13] * ia;
-      frag[27] = paint[14];
+     {var _iB_=t[13],ia=paint[14];
+      set$1(_iB_,frag,24,paint[11] * ia);
+      set$1(_iB_,frag,25,paint[12] * ia);
+      set$1(_iB_,frag,26,paint[13] * ia);
+      set$1(_iB_,frag,27,paint[14]);
       var oa=paint[18];
-      frag[28] = paint[15] * oa;
-      frag[29] = paint[16] * oa;
-      frag[30] = paint[17] * oa;
-      frag[31] = paint[18];
+      set$1(_iB_,frag,28,paint[15] * oa);
+      set$1(_iB_,frag,29,paint[16] * oa);
+      set$1(_iB_,frag,30,paint[17] * oa);
+      set$1(_iB_,frag,31,paint[18]);
       var invxform=create$0(0),switch$0=0;
       if(! (scissor[2] < -0.5) && ! (scissor[3] < -0.5))
        {inverse(invxform,scissor[1]);
         var
-         _iT_=invxform[6],
-         _iU_=invxform[5],
-         _iV_=invxform[4],
-         _iW_=invxform[3],
-         _iX_=invxform[2];
-        frag[0] = invxform[1];
-        frag[1] = _iX_;
-        frag[2] = 0.;
-        frag[3] = 0.;
-        frag[4] = _iW_;
-        frag[5] = _iV_;
-        frag[6] = 0.;
-        frag[7] = 0.;
-        frag[8] = _iU_;
-        frag[9] = _iT_;
-        frag[10] = 1.;
-        frag[11] = 0.;
+         _iP_=t[13],
+         _iK_=invxform[6],
+         _iL_=invxform[5],
+         _iM_=invxform[4],
+         _iN_=invxform[3],
+         _iO_=invxform[2];
+        set$1(_iP_,frag,0,invxform[1]);
+        set$1(_iP_,frag,1,_iO_);
+        set$1(_iP_,frag,2,0.);
+        set$1(_iP_,frag,3,0.);
+        set$1(_iP_,frag,4,_iN_);
+        set$1(_iP_,frag,5,_iM_);
+        set$1(_iP_,frag,6,0.);
+        set$1(_iP_,frag,7,0.);
+        set$1(_iP_,frag,8,_iL_);
+        set$1(_iP_,frag,9,_iK_);
+        set$1(_iP_,frag,10,1.);
+        set$1(_iP_,frag,11,0.);
         var
          x=scissor[1],
          scale0=Math.sqrt(x[1] * x[1] + x[3] * x[3]) / fringe,
          scale1=Math.sqrt(x[2] * x[2] + x[4] * x[4]) / fringe;
-        set_scissor_ext(frag,scissor[2],scissor[3]);
-        set_scissor_scale(frag,scale0,scale1);
+        set_scissor_ext(t[13],frag,scissor[2],scissor[3]);
+        set_scissor_scale(t[13],frag,scale0,scale1);
         switch$0 = 1}
       if(! switch$0)
-       {set_scissor_ext(frag,1.,1.);set_scissor_scale(frag,1.,1.)}
-      var x0=paint[7],x1=paint[8];
-      frag[36] = x0;
-      frag[37] = x1;
+       {set_scissor_ext(t[13],frag,1.,1.);set_scissor_scale(t[13],frag,1.,1.)}
+      var x0=paint[7],x1=paint[8],_iC_=t[13];
+      set$1(_iC_,frag,36,x0);
+      set$1(_iC_,frag,37,x1);
       var s=(width * 0.5 + fringe * 0.5) / fringe;
-      frag[40] = s;
-      frag[41] = stroke_thr;
+      set$1(t[13],frag,40,s);
+      set_stroke_thr(t[13],frag,stroke_thr);
       var
        paint_xform=
         [254,paint[1],paint[2],paint[3],paint[4],paint[5],paint[6]];
       if(paint[19] != 0.)
-       {var _iN_=paint[19] | 0,match=caml_call1(find_texture_by_id(t),_iN_);
+       {var _iD_=paint[19] | 0,match=caml_call1(find_texture_by_id(t),_iD_);
         if(match)
          {var tex=match[1];
           if(has$0(tex[6],flip_y))
@@ -7591,36 +7678,38 @@
             inverse(invxform,m1)}
           else
            inverse(invxform,paint_xform);
-          frag[43] = 1.;
+          set_type(t[13],frag,fill_img);
           var
            tex_type=
             912890036 <= tex[5]?has$0(tex[6],premultiplied)?0.:1.:2.;
-          frag[42] = tex_type}}
+          set$1(t[13],frag,42,tex_type)}}
       else
-       {frag[43] = 0.;
-        frag[38] = paint[9];
-        frag[39] = paint[10];
+       {set_type(t[13],frag,fill_grad);
+        set$1(t[13],frag,38,paint[9]);
+        set$1(t[13],frag,39,paint[10]);
         inverse(invxform,paint_xform)}
       var
-       _iO_=invxform[6],
-       _iP_=invxform[5],
-       _iQ_=invxform[4],
-       _iR_=invxform[3],
-       _iS_=invxform[2];
-      frag[12] = invxform[1];
-      frag[13] = _iS_;
-      frag[14] = 0.;
-      frag[15] = 0.;
-      frag[16] = _iR_;
-      frag[17] = _iQ_;
-      frag[18] = 0.;
-      frag[19] = 0.;
-      frag[20] = _iP_;
-      frag[21] = _iO_;
-      frag[22] = 1.;
-      return frag[23] = 0.}
-    function set_uniforms(t,uniforms,image)
-     {t[1].uniform4fv(t[3][1],uniforms);
+       _iJ_=t[13],
+       _iE_=invxform[6],
+       _iF_=invxform[5],
+       _iG_=invxform[4],
+       _iH_=invxform[3],
+       _iI_=invxform[2];
+      set$1(_iJ_,frag,12,invxform[1]);
+      set$1(_iJ_,frag,13,_iI_);
+      set$1(_iJ_,frag,14,0.);
+      set$1(_iJ_,frag,15,0.);
+      set$1(_iJ_,frag,16,_iH_);
+      set$1(_iJ_,frag,17,_iG_);
+      set$1(_iJ_,frag,18,0.);
+      set$1(_iJ_,frag,19,0.);
+      set$1(_iJ_,frag,20,_iF_);
+      set$1(_iJ_,frag,21,_iE_);
+      set$1(_iJ_,frag,22,1.);
+      return set$1(_iJ_,frag,23,0.)}
+    function set_uniforms(t,offset,image)
+     {var offset$0=offset * 4 | 0;
+      t[1].bindBufferRange(target,0,t[6],offset$0,176);
       if(image === 0)
        var tex=0;
       else
@@ -7628,102 +7717,11 @@
         if(s)
          var s$0=s;
         else
-         var _iM_=t[8],s$0=caml_call1(find_texture_by_id(t),_iM_);
+         var _iA_=t[11],s$0=caml_call1(find_texture_by_id(t),_iA_);
         var tex=s$0}
       if(tex)var t$0=tex[1],tex$0=t$0[2];else var tex$0=tex;
       bind_texture$0(t,tex$0);
       return 0}
-    function Impl(P)
-     {var invalid_glyph=[0,"",-1];
-      function ascent(t){return t[1]}
-      function descent(t){return t[2]}
-      function line_gap(t){return t[3]}
-      var VMetrics=[0,ascent,descent,line_gap];
-      function advance_width(t){return t[1]}
-      function left_side_bearing(t){return t[2]}
-      var HMetrics=[0,advance_width,left_side_bearing];
-      function x0(t){return t[1]}
-      function y0(t){return t[2]}
-      function x1(t){return t[3]}
-      function y1(t){return t[4]}
-      function create(x0,y0,x1,y1){return [0,x0,y0,x1,y1]}
-      var Box=[0,x0,y0,x1,y1,create];
-      function vmetrics(font){return _bI_}
-      function hmetrics(font,glyph)
-       {var _iL_=caml_jsstring_of_string(symbol(_bJ_,font[1]));
-        P[1].font = _iL_;
-        var m=P[1].measureText(glyph[1]);
-        return [0,m.width * 175. | 0,0]}
-      function get_glyph_bitmap_box(font,glyph,scale)
-       {var
-         height=scale * 2146.,
-         s=height.toString(),
-         _iK_=s.concat("px ",caml_jsstring_of_string(font[1]));
-        P[1].font = _iK_;
-        var
-         width=P[1].measureText(glyph[1]).width,
-         width$0=width * 1.2 | 0,
-         y=-0.8 * (scale * 2146.) | 0;
-        return caml_call4(Box[5],1,y,width$0,scale * 2146. * 0.22 | 0)}
-      function kern_advance(font,glyph1,glyph2){return 0}
-      function create_font(data){return failwith(_bK_)}
-      function load_font(name){return [0,[0,name]]}
-      function is_invalid_glyph(g){return g[2] === -1?1:0}
-      function make_glyph_bitmap(font,data,width,param,scale,box,glyph)
-       {var
-         font_height=scale * 2146.,
-         s=font_height.toString(),
-         _iD_=s.concat("px ",caml_jsstring_of_string(font[1]));
-        P[1].font = _iD_;
-        P[1].textBaseline = "top";
-        P[1].textAlign = "left";
-        var w=box[3] - box[1] | 0,h=box[4] - box[2] | 0;
-        P[1].clearRect(0.,0.,w,h);
-        P[1].fillText(glyph[1],0.,0.);
-        var
-         copy=P[1].getImageData(0.,0.,w,h),
-         x_off=box[1],
-         y_off=box[2],
-         _iF_=w - 1 | 0,
-         _iE_=0;
-        if(! (_iF_ < 0))
-         {var x=_iE_;
-          for(;;)
-           {var _iH_=h - 1 | 0,_iG_=0;
-            if(! (_iH_ < 0))
-             {var y=_iG_;
-              for(;;)
-               {var
-                 b=
-                  copy.data[((x * 4 | 0) + 3 | 0) + caml_mul(y * 4 | 0,w) | 0];
-                data[(x + x_off | 0) + caml_mul(y + y_off | 0,width) | 0] = b;
-                var _iJ_=y + 1 | 0;
-                if(_iH_ !== y){var y=_iJ_;continue}
-                break}}
-            var _iI_=x + 1 | 0;
-            if(_iF_ !== x){var x=_iI_;continue}
-            break}}
-        return 0}
-      function scale_for_mapping_em_to_pixels(font,scale)
-       {return scale / 2146.}
-      function find(font,codepoint)
-       {var str=String.fromCodePoint(codepoint);return [0,[0,str,codepoint]]}
-      return [0,
-              invalid_glyph,
-              [0,set,sub,length$0,get,create$4,empty$1],
-              VMetrics,
-              HMetrics,
-              vmetrics,
-              hmetrics,
-              Box,
-              get_glyph_bitmap_box,
-              kern_advance,
-              create_font,
-              is_invalid_glyph,
-              make_glyph_bitmap,
-              scale_for_mapping_em_to_pixels,
-              find,
-              load_font]}
     function equal$1(a,b)
      {var switch$0=0;
       switch(a)
@@ -7732,19 +7730,19 @@
         default:if(2 <= b)switch$0 = 1}
       return switch$0?1:0}
     function create$9(param)
-     {var _iz_=create$1(0),_iA_=create$0(0),_iB_=create$2(0),_iC_=create$2(0);
+     {var _iw_=create$1(0),_ix_=create$0(0),_iy_=create$2(0),_iz_=create$2(0);
       return [0,
               of_composite_operation(0),
               0,
-              _iC_,
-              _iB_,
+              _iz_,
+              _iy_,
               1.,
               0.,
               0,
               0,
               1.,
-              _iA_,
-              _iz_,
+              _ix_,
+              _iw_,
               16.,
               0.,
               1.,
@@ -7752,7 +7750,7 @@
               left,
               0]}
     var no_flags$1=0,typ=1,left$0=2,bevel=4,inner_bevel=8;
-    function set$1(_iy_,_ix_,_iw_){_iy_[1 + _ix_] = _iw_;return 0}
+    function set$2(_iv_,_iu_,_it_){_iv_[1 + _iu_] = _it_;return 0}
     function equals(x1,y1,x2,y2,tol)
      {var dx=x2 - x1,dy=y2 - y1;return dx * dx + dy * dy < tol * tol?1:0}
     function normalize(x,y)
@@ -7764,8 +7762,8 @@
     function get_dx(t,idx){return t[1 + ((idx * 7 | 0) + 2 | 0)]}
     function get_dy(t,idx){return t[1 + ((idx * 7 | 0) + 3 | 0)]}
     function len(t,idx){return t[1 + ((idx * 7 | 0) + 4 | 0)]}
-    function set_dmx(t,idx,v){return set$1(t,(idx * 7 | 0) + 5 | 0,v)}
-    function set_dmy(t,idx,v){return set$1(t,(idx * 7 | 0) + 6 | 0,v)}
+    function set_dmx(t,idx,v){return set$2(t,(idx * 7 | 0) + 5 | 0,v)}
+    function set_dmy(t,idx,v){return set$2(t,(idx * 7 | 0) + 6 | 0,v)}
     function get_dmx(t,idx){return t[1 + ((idx * 7 | 0) + 5 | 0)]}
     function get_dmy(t,idx){return t[1 + ((idx * 7 | 0) + 6 | 0)]}
     function has_flag(t,idx,flag){return 0 < (t[1 + idx] & flag)?1:0}
@@ -7787,8 +7785,8 @@
      Font=Make$0(FontJS),
      Buffer=
       [0,
-       [0,set,sub,length$0,get,create$4,empty$1],
-       [0,set,length$1,get,create$5,blit$1,zero]],
+       [0,set,sub$0,length$1,get,create$5,empty$2],
+       [0,set,length$2,get,create$6,blit$1,zero]],
      include=
       function(Font)
         {var dummy=-1;
@@ -7799,10 +7797,10 @@
            if(len === caml_mul(width,height))
             {var
               img=caml_call1(Buffer[1][5],caml_mul(width,height) * 4 | 0),
-              _iu_=len - 1 | 0,
-              _it_=0;
-             if(! (_iu_ < 0))
-              {var i=_it_;
+              _ir_=len - 1 | 0,
+              _iq_=0;
+             if(! (_ir_ < 0))
+              {var i=_iq_;
                for(;;)
                 {var color=caml_check_bound(data,i)[1 + i];
                  caml_call3
@@ -7813,15 +7811,15 @@
                   (Buffer[1][1],img,(i * 4 | 0) + 2 | 0,color[3] * 255. | 0);
                  caml_call3
                   (Buffer[1][1],img,(i * 4 | 0) + 3 | 0,color[4] * 255. | 0);
-                 var _iv_=i + 1 | 0;
-                 if(_iu_ !== i){var i=_iv_;continue}
+                 var _is_=i + 1 | 0;
+                 if(_ir_ !== i){var i=_is_;continue}
                  break}}
              return from_buffer(t,img,width,height,flags)}
-           throw [0,Assert_failure,_bL_]}
+           throw [0,Assert_failure,_bM_]}
          function update_image(t,image,data)
           {var match=get_texture_size(t[1],image),h=match[2],w=match[1];
            return update_texture(t[1],image,0,0,w,h,data)}
-         function size(t,image){return get_texture_size(t[1],image)}
+         function size$0(t,image){return get_texture_size(t[1],image)}
          function set_device_pixel_ratio(t,ratio)
           {t[8] = 0.25 / ratio;
            t[9] = 0.01 / ratio;
@@ -7835,46 +7833,46 @@
            else
             var
              t$0=get_state(t),
-             _ik_=t$0[11],
-             _ie_=t$0[17],
-             _if_=t$0[16],
-             _ig_=t$0[15],
-             _ih_=t$0[14],
-             _ii_=t$0[13],
-             _ij_=t$0[12],
-             _ib_=_ik_[3],
-             _ic_=_ik_[2],
-             _id_=[0,copy$1(_ik_[1]),_ic_,_ib_],
-             _il_=copy$1(t$0[10]),
-             _im_=t$0[9],
-             _in_=t$0[8],
-             _io_=t$0[7],
-             _ip_=t$0[6],
-             _iq_=t$0[5],
-             _ir_=copy$2(t$0[4]),
-             _is_=copy$2(t$0[3]),
+             _ih_=t$0[11],
+             _ib_=t$0[17],
+             _ic_=t$0[16],
+             _id_=t$0[15],
+             _ie_=t$0[14],
+             _if_=t$0[13],
+             _ig_=t$0[12],
+             _h__=_ih_[3],
+             _h$_=_ih_[2],
+             _ia_=[0,copy$1(_ih_[1]),_h$_,_h__],
+             _ii_=copy$1(t$0[10]),
+             _ij_=t$0[9],
+             _ik_=t$0[8],
+             _il_=t$0[7],
+             _im_=t$0[6],
+             _in_=t$0[5],
+             _io_=copy$2(t$0[4]),
+             _ip_=copy$2(t$0[3]),
              state=
               [0,
                t$0[1],
                t$0[2],
-               _is_,
-               _ir_,
-               _iq_,
                _ip_,
                _io_,
                _in_,
                _im_,
                _il_,
-               _id_,
+               _ik_,
                _ij_,
                _ii_,
-               _ih_,
+               _ia_,
                _ig_,
                _if_,
-               _ie_];
+               _ie_,
+               _id_,
+               _ic_,
+               _ib_];
            return add(t[6],state)}
          function restore(t)
-          {var _ia_=t[6];_ia_[3] = max(_ia_[3] - 1 | 0,0);return 0}
+          {var _h9_=t[6];_h9_[3] = max(_h9_[3] - 1 | 0,0);return 0}
          function set_shape_antialias(t,enabled)
           {var state=get_state(t);state[2] = enabled;return 0}
          function set_stroke_width(t,width)
@@ -7979,7 +7977,7 @@
           {var state=get_state(t);state[9] = alpha;return 0}
          function last_path(t){return last(t[7][2])}
          function add_path(t)
-          {var npoints=t[7][1][3],t$0=steal(t[7][2],create$7);
+          {var npoints=t[7][1][3],t$0=steal(t[7][2],create$8);
            t$0[1] = 0;
            t$0[2] = 0;
            t$0[3] = 0;
@@ -8011,13 +8009,13 @@
              points[3] = points[3] + 1 | 0;
              points[1][1 + idx] = flags;
              var idx$0=idx * 7 | 0;
-             set$1(points[2],idx$0,x);
-             set$1(points[2],idx$0 + 1 | 0,y);
-             set$1(points[2],idx$0 + 2 | 0,0.);
-             set$1(points[2],idx$0 + 3 | 0,0.);
-             set$1(points[2],idx$0 + 4 | 0,0.);
-             set$1(points[2],idx$0 + 5 | 0,0.);
-             set$1(points[2],idx$0 + 6 | 0,0.);
+             set$2(points[2],idx$0,x);
+             set$2(points[2],idx$0 + 1 | 0,y);
+             set$2(points[2],idx$0 + 2 | 0,0.);
+             set$2(points[2],idx$0 + 3 | 0,0.);
+             set$2(points[2],idx$0 + 4 | 0,0.);
+             set$2(points[2],idx$0 + 5 | 0,0.);
+             set$2(points[2],idx$0 + 6 | 0,0.);
              path[2] = path[2] + 1 | 0;
              return 0}
            if(0 < path[2] && 0 < t[7][1][3])
@@ -8035,8 +8033,8 @@
          function tesselate_bezier(t,x1,y1,x2,y2,x3,y3,x4,y4,level,typ)
           {var x1$0=x1,y1$0=y1,x2$0=x2,y2$0=y2,x3$0=x3,y3$0=y3,level$0=level;
            for(;;)
-            {var _h$_=level$0 < 10?1:0;
-             if(_h$_)
+            {var _h8_=level$0 < 10?1:0;
+             if(_h8_)
               {var
                 dx=x4 - x1$0,
                 dy=y4 - y1$0,
@@ -8079,13 +8077,13 @@
                 y3$0=y3$1,
                 level$0=level$1;
                continue}
-             return _h$_}}
+             return _h8_}}
          function poly_reverse(points,offset,count)
           {var flags=points[1],data=points[2];
            function swap(data,i,j)
             {var tmp=data[1 + i];
-             set$1(data,i,data[1 + j]);
-             return set$1(data,j,tmp)}
+             set$2(data,i,data[1 + j]);
+             return set$2(data,j,tmp)}
            var i=[0,0],j=[0,count - 1 | 0];
            for(;;)
             {if(i[1] < j[1])
@@ -8116,13 +8114,13 @@
                return 0}}}
          function begin(t)
           {clear$0(0,t[2]);
-           var _h__=t[7];
-           _h__[1][3] = 0;
-           return clear$0(0,_h__[2])}
+           var _h7_=t[7];
+           _h7_[1][3] = 0;
+           return clear$0(0,_h7_[2])}
          function add_command(t,cmd)
           {var xform=get_state(t)[10];
            if(typeof cmd === "number")
-            var _h9_=cmd;
+            var _h6_=cmd;
            else
             switch(cmd[0])
              {case 0:
@@ -8131,7 +8129,7 @@
                 x=cmd[1],
                 xn=x * xform[1] + y * xform[3] + xform[5],
                 yn=x * xform[2] + y * xform[4] + xform[6],
-                _h9_=[0,xn,yn];
+                _h6_=[0,xn,yn];
                break;
               case 1:
                var
@@ -8139,7 +8137,7 @@
                 x$0=cmd[1],
                 xn$0=x$0 * xform[1] + y$0 * xform[3] + xform[5],
                 yn$0=x$0 * xform[2] + y$0 * xform[4] + xform[6],
-                _h9_=[1,xn$0,yn$0];
+                _h6_=[1,xn$0,yn$0];
                break;
               case 2:
                var
@@ -8155,10 +8153,10 @@
                 c1yn=c1x * xform[2] + c1y * xform[4] + xform[6],
                 c2xn=c2x * xform[1] + c2y * xform[3] + xform[5],
                 c2yn=c2x * xform[2] + c2y * xform[4] + xform[6],
-                _h9_=[2,c1xn,c1yn,c2xn,c2yn,xn$1,yn$1];
+                _h6_=[2,c1xn,c1yn,c2xn,c2yn,xn$1,yn$1];
                break;
-              default:var _h9_=cmd}
-           return add(t[2],_h9_)}
+              default:var _h6_=cmd}
+           return add(t[2],_h6_)}
          function close(t){return add_command(t,0)}
          function winding(t,winding){return add_command(t,[3,winding])}
          function move_to(t,x,y){return add_command(t,[0,x,y])}
@@ -8211,8 +8209,8 @@
            var
             a=Math.abs(da$2) / 1.57079632679489656 + 0.5 | 0,
             b=5,
-            _h6_=a < 5?a:b,
-            ndivs=imax(1,_h6_),
+            _h3_=a < 5?a:b,
+            ndivs=imax(1,_h3_),
             hda=da$2 / ndivs / 2.,
             kappa=
              Math.abs
@@ -8222,9 +8220,9 @@
             ptany=[0,0.],
             px=[0,0.],
             py=[0,0.],
-            _h7_=0;
+            _h4_=0;
            if(! (ndivs < 0))
-            {var i=_h7_;
+            {var i=_h4_;
              for(;;)
               {var
                 a$0=a0 + da$2 * (i / ndivs),
@@ -8247,8 +8245,8 @@
                py[1] = y;
                ptanx[1] = tanx;
                ptany[1] = tany;
-               var _h8_=i + 1 | 0;
-               if(ndivs !== i){var i=_h8_;continue}
+               var _h5_=i + 1 | 0;
+               if(ndivs !== i){var i=_h5_;continue}
                break}}
            return 0}
          function arc_to(t$2,x1,y1,x2,y2,radius)
@@ -8261,12 +8259,12 @@
               dy=y1 - y0,
               d=pqx * pqx + pqy * pqy,
               t=pqx * dx + pqy * dy,
-              _h5_=t$2[9] * t$2[9],
+              _h2_=t$2[9] * t$2[9],
               t$0=0. < d?t / d:t,
               t$1=t$0 < 0.?0.:1. < t$0?1.:t$0,
               dx$0=x0 + t$1 * pqx - x1,
               dy$0=y0 + t$1 * pqy - y1;
-             if(! (dx$0 * dx$0 + dy$0 * dy$0 < _h5_) && ! (radius < t$2[9]))
+             if(! (dx$0 * dx$0 + dy$0 * dy$0 < _h2_) && ! (radius < t$2[9]))
               {var
                 dx0=x0 - x1,
                 dy0=y0 - y1,
@@ -8355,22 +8353,22 @@
            var
             halfw=Math.abs(w) * 0.5,
             halfh=Math.abs(h) * 0.5,
-            _hX_=sign(w),
-            rxBL=min$0(bot_left,halfw) * _hX_,
-            _hY_=sign(h),
-            ryBL=min$0(bot_left,halfh) * _hY_,
-            _hZ_=sign(w),
-            rxBR=min$0(bot_right,halfw) * _hZ_,
-            _h0_=sign(h),
-            ryBR=min$0(bot_right,halfh) * _h0_,
-            _h1_=sign(w),
-            rxTR=min$0(top_right,halfw) * _h1_,
-            _h2_=sign(h),
-            ryTR=min$0(top_right,halfh) * _h2_,
-            _h3_=sign(w),
-            rxTL=min$0(top_left,halfw) * _h3_,
-            _h4_=sign(h),
-            ryTL=min$0(top_left,halfh) * _h4_;
+            _hU_=sign(w),
+            rxBL=min$0(bot_left,halfw) * _hU_,
+            _hV_=sign(h),
+            ryBL=min$0(bot_left,halfh) * _hV_,
+            _hW_=sign(w),
+            rxBR=min$0(bot_right,halfw) * _hW_,
+            _hX_=sign(h),
+            ryBR=min$0(bot_right,halfh) * _hX_,
+            _hY_=sign(w),
+            rxTR=min$0(top_right,halfw) * _hY_,
+            _hZ_=sign(h),
+            ryTR=min$0(top_right,halfh) * _hZ_,
+            _h0_=sign(w),
+            rxTL=min$0(top_left,halfw) * _h0_,
+            _h1_=sign(h),
+            ryTL=min$0(top_left,halfh) * _h1_;
            add_command(t,[0,x,y + ryTL]);
            line_to(x,y + h - ryBL);
            bz_to
@@ -8408,11 +8406,11 @@
          function rounded_rect(t,x,y,w,h,r)
           {return rounded_rect_varying(t,x,y,w,h,r,r,r,r)}
          function flatten(t$1)
-          {var _hH_=0 === t$1[7][2][3]?1:0;
-           if(_hH_)
-            {var _hJ_=t$1[2][3] - 1 | 0,_hI_=0;
-             if(! (_hJ_ < 0))
-              {var i$2=_hI_;
+          {var _hE_=0 === t$1[7][2][3]?1:0;
+           if(_hE_)
+            {var _hG_=t$1[2][3] - 1 | 0,_hF_=0;
+             if(! (_hG_ < 0))
+              {var i$2=_hF_;
                for(;;)
                 {var match$0=get$0(t$1[2],i$2);
                  if(typeof match$0 === "number")
@@ -8568,8 +8566,8 @@
                        (t$1,last_x,last_y,c1x,c1y,c2x,c2y,x$2,y$2,0,typ);
                      break;
                     default:var w=match$0[1],path$0=last_path(t$1);path$0[7] = w}
-                 var _hW_=i$2 + 1 | 0;
-                 if(_hJ_ !== i$2){var i$2=_hW_;continue}
+                 var _hT_=i$2 + 1 | 0;
+                 if(_hG_ !== i$2){var i$2=_hT_;continue}
                  break}}
              var
               xmin=[0,1000000.],
@@ -8577,10 +8575,10 @@
               xmax=[0,-1000000.],
               ymax=[0,-1000000.],
               points=t$1[7][1],
-              _hL_=t$1[7][2][3] - 1 | 0,
-              _hK_=0;
-             if(! (_hL_ < 0))
-              {var i$1=_hK_;
+              _hI_=t$1[7][2][3] - 1 | 0,
+              _hH_=0;
+             if(! (_hI_ < 0))
+              {var i$1=_hH_;
                for(;;)
                 {var
                   path$1=get$0(t$1[7][2],i$1),
@@ -8603,18 +8601,18 @@
                    path$1[3] = 1}
                  if(2 < path$1[2])
                   {var
-                    _hN_=path$1[1],
+                    _hK_=path$1[1],
                     area=[0,0.],
-                    _hF_=path$1[2] - 1 | 0,
-                    _hE_=2;
-                   if(! (_hF_ < 2))
-                    {var i$0=_hE_;
+                    _hC_=path$1[2] - 1 | 0,
+                    _hB_=2;
+                   if(! (_hC_ < 2))
+                    {var i$0=_hB_;
                      for(;;)
                       {var
-                        c$0=_hN_ + i$0 | 0,
-                        b$0=(_hN_ + i$0 | 0) - 1 | 0,
+                        c$0=_hK_ + i$0 | 0,
+                        b$0=(_hK_ + i$0 | 0) - 1 | 0,
                         t$0=points[2],
-                        a=_hN_ * 7 | 0,
+                        a=_hK_ * 7 | 0,
                         ax=t$0[1 + a],
                         ay=t$0[1 + (a + 1 | 0)],
                         b=b$0 * 7 | 0,
@@ -8628,21 +8626,21 @@
                         acx=cx - ax,
                         acy=cy - ay;
                        area[1] = area[1] + (acx * aby - abx * acy);
-                       var _hG_=i$0 + 1 | 0;
-                       if(_hF_ !== i$0){var i$0=_hG_;continue}
+                       var _hD_=i$0 + 1 | 0;
+                       if(_hC_ !== i$0){var i$0=_hD_;continue}
                        break}}
                    var
                     area$0=area[1] * 0.5,
-                    _hO_=equal(path$1[7],0),
-                    _hP_=_hO_?area$0 < 0.?1:0:_hO_;
-                   if(_hP_)poly_reverse(points,path$1[1],path$1[2]);
-                   var _hQ_=equal(path$1[7],1),_hR_=_hQ_?0. < area$0?1:0:_hQ_;
-                   if(_hR_)poly_reverse(points,path$1[1],path$1[2])}
+                    _hL_=equal(path$1[7],0),
+                    _hM_=_hL_?area$0 < 0.?1:0:_hL_;
+                   if(_hM_)poly_reverse(points,path$1[1],path$1[2]);
+                   var _hN_=equal(path$1[7],1),_hO_=_hN_?0. < area$0?1:0:_hN_;
+                   if(_hO_)poly_reverse(points,path$1[1],path$1[2])}
                  var p1_off=[0,0];
                  p0$0[1] = get(path$1[2] - 1 | 0);
-                 var _hT_=path$1[2] - 1 | 0,_hS_=0;
-                 if(! (_hT_ < 0))
-                  {var for$0=_hS_;
+                 var _hQ_=path$1[2] - 1 | 0,_hP_=0;
+                 if(! (_hQ_ < 0))
+                  {var for$0=_hP_;
                    for(;;)
                     {var
                       p1$0=get(p1_off[1]),
@@ -8653,19 +8651,19 @@
                       x1$0=data$0[1 + p1],
                       y0=data$0[1 + (p0 + 1 | 0)],
                       y1$0=data$0[1 + (p1 + 1 | 0)];
-                     set$1(data$0,p0 + 2 | 0,x1$0 - x0);
-                     set$1(data$0,p0 + 3 | 0,y1$0 - y0);
+                     set$2(data$0,p0 + 2 | 0,x1$0 - x0);
+                     set$2(data$0,p0 + 3 | 0,y1$0 - y0);
                      var
                       idx=p0$0[1] * 7 | 0,
                       t=points[2],
                       dx=t[1 + (idx + 2 | 0)],
                       dy=t[1 + (idx + 3 | 0)],
                       d=Math.sqrt(dx * dx + dy * dy);
-                     set$1(t,idx + 4 | 0,d);
+                     set$2(t,idx + 4 | 0,d);
                      if(1e-06 < d)
                       {var id=1. / d;
-                       set$1(t,idx + 2 | 0,dx * id);
-                       set$1(t,idx + 3 | 0,dy * id)}
+                       set$2(t,idx + 2 | 0,dx * id);
+                       set$2(t,idx + 3 | 0,dy * id)}
                      var match=get_xy(points,p0$0[1]),y=match[2],x=match[1];
                      xmin[1] = min$1(xmin[1],x);
                      ymin[1] = min$1(ymin[1],y);
@@ -8673,17 +8671,17 @@
                      ymax[1] = max$0(ymax[1],y);
                      p0$0[1] = get(p1_off[1]);
                      p1_off[1]++;
-                     var _hV_=for$0 + 1 | 0;
-                     if(_hT_ !== for$0){var for$0=_hV_;continue}
+                     var _hS_=for$0 + 1 | 0;
+                     if(_hQ_ !== for$0){var for$0=_hS_;continue}
                      break}}
-                 var _hU_=i$1 + 1 | 0;
-                 if(_hL_ !== i$1){var i$1=_hU_;continue}
+                 var _hR_=i$1 + 1 | 0;
+                 if(_hI_ !== i$1){var i$1=_hR_;continue}
                  break}}
              t$1[7][4] = [254,xmin[1],ymin[1],xmax[1],ymax[1]];
-             var _hM_=0}
+             var _hJ_=0}
            else
-            var _hM_=_hH_;
-           return _hM_}
+            var _hJ_=_hE_;
+           return _hJ_}
          function reset$2(t)
           {var t$0=get_state(t);
            t$0[1] = of_composite_operation(0);
@@ -8726,9 +8724,9 @@
            save(t);
            reset$2(t);
            set_device_pixel_ratio(t,device_ratio);
-           var _hD_=t[1];
-           _hD_[9][0] = width;
-           _hD_[9][1] = height;
+           var _hA_=t[1];
+           _hA_[12][0] = width;
+           _hA_[12][1] = height;
            t[15] = 0;
            t[16] = 0;
            t[17] = 0;
@@ -8741,10 +8739,10 @@
             iw=0. < w?1. / w:0.,
             data=t[7][1][2],
             flags=t[7][1][1],
-            _hs_=t[7][2][3] - 1 | 0,
-            _hr_=0;
-           if(! (_hs_ < 0))
-            {var i=_hr_;
+            _hp_=t[7][2][3] - 1 | 0,
+            _ho_=0;
+           if(! (_hp_ < 0))
+            {var i=_ho_;
              for(;;)
               {var
                 path=get$0(t[7][2],i),
@@ -8756,9 +8754,9 @@
                 p1_off=[0,0],
                 left=[0,0];
                path[4] = 0;
-               var _hu_=path[2] - 1 | 0,_ht_=0;
-               if(! (_hu_ < 0))
-                {var for$0=_ht_;
+               var _hr_=path[2] - 1 | 0,_hq_=0;
+               if(! (_hr_ < 0))
+                {var for$0=_hq_;
                  for(;;)
                   {var
                     p0=get(p0_off[1]),
@@ -8776,8 +8774,8 @@
                     {var s=1. / dmr2,scale=600. < s?600.:s;
                      set_dmx(data,idx,dmx * scale);
                      set_dmy(data,idx,dmy * scale)}
-                   var _hw_=has_flag(flags,idx,typ)?typ:no_flags$1;
-                   flags[1 + idx] = _hw_;
+                   var _ht_=has_flag(flags,idx,typ)?typ:no_flags$1;
+                   flags[1 + idx] = _ht_;
                    var
                     dx1=get_dx(data,idx),
                     dy1=get_dy(data,idx),
@@ -8792,26 +8790,26 @@
                    if(dmr2 * limit * limit < 1.)
                     add_flag(flags,idx,inner_bevel);
                    if(has_flag(flags,idx,typ))
-                    {var _hx_=dmr2 * miter_limit * miter_limit < 1.?1:0;
-                     if(_hx_)
-                      var _hy_=_hx_;
+                    {var _hu_=dmr2 * miter_limit * miter_limit < 1.?1:0;
+                     if(_hu_)
+                      var _hv_=_hu_;
                      else
                       var
-                       _hC_=equal$1(line_join,1),
-                       _hy_=_hC_ || equal$1(line_join,2);
-                     if(_hy_)add_flag(flags,idx,bevel)}
+                       _hz_=equal$1(line_join,1),
+                       _hv_=_hz_ || equal$1(line_join,2);
+                     if(_hv_)add_flag(flags,idx,bevel)}
                    var
-                    _hz_=has_flag(flags,idx,bevel),
-                    _hA_=_hz_ || has_flag(flags,idx,inner_bevel);
-                   if(_hA_)path[4] = path[4] + 1 | 0;
+                    _hw_=has_flag(flags,idx,bevel),
+                    _hx_=_hw_ || has_flag(flags,idx,inner_bevel);
+                   if(_hx_)path[4] = path[4] + 1 | 0;
                    p0_off[1] = p1_off[1];
                    p1_off[1]++;
-                   var _hB_=for$0 + 1 | 0;
-                   if(_hu_ !== for$0){var for$0=_hB_;continue}
+                   var _hy_=for$0 + 1 | 0;
+                   if(_hr_ !== for$0){var for$0=_hy_;continue}
                    break}}
                path[8] = left[1] === path[2]?1:0;
-               var _hv_=i + 1 | 0;
-               if(_hs_ !== i){var i=_hv_;continue}
+               var _hs_=i + 1 | 0;
+               if(_hp_ !== i){var i=_hs_;continue}
                break}}
            return 0}
          function choose_bevel(bevel,data,p0,p1,w)
@@ -8904,18 +8902,18 @@
           {var aa=t[10],fringe=0. < w?1:0;
            calculate_joins(t,w,line_join,miter_limit);
            var
-            _ha_=1 === t[7][2][3]?1:0,
-            convex=_ha_?t[7][2][2][1][8]:_ha_,
+            _g9_=1 === t[7][2][3]?1:0,
+            convex=_g9_?t[7][2][2][1][8]:_g9_,
             points=t[7][1],
             flags=points[1],
             data=points[2],
             woff=0.5 * aa,
             verts=[0,t[7][3][2]],
             dst=[0,verts[1]],
-            _hc_=t[7][2][3] - 1 | 0,
-            _hb_=0;
-           if(! (_hc_ < 0))
-            {var i=_hb_;
+            _g$_=t[7][2][3] - 1 | 0,
+            _g__=0;
+           if(! (_g$_ < 0))
+            {var i=_g__;
              for(;;)
               {var path=get$0(t[7][2],i);
                dst[1] = verts[1];
@@ -8929,19 +8927,19 @@
                 {var
                   p0=[0,get_pt(path[2] - 1 | 0)],
                   p1_off=[0,0],
-                  _he_=path[2] - 1 | 0,
-                  _hd_=0;
-                 if(! (_he_ < 0))
-                  {var for$1=_hd_;
+                  _hb_=path[2] - 1 | 0,
+                  _ha_=0;
+                 if(! (_hb_ < 0))
+                  {var for$1=_ha_;
                    for(;;)
                     {var p1$0=get_pt(p1_off[1]);
                      if(has_flag(flags,p1$0,bevel))
                       if(has_flag(flags,p1$0,left$0))
                        {var
-                         _hj_=get_dmx(data,p1$0) * woff,
-                         lx=get_x(data,p1$0) + _hj_,
-                         _hk_=get_dmy(data,p1$0) * woff,
-                         ly=get_y(data,p1$0) + _hk_;
+                         _hg_=get_dmx(data,p1$0) * woff,
+                         lx=get_x(data,p1$0) + _hg_,
+                         _hh_=get_dmy(data,p1$0) * woff,
+                         ly=get_y(data,p1$0) + _hh_;
                         set$0(t[7][3],dst[1],lx,ly,0.5,1.);
                         dst[1]++}
                       else
@@ -8962,22 +8960,22 @@
                         dst[1] = dst[1] + 2 | 0}
                      else
                       {var
-                        _hm_=get_dmx(data,p1$0) * woff,
-                        x$1=get_x(data,p1$0) + _hm_,
-                        _hn_=get_dmy(data,p1$0) * woff,
-                        y$1=get_y(data,p1$0) + _hn_;
+                        _hj_=get_dmx(data,p1$0) * woff,
+                        x$1=get_x(data,p1$0) + _hj_,
+                        _hk_=get_dmy(data,p1$0) * woff,
+                        y$1=get_y(data,p1$0) + _hk_;
                        set$0(t[7][3],dst[1],x$1,y$1,0.5,1.);
                        dst[1]++}
                      p0[1] = p1$0;
                      p1_off[1]++;
-                     var _hl_=for$1 + 1 | 0;
-                     if(_he_ !== for$1){var for$1=_hl_;continue}
+                     var _hi_=for$1 + 1 | 0;
+                     if(_hb_ !== for$1){var for$1=_hi_;continue}
                      break}}}
                else
                 {check_size(t[7][3],dst[1] + path[2] | 0);
-                 var _hp_=path[2] - 1 | 0,_ho_=0;
-                 if(! (_hp_ < 0))
-                  {var j=_ho_;
+                 var _hm_=path[2] - 1 | 0,_hl_=0;
+                 if(! (_hm_ < 0))
+                  {var j=_hl_;
                    for(;;)
                     {var
                       point=get_pt(j),
@@ -8985,8 +8983,8 @@
                       y$2=match$1[2],
                       x$2=match$1[1];
                      unsafe_set(t[7][3],dst[1] + j | 0,x$2,y$2,0.5,1.);
-                     var _hq_=j + 1 | 0;
-                     if(_hp_ !== j){var j=_hq_;continue}
+                     var _hn_=j + 1 | 0;
+                     if(_hm_ !== j){var j=_hn_;continue}
                      break}}
                  dst[1] = dst[1] + path[2] | 0}
                var nfill=dst[1] - verts[1] | 0;
@@ -9000,11 +8998,11 @@
                  var
                   p1_off$0=[0,0],
                   p0$0=[0,get_pt(path[2] - 1 | 0)],
-                  _hg_=path[2] - 1 | 0,
+                  _hd_=path[2] - 1 | 0,
                   ru=1.,
-                  _hf_=0;
-                 if(! (_hg_ < 0))
-                  {var for$0=_hf_;
+                  _hc_=0;
+                 if(! (_hd_ < 0))
+                  {var for$0=_hc_;
                    for(;;)
                     {var p1=get_pt(p1_off$0[1]);
                      if(has_flag(flags,p1,flag))
@@ -9026,8 +9024,8 @@
                        dst[1] = dst[1] + 2 | 0}
                      p0$0[1] = p1;
                      p1_off$0[1]++;
-                     var _hi_=for$0 + 1 | 0;
-                     if(_hg_ !== for$0){var for$0=_hi_;continue}
+                     var _hf_=for$0 + 1 | 0;
+                     if(_hd_ !== for$0){var for$0=_hf_;continue}
                      break}}
                  check_size(t[7][3],dst[1] + 2 | 0);
                  var
@@ -9042,13 +9040,13 @@
                  unsafe_set(t[7][3],dst[1] + 1 | 0,v1_x,v1_y,ru,1.);
                  dst[1] = dst[1] + 2 | 0;
                  var nstroke=dst[1] - verts[1] | 0;
-                 if(! (0 < nstroke))throw [0,Assert_failure,_bN_];
+                 if(! (0 < nstroke))throw [0,Assert_failure,_bO_];
                  path[6] = [0,verts[1],nstroke,t[7][3]];
                  verts[1] = dst[1]}
                else
-                path[6] = empty$2;
-               var _hh_=i + 1 | 0;
-               if(_hc_ !== i){var i=_hh_;continue}
+                path[6] = empty$3;
+               var _he_=i + 1 | 0;
+               if(_g$_ !== i){var i=_he_;continue}
                break}}
            return 0}
          function butt_cap_start(verts,dst,px,py,dx,dy,w,d,aa,u0,u1)
@@ -9105,10 +9103,10 @@
             data$0=t[7][1][2],
             flags$0=t[7][1][1],
             dst=[0,verts[1]],
-            _g2_=t[7][2][3] - 1 | 0,
-            _g1_=0;
-           if(! (_g2_ < 0))
-            {var i$3=_g1_;
+            _gZ_=t[7][2][3] - 1 | 0,
+            _gY_=0;
+           if(! (_gZ_ < 0))
+            {var i$3=_gY_;
              a:
              for(;;)
               {var
@@ -9117,7 +9115,7 @@
                  function(path)
                   {function get(idx){return path[1] + idx | 0}return get},
                 get=get$2(path);
-               path[5] = empty$2;
+               path[5] = empty$3;
                dst[1] = verts[1];
                var
                 s=[0,0],
@@ -9132,10 +9130,10 @@
                  var
                   p0=get(p0_off[1]),
                   p1=get(p1_off[1]),
-                  _g3_=get_x(data$0,p0),
-                  dx=get_x(data$0,p1) - _g3_,
-                  _g4_=get_y(data$0,p0),
-                  dy=get_y(data$0,p1) - _g4_,
+                  _g0_=get_x(data$0,p0),
+                  dx=get_x(data$0,p1) - _g0_,
+                  _g1_=get_y(data$0,p0),
+                  dy=get_y(data$0,p1) - _g1_,
                   match$1=normalize(dx,dy),
                   dy$0=match$1[3],
                   dx$0=match$1[2],
@@ -9149,7 +9147,7 @@
                      (t[7][3],dst[1],px,py,dx$0,dy$0,lw,- aa * 0.5,aa,u0,u1);
                     break;
                    case 1:
-                    var _g$_=t[7][3],dly=- dx$0,i=[0,0];
+                    var _g8_=t[7][3],dly=- dx$0,i=[0,0];
                     for(;;)
                      {if(i[1] < ncap)
                        {var
@@ -9157,20 +9155,20 @@
                          ax=Math.cos(a) * lw,
                          ay=Math.sin(a) * lw;
                         set$0
-                         (_g$_,
+                         (_g8_,
                           dst[1],
                           px - dy$0 * ax - dx$0 * ay,
                           py - dly * ax - dy$0 * ay,
                           u0,
                           1.);
                         dst[1]++;
-                        set$0(_g$_,dst[1],px,py,0.5,1.);
+                        set$0(_g8_,dst[1],px,py,0.5,1.);
                         dst[1]++;
                         i[1]++;
                         continue}
-                      set$0(_g$_,dst[1],px + dy$0 * lw,py + dly * lw,u0,1.);
+                      set$0(_g8_,dst[1],px + dy$0 * lw,py + dly * lw,u0,1.);
                       dst[1]++;
-                      set$0(_g$_,dst[1],px - dy$0 * lw,py - dly * lw,u1,1.);
+                      set$0(_g8_,dst[1],px - dy$0 * lw,py - dly * lw,u1,1.);
                       dst[1]++;
                       break}
                     break;
@@ -9205,10 +9203,10 @@
                    if(switch$0)
                     if(equal$1(line_join,2))
                      {var
-                       _g5_=t[7][1],
-                       _g6_=t[7][3],
-                       flags=_g5_[1],
-                       data=_g5_[2],
+                       _g2_=t[7][1],
+                       _g3_=t[7][3],
+                       flags=_g2_[1],
+                       data=_g2_[2],
                        dlx0=get_dy(data,p0$0),
                        dly0=- get_dx(data,p0$0),
                        dlx1=get_dy(data,p1$0),
@@ -9226,9 +9224,9 @@
                          a1$0=a0 < a1?a1 - 6.28318530717958623:a1,
                          p1x=get_x(data,p1$0),
                          p1y=get_y(data,p1$0);
-                        set$0(_g6_,dst[1],lx0,ly0,u0,1.);
+                        set$0(_g3_,dst[1],lx0,ly0,u0,1.);
                         dst[1]++;
-                        set$0(_g6_,dst[1],p1x - dlx0 * lw,p1y - dly0 * lw,u1,1.);
+                        set$0(_g3_,dst[1],p1x - dlx0 * lw,p1y - dly0 * lw,u1,1.);
                         dst[1]++;
                         var
                          n=
@@ -9236,26 +9234,26 @@
                            (Math.ceil((a0 - a1$0) / 3.14159265358979312 * ncap) | 0,
                             2,
                             ncap),
-                         _gW_=n - 1 | 0,
-                         _gV_=0;
-                        if(! (_gW_ < 0))
-                         {var i$1=_gV_;
+                         _gT_=n - 1 | 0,
+                         _gS_=0;
+                        if(! (_gT_ < 0))
+                         {var i$1=_gS_;
                           for(;;)
                            {var
                              u=i$1 / (n - 1.),
                              a$1=a0 + u * (a1$0 - a0),
                              rx=p1x + Math.cos(a$1) * lw,
                              ry=p1y + Math.sin(a$1) * lw;
-                            set$0(_g6_,dst[1],p1x,p1y,0.5,1.);
+                            set$0(_g3_,dst[1],p1x,p1y,0.5,1.);
                             dst[1]++;
-                            set$0(_g6_,dst[1],rx,ry,u1,1.);
+                            set$0(_g3_,dst[1],rx,ry,u1,1.);
                             dst[1]++;
-                            var _gX_=i$1 + 1 | 0;
-                            if(_gW_ !== i$1){var i$1=_gX_;continue}
+                            var _gU_=i$1 + 1 | 0;
+                            if(_gT_ !== i$1){var i$1=_gU_;continue}
                             break}}
-                        set$0(_g6_,dst[1],lx1,ly1,u0,1.);
+                        set$0(_g3_,dst[1],lx1,ly1,u0,1.);
                         dst[1]++;
-                        set$0(_g6_,dst[1],p1x - dlx1 * lw,p1y - dly1 * lw,u1,1.);
+                        set$0(_g3_,dst[1],p1x - dlx1 * lw,p1y - dly1 * lw,u1,1.);
                         dst[1]++}
                       else
                        {var
@@ -9270,9 +9268,9 @@
                          a1$2=a1$1 < a0$0?a1$1 + 6.28318530717958623:a1$1,
                          p1x$0=get_x(data,p1$0),
                          p1y$0=get_y(data,p1$0);
-                        set$0(_g6_,dst[1],p1x$0 + dlx0 * lw,p1y$0 + dly0 * lw,u0,1.);
+                        set$0(_g3_,dst[1],p1x$0 + dlx0 * lw,p1y$0 + dly0 * lw,u0,1.);
                         dst[1]++;
-                        set$0(_g6_,dst[1],rx0,ry0,u1,1.);
+                        set$0(_g3_,dst[1],rx0,ry0,u1,1.);
                         dst[1]++;
                         var
                          n$0=
@@ -9280,26 +9278,26 @@
                            (Math.ceil((a1$2 - a0$0) / 3.14159265358979312 * ncap) | 0,
                             2,
                             ncap),
-                         _gZ_=n$0 - 1 | 0,
-                         _gY_=0;
-                        if(! (_gZ_ < 0))
-                         {var i$2=_gY_;
+                         _gW_=n$0 - 1 | 0,
+                         _gV_=0;
+                        if(! (_gW_ < 0))
+                         {var i$2=_gV_;
                           for(;;)
                            {var
                              u$0=i$2 / (n$0 - 1 | 0),
                              a$2=a0$0 + u$0 * (a1$2 - a0$0),
                              lx=p1x$0 + Math.cos(a$2) * lw,
                              ly=p1y$0 + Math.sin(a$2) * lw;
-                            set$0(_g6_,dst[1],lx,ly,u0,1.);
+                            set$0(_g3_,dst[1],lx,ly,u0,1.);
                             dst[1]++;
-                            set$0(_g6_,dst[1],p1x$0,p1y$0,0.5,1.);
+                            set$0(_g3_,dst[1],p1x$0,p1y$0,0.5,1.);
                             dst[1]++;
-                            var _g0_=i$2 + 1 | 0;
-                            if(_gZ_ !== i$2){var i$2=_g0_;continue}
+                            var _gX_=i$2 + 1 | 0;
+                            if(_gW_ !== i$2){var i$2=_gX_;continue}
                             break}}
-                        set$0(_g6_,dst[1],p1x$0 + dlx1 * lw,p1y$0 + dly1 * lw,u0,1.);
+                        set$0(_g3_,dst[1],p1x$0 + dlx1 * lw,p1y$0 + dly1 * lw,u0,1.);
                         dst[1]++;
-                        set$0(_g6_,dst[1],rx1,ry1,u1,1.);
+                        set$0(_g3_,dst[1],rx1,ry1,u1,1.);
                         dst[1]++}}
                     else
                      dst[1]
@@ -9325,10 +9323,10 @@
                   {var
                     p0$1=get(p0_off[1]),
                     p1$1=get(p1_off[1]),
-                    _g8_=get_x(data$0,p0$1),
-                    dx$1=get_x(data$0,p1$1) - _g8_,
-                    _g9_=get_y(data$0,p0$1),
-                    dy$1=get_y(data$0,p1$1) - _g9_,
+                    _g5_=get_x(data$0,p0$1),
+                    dx$1=get_x(data$0,p1$1) - _g5_,
+                    _g6_=get_y(data$0,p0$1),
+                    dy$1=get_y(data$0,p1$1) - _g6_,
                     match$4=normalize(dx$1,dy$1),
                     dy$2=match$4[3],
                     dx$2=match$4[2],
@@ -9342,10 +9340,10 @@
                        (t[7][3],dst[1],px$0,py$0,dx$2,dy$2,lw,- aa * 0.5,aa,u0,u1);
                       break;
                      case 1:
-                      var _g__=t[7][3],i$0=[0,0],dly$0=- dx$2;
-                      set$0(_g__,dst[1],px$0 + dy$2 * lw,py$0 + dly$0 * lw,u0,1.);
+                      var _g7_=t[7][3],i$0=[0,0],dly$0=- dx$2;
+                      set$0(_g7_,dst[1],px$0 + dy$2 * lw,py$0 + dly$0 * lw,u0,1.);
                       dst[1]++;
-                      set$0(_g__,dst[1],px$0 - dy$2 * lw,py$0 - dly$0 * lw,u1,1.);
+                      set$0(_g7_,dst[1],px$0 - dy$2 * lw,py$0 - dly$0 * lw,u1,1.);
                       dst[1]++;
                       for(;;)
                        {if(i$0[1] < ncap)
@@ -9353,10 +9351,10 @@
                            a$0=i$0[1] / (ncap - 1 | 0) * 3.14159265358979312,
                            ax$0=Math.cos(a$0) * lw,
                            ay$0=Math.sin(a$0) * lw;
-                          set$0(_g__,dst[1],px$0,py$0,0.5,1.);
+                          set$0(_g7_,dst[1],px$0,py$0,0.5,1.);
                           dst[1]++;
                           set$0
-                           (_g__,
+                           (_g7_,
                             dst[1],
                             px$0 - dy$2 * ax$0 + dx$2 * ay$0,
                             py$0 - dly$0 * ax$0 + dy$2 * ay$0,
@@ -9377,8 +9375,8 @@
                  var len=dst[1] - verts[1] | 0;
                  path[6] = [0,verts[1],len,t[7][3]];
                  verts[1] = dst[1];
-                 var _g7_=i$3 + 1 | 0;
-                 if(_g2_ !== i$3){var i$3=_g7_;continue a}
+                 var _g4_=i$3 + 1 | 0;
+                 if(_gZ_ !== i$3){var i$3=_g4_;continue a}
                  break}
                break}}
            return 0}
@@ -9396,7 +9394,7 @@
             before=match[1];
            flatten(t);
            var switch$0=0;
-           if(t[1][5] && state[2])
+           if(t[1][8] && state[2])
             {expand_stroke
               (t,stroke_width * 0.5,t[10],state[8],state[7],state[6]);
              switch$0 = 1}
@@ -9413,66 +9411,78 @@
              stroke_width$0[1] = t[10]}
            modify_alpha(paint,state[9]);
            var
-            _gP_=t[7][2],
-            _gQ_=stroke_width$0[1],
-            _gR_=t[10],
-            _gS_=state[11],
-            _gU_=t[1],
-            _gT_=state[1],
-            call=steal(_gU_[12],empty$4);
+            _gM_=t[7][2],
+            _gN_=stroke_width$0[1],
+            _gO_=t[10],
+            _gP_=state[11],
+            _gR_=t[1],
+            _gQ_=state[1],
+            call=steal(_gR_[15],empty$5);
            reset$1(call,2);
            call[2] = paint[19] | 0;
-           call[7] = of_composite_op_state(_gT_);
+           call[7] = of_composite_op_state(_gQ_);
            call[5] = -1;
            call[4] = -1;
-           var _gN_=_gP_[3] - 1 | 0,_gM_=0;
-           if(! (_gN_ < 0))
-            {var i=_gM_;
+           var _gK_=_gM_[3] - 1 | 0,_gJ_=0;
+           if(! (_gK_ < 0))
+            {var i=_gJ_;
              for(;;)
-              {var path=get$0(_gP_,i),count=path[6][2];
+              {var path=get$0(_gM_,i),count=path[6][2];
                if(0 < count)
-                add(call[10],[0,init$1[1],init$1[2],path[6][1],path[6][2]]);
-               var _gO_=i + 1 | 0;
-               if(_gN_ !== i){var i=_gO_;continue}
+                add(call[8],[0,init$1[1],init$1[2],path[6][1],path[6][2]]);
+               var _gL_=i + 1 | 0;
+               if(_gK_ !== i){var i=_gL_;continue}
                break}}
-           return has(_gU_[11],stencil_strokes)
-                   ?(convert_paint(_gU_,call[8],paint,_gS_,_gQ_,_gR_,-1.),
+           return has(_gR_[14],stencil_strokes)
+                   ?(call[6]
+                     =
+                     make_slot(_gR_[13],2,_gR_[7]),
+                     convert_paint(_gR_,call[6],paint,_gP_,_gN_,_gO_,-1.),
                      convert_paint
-                      (_gU_,call[9],paint,_gS_,_gQ_,_gR_,0.998039215686274517))
-                   :convert_paint(_gU_,call[8],paint,_gS_,_gQ_,_gR_,-1.)}
+                      (_gR_,
+                       call[6] + _gR_[7] | 0,
+                       paint,
+                       _gP_,
+                       _gN_,
+                       _gO_,
+                       0.998039215686274517))
+                   :(call[6]
+                     =
+                     make_slot(_gR_[13],1,_gR_[7]),
+                     convert_paint(_gR_,call[6],paint,_gP_,_gN_,_gO_,-1.))}
          function stroke(t)
           {var state=get_state(t),stroke_width=stroke_prepare(t,state);
            return stroke_finish(t,state,stroke_width)}
          function fill_prepare(t,state)
           {flatten(t);
-           if(t[1][5] && state[2])return expand_fill(t,t[10],0,2.4);
+           if(t[1][8] && state[2])return expand_fill(t,t[10],0,2.4);
            return expand_fill(t,0.,0,2.4)}
          function fill_finish(t,state)
           {var paint=copy$2(state[3]);
            modify_alpha(paint,state[9]);
            var
-            _gF_=t[7][3],
-            _gG_=t[7][2],
-            _gH_=t[7][4],
-            _gI_=t[10],
-            _gJ_=state[11],
-            _gL_=t[1],
-            _gK_=state[1],
-            call=steal(_gL_[12],empty$4);
+            _gC_=t[7][3],
+            _gD_=t[7][2],
+            _gE_=t[7][4],
+            _gF_=t[10],
+            _gG_=state[11],
+            _gI_=t[1],
+            _gH_=state[1],
+            call=steal(_gI_[15],empty$5);
            reset$1(call,0);
-           var npaths=_gG_[3];
+           var npaths=_gD_[3];
            call[5] = 4;
            call[3] = npaths;
            call[2] = paint[19] | 0;
-           call[7] = of_composite_op_state(_gK_);
-           var _gA_=1 === npaths?1:0,_gB_=_gA_?get$0(_gG_,0)[8]:_gA_;
-           if(_gB_){call[1] = 1;call[5] = 0}
-           var _gD_=_gG_[3] - 1 | 0,_gC_=0;
-           if(! (_gD_ < 0))
-            {var i=_gC_;
+           call[7] = of_composite_op_state(_gH_);
+           var _gx_=1 === npaths?1:0,_gy_=_gx_?get$0(_gD_,0)[8]:_gx_;
+           if(_gy_){call[1] = 1;call[5] = 0}
+           var _gA_=_gD_[3] - 1 | 0,_gz_=0;
+           if(! (_gA_ < 0))
+            {var i=_gz_;
              for(;;)
               {var
-                path=get$0(_gG_,i),
+                path=get$0(_gD_,i),
                 fill_offset=[0,0],
                 fill_count=[0,0],
                 stroke_offset=[0,0],
@@ -9484,26 +9494,29 @@
                if(0 < nstroke)
                 {stroke_offset[1] = path[6][1];stroke_count[1] = path[6][2]}
                add
-                (call[10],
+                (call[8],
                  [0,
                   fill_offset[1],
                   fill_count[1],
                   stroke_offset[1],
                   stroke_count[1]]);
-               var _gE_=i + 1 | 0;
-               if(_gD_ !== i){var i=_gE_;continue}
+               var _gB_=i + 1 | 0;
+               if(_gA_ !== i){var i=_gB_;continue}
                break}}
            if(call[1])
-            return convert_paint(_gL_,call[8],paint,_gJ_,_gI_,_gI_,-1.);
-           var offset=_gF_[2];
+            {call[6] = make_slot(_gI_[13],1,_gI_[7]);
+             return convert_paint(_gI_,call[6],paint,_gG_,_gF_,_gF_,-1.)}
+           var offset=_gC_[2];
            call[4] = offset;
-           set$0(_gF_,offset,_gH_[3],_gH_[4],0.5,1.);
-           set$0(_gF_,offset + 1 | 0,_gH_[3],_gH_[2],0.5,1.);
-           set$0(_gF_,offset + 2 | 0,_gH_[1],_gH_[4],0.5,1.);
-           set$0(_gF_,offset + 3 | 0,_gH_[1],_gH_[2],0.5,1.);
-           call[8][43] = 2.;
-           call[8][41] = -1.;
-           return convert_paint(_gL_,call[9],paint,_gJ_,_gI_,_gI_,-1.)}
+           set$0(_gC_,offset,_gE_[3],_gE_[4],0.5,1.);
+           set$0(_gC_,offset + 1 | 0,_gE_[3],_gE_[2],0.5,1.);
+           set$0(_gC_,offset + 2 | 0,_gE_[1],_gE_[4],0.5,1.);
+           set$0(_gC_,offset + 3 | 0,_gE_[1],_gE_[2],0.5,1.);
+           call[6] = make_slot(_gI_[13],2,_gI_[7]);
+           set_type(_gI_[13],call[6],simple);
+           set_stroke_thr(_gI_[13],call[6],-1.);
+           return convert_paint
+                   (_gI_,call[6] + _gI_[7] | 0,paint,_gG_,_gF_,_gF_,-1.)}
          function fill(t)
           {var state=get_state(t);
            fill_prepare(t,state);
@@ -9547,7 +9560,7 @@
              state[5] = tess[4];
              t[10] = tess[5];
              t[7][4] = [254,xmin[1],ymin[1],xmax[1],ymax[1]];
-             var match=stroke_calc_width(t,state),width=match[2],_gz_=tess[2];
+             var match=stroke_calc_width(t,state),width=match[2],_gw_=tess[2];
              iter$0
               (function(p)
                 {add_path(t);
@@ -9555,7 +9568,7 @@
                  path[5] = [0,start + p[1] | 0,p[2],t[7][3]];
                  path[6] = [0,start + p[3] | 0,p[4],t[7][3]];
                  return 0},
-               _gz_);
+               _gw_);
              switch(tess[3])
               {case 0:stroke_finish(t,state,width);break;
                case 1:fill_finish(t,state);break;
@@ -9575,7 +9588,7 @@
               var copy=copy$3(t[7][2],copy$4),temp=t[7][2];
               t[7][2] = copy;
               stroke_prepare(t,state);
-              append_steal(temp,copy,create$7);
+              append_steal(temp,copy,create$8);
               t[7][2] = temp;
               break;
              default:
@@ -9583,17 +9596,17 @@
               var copy$0=copy$3(t[7][2],copy$4),temp$0=t[7][2];
               t[7][2] = copy$0;
               fill_prepare(t,state);
-              append_steal(temp$0,copy$0,create$7);
+              append_steal(temp$0,copy$0,create$8);
               t[7][2] = temp$0}
-           var _gv_=t[7][2],length=[0,0],_gt_=_gv_[3] - 1 | 0,_gs_=0;
-           if(! (_gt_ < 0))
-            {var i=_gs_;
+           var _gs_=t[7][2],length=[0,0],_gq_=_gs_[3] - 1 | 0,_gp_=0;
+           if(! (_gq_ < 0))
+            {var i=_gp_;
              for(;;)
-              {var path=get$0(_gv_,i);
+              {var path=get$0(_gs_,i);
                length[1] = length[1] + path[5][2] | 0;
                length[1] = length[1] + path[6][2] | 0;
-               var _gu_=i + 1 | 0;
-               if(_gt_ !== i){var i=_gu_;continue}
+               var _gr_=i + 1 | 0;
+               if(_gq_ !== i){var i=_gr_;continue}
                break}}
            var
             buffer=caml_call1(Buffer[2][4],length[1] * 4 | 0),
@@ -9602,9 +9615,9 @@
             off=[0,0],
             vbuff=t[7][3][1],
             l=t[7][2][3] - 1 | 0,
-            _gw_=0;
+            _gt_=0;
            if(! (l < 0))
-            {var idx=_gw_;
+            {var idx=_gt_;
              for(;;)
               {var
                 path$0=get$0(t[7][2],idx),
@@ -9630,203 +9643,202 @@
                 path$1=
                  [0,off[1],fill_length,off[1] + fill_length | 0,stroke_length];
                off[1] = (off[1] + fill_length | 0) + stroke_length | 0;
-               var _gx_=i$0[1];
-               caml_check_bound(paths,_gx_)[1 + _gx_] = path$1;
+               var _gu_=i$0[1];
+               caml_check_bound(paths,_gu_)[1 + _gu_] = path$1;
                i$0[1]++;
-               var _gy_=idx + 1 | 0;
-               if(l !== idx){var idx=_gy_;continue}
+               var _gv_=idx + 1 | 0;
+               if(l !== idx){var idx=_gv_;continue}
                break}}
            return [0,buffer,paths,kind,state[5],t[10]]}
          function end_frame(t$0)
-          {var _go_=t$0[7][3],_gp_=t$0[1];
-           if(0 < _gp_[12][3])
-            {_gp_[1].useProgram(_gp_[2]);
-             _gp_[1].enable(cull_face_enum);
-             _gp_[1].cullFace(m$0);
-             _gp_[1].frontFace(m$1);
-             _gp_[1].enable(blend);
-             _gp_[1].disable(depth_test);
-             _gp_[1].disable(scissor_test);
-             color_mask(_gp_[1],1,1,1,1);
-             _gp_[1].stencilMask(-1);
-             _gp_[1].stencilOp(keep,keep,keep);
-             _gp_[1].stencilFunc(always,0,-1);
-             _gp_[1].activeTexture(t);
-             bind_texture(_gp_[1],m,0);
-             _gp_[14] = 0;
-             _gp_[15] = -1;
-             _gp_[16] = always;
-             _gp_[17] = 0;
-             _gp_[18] = -1;
-             _gp_[19] = empty$3;
-             _gp_[1].bindBuffer(b,_gp_[4]);
-             var size=_go_[2] * 16 | 0,_gg_=_gp_[1];
-             _gg_.bufferData(b,_go_[1].subarray(0,size),b$0);
-             _gp_[1].enableVertexAttribArray(0);
-             _gp_[1].enableVertexAttribArray(1);
-             vertex_attrib_pointer(_gp_[1],0,2,float$0,0,16,0);
-             vertex_attrib_pointer(_gp_[1],1,2,float$0,0,16,8);
-             _gp_[1].uniform1i(_gp_[3][2],0);
+          {var _gl_=t$0[7][3],_gm_=t$0[1];
+           if(0 < _gm_[15][3])
+            {_gm_[1].useProgram(_gm_[2]);
+             _gm_[1].enable(cull_face_enum);
+             _gm_[1].cullFace(m$0);
+             _gm_[1].frontFace(m$1);
+             _gm_[1].enable(blend);
+             _gm_[1].disable(depth_test);
+             _gm_[1].disable(scissor_test);
+             color_mask(_gm_[1],1,1,1,1);
+             _gm_[1].stencilMask(-1);
+             _gm_[1].stencilOp(keep,keep,keep);
+             _gm_[1].stencilFunc(always,0,-1);
+             _gm_[1].activeTexture(t);
+             bind_texture(_gm_[1],m,0);
+             _gm_[17] = 0;
+             _gm_[18] = -1;
+             _gm_[19] = always;
+             _gm_[20] = 0;
+             _gm_[21] = -1;
+             _gm_[22] = empty$4;
+             _gm_[1].bindBuffer(target,_gm_[6]);
+             var ubo_size=_gm_[13][2] * 4 | 0;
+             buffer_data(_gm_[1],target,_gm_[13][1],ubo_size,stream_draw);
+             _gm_[1].bindBuffer(array_buffer,_gm_[5]);
+             var vert_size=_gl_[2] * 16 | 0;
+             buffer_data(_gm_[1],array_buffer,_gl_[1],vert_size,stream_draw);
+             _gm_[1].bindVertexArray(_gm_[4]);
+             _gm_[1].uniform1i(_gm_[3][2],0);
              var
-              _gh_=_gp_[9],
-              v1=_gh_[0],
-              v2=_gh_[1],
-              _gi_=_gp_[3][3],
-              _gj_=_gp_[1];
+              _ge_=_gm_[12],
+              v1=_ge_[0],
+              v2=_ge_[1],
+              _gf_=_gm_[3][3],
+              _gg_=_gm_[1];
              temp_array[0] = v1;
              temp_array[1] = v2;
-             _gj_.uniform2fv(_gi_,temp_array);
-             var _gl_=_gp_[12][3] - 1 | 0,_gk_=0;
-             if(! (_gl_ < 0))
-              {var i$6=_gk_;
+             _gg_.uniform2fv(_gf_,temp_array);
+             var _gi_=_gm_[15][3] - 1 | 0,_gh_=0;
+             if(! (_gi_ < 0))
+              {var i$6=_gh_;
                for(;;)
                 {var
-                  call=get$0(_gp_[12],i$6),
-                  _gm_=call[7],
-                  _fV_=_gp_[19],
-                  _fR_=blending_eq(_fV_[1],_gm_[1]),
+                  call=get$0(_gm_[15],i$6),
+                  _gj_=call[7],
+                  _fT_=_gm_[22],
+                  _fP_=blending_eq(_fT_[1],_gj_[1]),
                   switch$0=0;
-                 if(_fR_)
-                  {var _fS_=blending_eq(_fV_[2],_gm_[2]);
-                   if(_fS_)
-                    {var _fT_=blending_eq(_fV_[3],_gm_[3]);
-                     if(_fT_)
-                      {var _fW_=blending_eq(_fV_[4],_gm_[4]);switch$0 = 1}
+                 if(_fP_)
+                  {var _fQ_=blending_eq(_fT_[2],_gj_[2]);
+                   if(_fQ_)
+                    {var _fR_=blending_eq(_fT_[3],_gj_[3]);
+                     if(_fR_)
+                      {var _fU_=blending_eq(_fT_[4],_gj_[4]);switch$0 = 1}
                      else
-                      var _fU_=_fT_}
+                      var _fS_=_fR_}
                    else
-                    var _fU_=_fS_}
+                    var _fS_=_fQ_}
                  else
-                  var _fU_=_fR_;
-                 if(! switch$0)var _fW_=_fU_;
-                 if(1 - _fW_)
-                  {_gp_[19] = _gm_;
+                  var _fS_=_fP_;
+                 if(! switch$0)var _fU_=_fS_;
+                 if(1 - _fU_)
+                  {_gm_[22] = _gj_;
                    var
-                    d=int_val(_gm_[4]),
-                    e=int_val(_gm_[3]),
-                    b$1=int_val(_gm_[2]),
-                    a=int_val(_gm_[1]);
-                   _gp_[1].blendFuncSeparate(a,b$1,e,d)}
+                    d=int_val(_gj_[4]),
+                    e=int_val(_gj_[3]),
+                    b=int_val(_gj_[2]),
+                    a=int_val(_gj_[1]);
+                   _gm_[1].blendFuncSeparate(a,b,e,d)}
                  switch(call[1])
                   {case 0:
-                    _gp_[1].enable(stencil_test);
-                    stencil_mask(_gp_,255);
-                    stencil_func(_gp_,always,0,255);
-                    color_mask(_gp_[1],0,0,0,0);
-                    set_uniforms(_gp_,call[8],0);
-                    _gp_[1].stencilOpSeparate(front,keep,keep,incr_wrap);
-                    _gp_[1].stencilOpSeparate(m$0,keep,keep,decr_wrap);
-                    _gp_[1].disable(cull_face_enum);
-                    var _f__=call[10][3] - 1 | 0,_f9_=0;
-                    if(! (_f__ < 0))
-                     {var i$4=_f9_;
+                    _gm_[1].enable(stencil_test);
+                    stencil_mask(_gm_,255);
+                    stencil_func(_gm_,always,0,255);
+                    color_mask(_gm_[1],0,0,0,0);
+                    set_uniforms(_gm_,call[6],0);
+                    _gm_[1].stencilOpSeparate(front,keep,keep,incr_wrap);
+                    _gm_[1].stencilOpSeparate(m$0,keep,keep,decr_wrap);
+                    _gm_[1].disable(cull_face_enum);
+                    var _f8_=call[8][3] - 1 | 0,_f7_=0;
+                    if(! (_f8_ < 0))
+                     {var i$4=_f7_;
                       for(;;)
-                       {var path$4=get$0(call[10],i$4);
-                        _gp_[1].drawArrays(triangle_fan,path$4[1],path$4[2]);
-                        var _gc_=i$4 + 1 | 0;
-                        if(_f__ !== i$4){var i$4=_gc_;continue}
+                       {var path$4=get$0(call[8],i$4);
+                        _gm_[1].drawArrays(triangle_fan,path$4[1],path$4[2]);
+                        var _ga_=i$4 + 1 | 0;
+                        if(_f8_ !== i$4){var i$4=_ga_;continue}
                         break}}
-                    _gp_[1].enable(cull_face_enum);
-                    color_mask(_gp_[1],1,1,1,1);
-                    set_uniforms(_gp_,call[9],call[2]);
-                    if(has(_gp_[11],antialias))
-                     {stencil_func(_gp_,equal$0,0,255);
-                      _gp_[1].stencilOp(keep,keep,keep);
-                      var _ga_=call[10][3] - 1 | 0,_f$_=0;
-                      if(! (_ga_ < 0))
-                       {var i$3=_f$_;
+                    _gm_[1].enable(cull_face_enum);
+                    color_mask(_gm_[1],1,1,1,1);
+                    set_uniforms(_gm_,call[6] + _gm_[7] | 0,call[2]);
+                    if(has(_gm_[14],antialias))
+                     {stencil_func(_gm_,equal$0,0,255);
+                      _gm_[1].stencilOp(keep,keep,keep);
+                      var _f__=call[8][3] - 1 | 0,_f9_=0;
+                      if(! (_f__ < 0))
+                       {var i$3=_f9_;
                         for(;;)
-                         {var path$3=get$0(call[10],i$3);
-                          _gp_[1].drawArrays(triangle_strip,path$3[3],path$3[4]);
-                          var _gb_=i$3 + 1 | 0;
-                          if(_ga_ !== i$3){var i$3=_gb_;continue}
+                         {var path$3=get$0(call[8],i$3);
+                          _gm_[1].drawArrays(triangle_strip,path$3[3],path$3[4]);
+                          var _f$_=i$3 + 1 | 0;
+                          if(_f__ !== i$3){var i$3=_f$_;continue}
                           break}}}
-                    stencil_func(_gp_,notequal,0,255);
-                    _gp_[1].stencilOp(zero$1,zero$1,zero$1);
-                    _gp_[1].drawArrays(triangle_strip,call[4],call[5]);
-                    _gp_[1].disable(stencil_test);
+                    stencil_func(_gm_,notequal,0,255);
+                    _gm_[1].stencilOp(zero$1,zero$1,zero$1);
+                    _gm_[1].drawArrays(triangle_strip,call[4],call[5]);
+                    _gm_[1].disable(stencil_test);
                     break;
                    case 1:
-                    set_uniforms(_gp_,call[8],call[2]);
-                    var _ge_=call[10][3] - 1 | 0,_gd_=0;
-                    if(! (_ge_ < 0))
-                     {var i$5=_gd_;
+                    set_uniforms(_gm_,call[6],call[2]);
+                    var _gc_=call[8][3] - 1 | 0,_gb_=0;
+                    if(! (_gc_ < 0))
+                     {var i$5=_gb_;
                       for(;;)
-                       {var path$5=get$0(call[10],i$5);
-                        _gp_[1].drawArrays(triangle_fan,path$5[1],path$5[2]);
+                       {var path$5=get$0(call[8],i$5);
+                        _gm_[1].drawArrays(triangle_fan,path$5[1],path$5[2]);
                         if(0 < path$5[4])
-                         _gp_[1].drawArrays(triangle_strip,path$5[3],path$5[4]);
-                        var _gf_=i$5 + 1 | 0;
-                        if(_ge_ !== i$5){var i$5=_gf_;continue}
+                         _gm_[1].drawArrays(triangle_strip,path$5[3],path$5[4]);
+                        var _gd_=i$5 + 1 | 0;
+                        if(_gc_ !== i$5){var i$5=_gd_;continue}
                         break}}
                     break;
                    case 2:
-                    if(has(_gp_[11],stencil_strokes))
-                     {_gp_[1].enable(stencil_test);
-                      stencil_mask(_gp_,255);
-                      stencil_func(_gp_,equal$0,0,255);
-                      _gp_[1].stencilOp(keep,keep,incr);
-                      set_uniforms(_gp_,call[9],call[2]);
-                      var _fY_=call[10][3] - 1 | 0,_fX_=0;
+                    if(has(_gm_[14],stencil_strokes))
+                     {_gm_[1].enable(stencil_test);
+                      stencil_mask(_gm_,255);
+                      stencil_func(_gm_,equal$0,0,255);
+                      _gm_[1].stencilOp(keep,keep,incr);
+                      set_uniforms(_gm_,call[6] + _gm_[7] | 0,call[2]);
+                      var _fW_=call[8][3] - 1 | 0,_fV_=0;
+                      if(! (_fW_ < 0))
+                       {var i$1=_fV_;
+                        for(;;)
+                         {var path$1=get$0(call[8],i$1);
+                          _gm_[1].drawArrays(triangle_strip,path$1[3],path$1[4]);
+                          var _f3_=i$1 + 1 | 0;
+                          if(_fW_ !== i$1){var i$1=_f3_;continue}
+                          break}}
+                      set_uniforms(_gm_,call[6],call[2]);
+                      stencil_func(_gm_,equal$0,0,255);
+                      _gm_[1].stencilOp(keep,keep,keep);
+                      var _fY_=call[8][3] - 1 | 0,_fX_=0;
                       if(! (_fY_ < 0))
-                       {var i$1=_fX_;
+                       {var i$0=_fX_;
                         for(;;)
-                         {var path$1=get$0(call[10],i$1);
-                          _gp_[1].drawArrays(triangle_strip,path$1[3],path$1[4]);
-                          var _f5_=i$1 + 1 | 0;
-                          if(_fY_ !== i$1){var i$1=_f5_;continue}
+                         {var path$0=get$0(call[8],i$0);
+                          _gm_[1].drawArrays(triangle_strip,path$0[3],path$0[4]);
+                          var _f2_=i$0 + 1 | 0;
+                          if(_fY_ !== i$0){var i$0=_f2_;continue}
                           break}}
-                      set_uniforms(_gp_,call[8],call[2]);
-                      stencil_func(_gp_,equal$0,0,255);
-                      _gp_[1].stencilOp(keep,keep,keep);
-                      var _f0_=call[10][3] - 1 | 0,_fZ_=0;
+                      color_mask(_gm_[1],0,0,0,0);
+                      stencil_func(_gm_,always,0,255);
+                      _gm_[1].stencilOp(zero$1,zero$1,zero$1);
+                      var _f0_=call[8][3] - 1 | 0,_fZ_=0;
                       if(! (_f0_ < 0))
-                       {var i$0=_fZ_;
+                       {var i=_fZ_;
                         for(;;)
-                         {var path$0=get$0(call[10],i$0);
-                          _gp_[1].drawArrays(triangle_strip,path$0[3],path$0[4]);
-                          var _f4_=i$0 + 1 | 0;
-                          if(_f0_ !== i$0){var i$0=_f4_;continue}
+                         {var path=get$0(call[8],i);
+                          _gm_[1].drawArrays(triangle_strip,path[3],path[4]);
+                          var _f1_=i + 1 | 0;
+                          if(_f0_ !== i){var i=_f1_;continue}
                           break}}
-                      color_mask(_gp_[1],0,0,0,0);
-                      stencil_func(_gp_,always,0,255);
-                      _gp_[1].stencilOp(zero$1,zero$1,zero$1);
-                      var _f2_=call[10][3] - 1 | 0,_f1_=0;
-                      if(! (_f2_ < 0))
-                       {var i=_f1_;
-                        for(;;)
-                         {var path=get$0(call[10],i);
-                          _gp_[1].drawArrays(triangle_strip,path[3],path[4]);
-                          var _f3_=i + 1 | 0;
-                          if(_f2_ !== i){var i=_f3_;continue}
-                          break}}
-                      color_mask(_gp_[1],1,1,1,1);
-                      _gp_[1].disable(stencil_test)}
+                      color_mask(_gm_[1],1,1,1,1);
+                      _gm_[1].disable(stencil_test)}
                     else
-                     {set_uniforms(_gp_,call[8],call[2]);
-                      var _f7_=call[10][3] - 1 | 0,_f6_=0;
-                      if(! (_f7_ < 0))
-                       {var i$2=_f6_;
+                     {set_uniforms(_gm_,call[6],call[2]);
+                      var _f5_=call[8][3] - 1 | 0,_f4_=0;
+                      if(! (_f5_ < 0))
+                       {var i$2=_f4_;
                         for(;;)
-                         {var path$2=get$0(call[10],i$2);
-                          _gp_[1].drawArrays(triangle_strip,path$2[3],path$2[4]);
-                          var _f8_=i$2 + 1 | 0;
-                          if(_f7_ !== i$2){var i$2=_f8_;continue}
+                         {var path$2=get$0(call[8],i$2);
+                          _gm_[1].drawArrays(triangle_strip,path$2[3],path$2[4]);
+                          var _f6_=i$2 + 1 | 0;
+                          if(_f5_ !== i$2){var i$2=_f6_;continue}
                           break}}}
                     break;
                    default:
-                    set_uniforms(_gp_,call[8],call[2]);
-                    _gp_[1].drawArrays(triangles,call[4],call[5])}
-                 var _gn_=i$6 + 1 | 0;
-                 if(_gl_ !== i$6){var i$6=_gn_;continue}
+                    set_uniforms(_gm_,call[6],call[2]);
+                    _gm_[1].drawArrays(triangles,call[4],call[5])}
+                 var _gk_=i$6 + 1 | 0;
+                 if(_gi_ !== i$6){var i$6=_gk_;continue}
                  break}}
-             _gp_[1].disableVertexAttribArray(0);
-             _gp_[1].disableVertexAttribArray(1);
-             _gp_[1].disable(cull_face_enum);
-             bind_texture$0(_gp_,0)}
-           cancel(_gp_);
-           var _gq_=0 !== t$0[14]?1:0,_gr_=_gq_?0:_gq_;
-           return _gr_}
+             _gm_[1].bindVertexArray(no_handler);
+             _gm_[1].disable(cull_face_enum);
+             bind_texture$0(_gm_,0)}
+           cancel(_gm_);
+           var _gn_=0 !== t$0[14]?1:0,_go_=_gn_?0:_gn_;
+           return _go_}
          function set_paint_color(p,color)
           {p[1] = 1.;
            p[2] = 0.;
@@ -9941,11 +9953,11 @@
           {if(opt)var sth=opt[1],start=sth;else var start=0;
            var
             state$0=get_state(t),
-            _fM_=t[11],
-            scale=get_font_scale(state$0) * _fM_,
+            _fK_=t[11],
+            scale=get_font_scale(state$0) * _fK_,
             inv_scale=1. / scale,
-            _fN_=state$0[10],
-            det=_fN_[1] * _fN_[4] - _fN_[3] * _fN_[2],
+            _fL_=state$0[10],
+            det=_fL_[1] * _fL_[4] - _fL_[3] * _fL_[2],
             is_flipped=det < 0.?1:0;
            if(end)
             var len$0=end[1],end$0=len$0;
@@ -9973,27 +9985,27 @@
                  q[4] = q[8];
                  q[6] = y0$0;
                  q[8] = t0}
-               var _fO_=state$0[10],_fP_=t[7][3],at=_fP_[2];
-               check_size(_fP_,at + 5 | 0);
+               var _fM_=state$0[10],_fN_=t[7][3],at=_fN_[2];
+               check_size(_fN_,at + 5 | 0);
                var
                 qx0=q[1] * inv_scale,
                 qy0=q[2] * inv_scale,
-                c0=qx0 * _fO_[1] + qy0 * _fO_[3] + _fO_[5],
-                c1=qx0 * _fO_[2] + qy0 * _fO_[4] + _fO_[6],
+                c0=qx0 * _fM_[1] + qy0 * _fM_[3] + _fM_[5],
+                c1=qx0 * _fM_[2] + qy0 * _fM_[4] + _fM_[6],
                 qx1=q[5] * inv_scale,
                 qy1=q[6] * inv_scale,
-                c4=qx1 * _fO_[1] + qy1 * _fO_[3] + _fO_[5],
-                c5=qx1 * _fO_[2] + qy1 * _fO_[4] + _fO_[6],
-                c2=qx1 * _fO_[1] + qy0 * _fO_[3] + _fO_[5],
-                c3=qx1 * _fO_[2] + qy0 * _fO_[4] + _fO_[6],
-                c6=qx0 * _fO_[1] + qy1 * _fO_[3] + _fO_[5],
-                c7=qx0 * _fO_[2] + qy1 * _fO_[4] + _fO_[6];
-               unsafe_set(_fP_,at,c0,c1,q[3],q[4]);
-               unsafe_set(_fP_,at + 1 | 0,c4,c5,q[7],q[8]);
-               unsafe_set(_fP_,at + 2 | 0,c2,c3,q[7],q[4]);
-               unsafe_set(_fP_,at + 3 | 0,c0,c1,q[3],q[4]);
-               unsafe_set(_fP_,at + 4 | 0,c6,c7,q[3],q[8]);
-               unsafe_set(_fP_,at + 5 | 0,c4,c5,q[7],q[8]);
+                c4=qx1 * _fM_[1] + qy1 * _fM_[3] + _fM_[5],
+                c5=qx1 * _fM_[2] + qy1 * _fM_[4] + _fM_[6],
+                c2=qx1 * _fM_[1] + qy0 * _fM_[3] + _fM_[5],
+                c3=qx1 * _fM_[2] + qy0 * _fM_[4] + _fM_[6],
+                c6=qx0 * _fM_[1] + qy1 * _fM_[3] + _fM_[5],
+                c7=qx0 * _fM_[2] + qy1 * _fM_[4] + _fM_[6];
+               unsafe_set(_fN_,at,c0,c1,q[3],q[4]);
+               unsafe_set(_fN_,at + 1 | 0,c4,c5,q[7],q[8]);
+               unsafe_set(_fN_,at + 2 | 0,c2,c3,q[7],q[4]);
+               unsafe_set(_fN_,at + 3 | 0,c0,c1,q[3],q[4]);
+               unsafe_set(_fN_,at + 4 | 0,c6,c7,q[3],q[8]);
+               unsafe_set(_fN_,at + 5 | 0,c4,c5,q[7],q[8]);
                continue}
              var match=caml_call1(Font[15],t[12]);
              if(match)
@@ -10011,23 +10023,24 @@
                   w=x1 - x0 | 0,
                   h=y1 - y0 | 0;
                  update_texture(t[1],image,x0,y0,w,h,data)}}
-             var _fQ_=t[7][3],state=get_state(t),paint=copy$2(state[3]);
+             var _fO_=t[7][3],state=get_state(t),paint=copy$2(state[3]);
              paint[19] = get$0(t[13],t[14]);
              modify_alpha(paint,state[9]);
              var
-              len=_fQ_[2] - off | 0,
-              _fL_=t[1],
-              _fI_=t[10],
-              _fJ_=state[11],
-              _fK_=state[1],
-              call=steal(_fL_[12],empty$4);
+              len=_fO_[2] - off | 0,
+              _fJ_=t[1],
+              _fG_=t[10],
+              _fH_=state[11],
+              _fI_=state[1],
+              call=steal(_fJ_[15],empty$5);
              reset$1(call,3);
              call[2] = paint[19] | 0;
-             call[7] = of_composite_op_state(_fK_);
+             call[7] = of_composite_op_state(_fI_);
              call[4] = off;
              call[5] = len;
-             convert_paint(_fL_,call[8],paint,_fJ_,1.,_fI_,-1.);
-             call[8][43] = 3.;
+             call[6] = make_slot(_fJ_[13],1,_fJ_[7]);
+             convert_paint(_fJ_,call[6],paint,_fH_,1.,_fG_,-1.);
+             set_type(_fJ_[13],call[6],img);
              t[15] = t[15] + 1 | 0;
              t[18] = t[18] + (len / 3 | 0) | 0;
              return caml_call1(Font[4][1],iter) / scale}}
@@ -10036,8 +10049,8 @@
          function metrics(t)
           {var
             state=get_state(t),
-            _fH_=t[11],
-            scale=get_font_scale(state) * _fH_;
+            _fF_=t[11],
+            scale=get_font_scale(state) * _fF_;
            set_font_attributes(t,state,scale);
            var metrics=caml_call1(Font[12],t[12]);
            return [254,metrics[1],metrics[2],metrics[3]]}
@@ -10054,8 +10067,8 @@
          function break_lines(t,break_width,max_rows,start,end,lines,text)
           {var
             state=get_state(t),
-            _e7_=t[11],
-            scale=get_font_scale(state) * _e7_,
+            _e5_=t[11],
+            scale=get_font_scale(state) * _e5_,
             inv_scale=1. / scale;
            set_font_attributes(t,state,scale);
            var
@@ -10114,16 +10127,16 @@
                        default:var type=1}
                      if(1 === type)
                       {var
-                        _e$_=caml_call1(Font[4][5],iter),
-                        _fa_=row_max_x[1] * inv_scale,
-                        _fb_=row_min_x[1] * inv_scale,
-                        _fc_=row_width[1] * inv_scale,
-                        _fd_=0 <= row_end[1]?row_end[1]:caml_call1(Font[4][3],iter),
-                        _fe_=
+                        _e9_=caml_call1(Font[4][5],iter),
+                        _e__=row_max_x[1] * inv_scale,
+                        _e$_=row_min_x[1] * inv_scale,
+                        _fa_=row_width[1] * inv_scale,
+                        _fb_=0 <= row_end[1]?row_end[1]:caml_call1(Font[4][3],iter),
+                        _fc_=
                          0 <= row_start[1]?row_start[1]:caml_call1(Font[4][3],iter),
-                        row=[0,_fe_,_fd_,_fc_,_fb_,_fa_,_e$_],
-                        _ff_=nrows[1];
-                       caml_check_bound(lines,_ff_)[1 + _ff_] = row;
+                        row=[0,_fc_,_fb_,_fa_,_e$_,_e__,_e9_],
+                        _fd_=nrows[1];
+                       caml_check_bound(lines,_fd_)[1 + _fd_] = row;
                        nrows[1]++;
                        if(max_rows <= nrows[1])throw Exit;
                        break_end[1] = row_start[1];
@@ -10136,13 +10149,13 @@
                        row_max_x[1] = 0.}
                      else
                       if(row_start[1] === -1)
-                       {var _fg_=symbol(type,2),_fh_=_fg_ || symbol(type,3);
-                        if(_fh_)
+                       {var _fe_=symbol(type,2),_ff_=_fe_ || symbol(type,3);
+                        if(_ff_)
                          {row_start_x[1] = caml_call1(Font[4][6],iter);
                           row_start[1] = caml_call1(Font[4][3],iter);
                           row_end[1] = caml_call1(Font[4][5],iter);
-                          var _fi_=row_start_x[1];
-                          row_width[1] = caml_call1(Font[4][1],iter) - _fi_;
+                          var _fg_=row_start_x[1];
+                          row_width[1] = caml_call1(Font[4][1],iter) - _fg_;
                           row_min_x[1] = q[1] - row_start_x[1];
                           row_max_x[1] = q[5] - row_start_x[1];
                           word_start[1] = caml_call1(Font[4][3],iter);
@@ -10153,56 +10166,56 @@
                           break_max_x[1] = 0.}}
                       else
                        {var
-                         _fj_=row_start_x[1],
-                         next_width=caml_call1(Font[4][1],iter) - _fj_,
-                         _fk_=symbol(ptype$0,0);
-                        if(_fk_)
-                         var _fl_=symbol(type,2),_fm_=_fl_ || symbol(type,3);
+                         _fh_=row_start_x[1],
+                         next_width=caml_call1(Font[4][1],iter) - _fh_,
+                         _fi_=symbol(ptype$0,0);
+                        if(_fi_)
+                         var _fj_=symbol(type,2),_fk_=_fj_ || symbol(type,3);
                         else
-                         var _fm_=_fk_;
-                        var _fn_=_fm_ || symbol(type,3);
-                        if(_fn_)
+                         var _fk_=_fi_;
+                        var _fl_=_fk_ || symbol(type,3);
+                        if(_fl_)
                          {word_start[1] = caml_call1(Font[4][3],iter);
                           word_start_x[1] = caml_call1(Font[4][6],iter);
                           word_min_x[1] = q[1]}
-                        var _fo_=symbol(type,2),_fp_=_fo_ || symbol(type,3);
-                        if(_fp_)
+                        var _fm_=symbol(type,2),_fn_=_fm_ || symbol(type,3);
+                        if(_fn_)
                          {row_end[1] = caml_call1(Font[4][5],iter);
-                          var _fq_=row_start_x[1];
-                          row_width[1] = caml_call1(Font[4][1],iter) - _fq_;
+                          var _fo_=row_start_x[1];
+                          row_width[1] = caml_call1(Font[4][1],iter) - _fo_;
                           row_max_x[1] = q[5] - row_start_x[1]}
                         var
-                         _fr_=symbol(ptype$0,2),
-                         _fs_=_fr_ || symbol(ptype$0,3),
-                         _ft_=_fs_?symbol(type,0):_fs_,
-                         _fu_=_ft_ || symbol(type,3);
-                        if(_fu_)
+                         _fp_=symbol(ptype$0,2),
+                         _fq_=_fp_ || symbol(ptype$0,3),
+                         _fr_=_fq_?symbol(type,0):_fq_,
+                         _fs_=_fr_ || symbol(type,3);
+                        if(_fs_)
                          {break_end[1] = caml_call1(Font[4][5],iter);
                           word_start[1] = caml_call1(Font[4][5],iter);
                           break_width$0[1] = row_width[1];
                           break_max_x[1] = row_max_x[1]}
                         var
-                         _fv_=symbol(type,2),
-                         _fw_=_fv_ || symbol(type,3),
-                         _fx_=_fw_?break_row_width < next_width?1:0:_fw_;
-                        if(_fx_)
+                         _ft_=symbol(type,2),
+                         _fu_=_ft_ || symbol(type,3),
+                         _fv_=_fu_?break_row_width < next_width?1:0:_fu_;
+                        if(_fv_)
                          {if(break_end[1] === row_start[1])
                            {var
-                             _fy_=caml_call1(Font[4][3],iter),
-                             _fz_=row_max_x[1] * inv_scale,
-                             _fA_=row_min_x[1] * inv_scale,
-                             _fB_=row_width[1] * inv_scale,
-                             _fC_=caml_call1(Font[4][3],iter),
-                             row$0=[0,row_start[1],_fC_,_fB_,_fA_,_fz_,_fy_],
-                             _fD_=nrows[1];
-                            caml_check_bound(lines,_fD_)[1 + _fD_] = row$0;
+                             _fw_=caml_call1(Font[4][3],iter),
+                             _fx_=row_max_x[1] * inv_scale,
+                             _fy_=row_min_x[1] * inv_scale,
+                             _fz_=row_width[1] * inv_scale,
+                             _fA_=caml_call1(Font[4][3],iter),
+                             row$0=[0,row_start[1],_fA_,_fz_,_fy_,_fx_,_fw_],
+                             _fB_=nrows[1];
+                            caml_check_bound(lines,_fB_)[1 + _fB_] = row$0;
                             nrows[1]++;
                             if(max_rows <= nrows[1])throw Exit;
                             row_start_x[1] = caml_call1(Font[4][6],iter);
                             row_start[1] = caml_call1(Font[4][3],iter);
                             row_end[1] = caml_call1(Font[4][5],iter);
-                            var _fE_=row_start_x[1];
-                            row_width[1] = caml_call1(Font[4][1],iter) - _fE_;
+                            var _fC_=row_start_x[1];
+                            row_width[1] = caml_call1(Font[4][1],iter) - _fC_;
                             row_min_x[1] = q[1] - row_start_x[1];
                             row_max_x[1] = q[5] - row_start_x[1];
                             word_start[1] = caml_call1(Font[4][3],iter);
@@ -10218,15 +10231,15 @@
                                row_min_x[1] * inv_scale,
                                break_max_x[1] * inv_scale,
                                word_start[1]],
-                             _fF_=nrows[1];
-                            caml_check_bound(lines,_fF_)[1 + _fF_] = row$1;
+                             _fD_=nrows[1];
+                            caml_check_bound(lines,_fD_)[1 + _fD_] = row$1;
                             nrows[1]++;
                             if(max_rows <= nrows[1])throw Exit;
                             row_start_x[1] = word_start_x[1];
                             row_start[1] = word_start[1];
                             row_end[1] = caml_call1(Font[4][5],iter);
-                            var _fG_=row_start_x[1];
-                            row_width[1] = caml_call1(Font[4][1],iter) - _fG_;
+                            var _fE_=row_start_x[1];
+                            row_width[1] = caml_call1(Font[4][1],iter) - _fE_;
                             row_min_x[1] = word_min_x[1] - row_start_x[1];
                             row_max_x[1] = q[5] - row_start_x[1]}
                           break_end[1] = row_start[1];
@@ -10251,20 +10264,20 @@
                   row_min_x[1] * inv_scale,
                   row_max_x[1] * inv_scale,
                   end$0],
-                _e8_=nrows[1];
-               caml_check_bound(lines,_e8_)[1 + _e8_] = row;
+                _e6_=nrows[1];
+               caml_check_bound(lines,_e6_)[1 + _e6_] = row;
                nrows[1]++}
-             var _e9_=nrows[1];
-             return _e9_}
-           catch(_e__)
-            {_e__ = caml_wrap_exception(_e__);
-             if(_e__ === Exit)return nrows[1];
-             throw _e__}}
+             var _e7_=nrows[1];
+             return _e7_}
+           catch(_e8_)
+            {_e8_ = caml_wrap_exception(_e8_);
+             if(_e8_ === Exit)return nrows[1];
+             throw _e8_}}
          function glyph_positions(t,x,y,start,end,glyphs,text)
           {var
             state=get_state(t),
-            _e1_=t[11],
-            scale=get_font_scale(state) * _e1_,
+            _eZ_=t[11],
+            scale=get_font_scale(state) * _eZ_,
             inv_scale=1. / scale;
            set_font_attributes(t,state,scale);
            var
@@ -10276,12 +10289,12 @@
             {var res=caml_call3(Font[18],t[12],iter,q);
              if(res)
               {var
-                _e2_=q[5],
-                _e3_=max$0(caml_call1(Font[4][1],iter),_e2_) * inv_scale,
-                _e4_=q[1],
-                _e5_=min$1(caml_call1(Font[4][6],iter),_e4_) * inv_scale,
-                _e6_=caml_call1(Font[4][6],iter) * inv_scale,
-                pos=[0,caml_call1(Font[4][3],iter),_e6_,_e5_,_e3_];
+                _e0_=q[5],
+                _e1_=max$0(caml_call1(Font[4][1],iter),_e0_) * inv_scale,
+                _e2_=q[1],
+                _e3_=min$1(caml_call1(Font[4][6],iter),_e2_) * inv_scale,
+                _e4_=caml_call1(Font[4][6],iter) * inv_scale,
+                pos=[0,caml_call1(Font[4][3],iter),_e4_,_e3_,_e1_];
                caml_check_bound(glyphs,idx)[1 + idx] = pos;
                var idx$0=idx + 1 | 0,idx=idx$0;
                continue}
@@ -10289,8 +10302,8 @@
          function bounds(t,x,y,start,end,str)
           {var
             state=get_state(t),
-            _e0_=t[11],
-            scale=get_font_scale(state) * _e0_,
+            _eY_=t[11],
+            scale=get_font_scale(state) * _eY_,
             inv_scale=1. / scale;
            set_font_attributes(t,state,scale);
            var
@@ -10312,8 +10325,8 @@
           {if(opt)var sth=opt[1],start=sth;else var start=0;
            var
             state=get_state(t),
-            _eW_=t[11],
-            scale=get_font_scale(state) * _eW_,
+            _eU_=t[11],
+            scale=get_font_scale(state) * _eU_,
             inv_scale=1. / scale,
             old_align=state[16],
             halign=h_align(state[16]),
@@ -10340,9 +10353,9 @@
              if(0 === count)
               {state[16] = old_align;
                return [254,min_x[1],min_y[1],max_x[1],max_y[1]]}
-             var _eY_=count - 1 | 0,_eX_=0;
-             if(! (_eY_ < 0))
-              {var i=_eX_;
+             var _eW_=count - 1 | 0,_eV_=0;
+             if(! (_eW_ < 0))
+              {var i=_eV_;
                for(;;)
                 {var
                   line=caml_check_bound(lines,i)[1 + i],
@@ -10360,11 +10373,11 @@
                  max_y[1] = max$0(max_y[1],y$0[1] + rmax_y$0);
                  y$0[1] = y$0[1] + line_h * state[14];
                  start$0[1] = line[6];
-                 var _eZ_=i + 1 | 0;
-                 if(_eY_ !== i){var i=_eZ_;continue}
+                 var _eX_=i + 1 | 0;
+                 if(_eW_ !== i){var i=_eX_;continue}
                  break}}
              continue}}
-         function create$6(t,name,file)
+         function create$4(t,name,file)
           {return caml_call3(Font[14],t[12],name,file)}
          function set_size(t,size)
           {var state=get_state(t);state[12] = size;return 0}
@@ -10398,9 +10411,9 @@
               count=
                break_lines(t,break_width,2,[0,start$0[1]],end,lines,str);
              if(0 === count){state[16] = old_align;return 0}
-             var _eU_=count - 1 | 0,_eT_=0;
-             if(! (_eU_ < 0))
-              {var i=_eT_;
+             var _eS_=count - 1 | 0,_eR_=0;
+             if(! (_eS_ < 0))
+              {var i=_eR_;
                for(;;)
                 {var
                   line=caml_check_bound(lines,i)[1 + i],
@@ -10418,8 +10431,8 @@
                      text(t,x$1,y$0[1],[0,s],[0,e],str)}
                  y$0[1] = y$0[1] + metrics$0[3] * state[14];
                  start$0[1] = line[6];
-                 var _eV_=i + 1 | 0;
-                 if(_eU_ !== i){var i=_eV_;continue}
+                 var _eT_=i + 1 | 0;
+                 if(_eS_ !== i){var i=_eT_;continue}
                  break}}
              continue}}
          function add_fallback_id(t,font,fallback)
@@ -10430,31 +10443,31 @@
           {return caml_call2(Font[21],t[12],font)}
          function reset_fallback(t,name)
           {return caml_call2(Font[22],t[12],name)}
-         function create$10(flags,impl)
+         function create$7(flags,impl)
           {var
-            _eH_=create$3(1,0),
-            _eI_=caml_call1(Font[2],0),
-            _et_=[0,create$5(10000),0],
-            _eB_=
+            _eF_=create$3(1,0),
+            _eG_=caml_call1(Font[2],0),
+            _es_=[0,create$6(10000),0],
+            _ez_=
              [0,
               [0,caml_make_vect(1000,0),caml_make_vect(7000,0.),0],
-              init$0(10,create$7),
-              _et_,
+              init$0(10,create$8),
+              _es_,
               empty],
-            _eN_=create$3(10,create$9(0)),
-            _eO_=has(flags,tesselate_afd),
+            _eL_=create$3(10,create$9(0)),
+            _eM_=has(flags,tesselate_afd),
+            _eA_=0,
+            _eB_=0,
             _eC_=0,
             _eD_=0,
             _eE_=0,
-            _eF_=0,
-            _eG_=0,
-            _eJ_=1.,
+            _eH_=1.,
+            _eI_=0.,
+            _eJ_=0.,
             _eK_=0.,
-            _eL_=0.,
-            _eM_=0.,
-            _eP_=0.,
-            _eQ_=0.,
-            _eR_=create$3(128,0),
+            _eN_=0.,
+            _eO_=0.,
+            _eP_=create$3(128,0),
             match=
              with_return
               (function(r)
@@ -10464,19 +10477,26 @@
                   frag=impl.createShader(impl.FRAGMENT_SHADER);
                  impl.shaderSource
                   (vert,
-                   "#version 100\n\nuniform vec2 viewSize;\nattribute vec2 vertex;\nattribute vec2 tcoord;\nvarying vec2 ftcoord;\nvarying vec2 fpos;\n\nvoid main(void) {\n\tftcoord = tcoord;\n\tfpos = vertex;\n\tgl_Position = vec4(2.0*vertex.x/viewSize.x - 1.0, 1.0 - 2.0*vertex.y/viewSize.y, 0, 1);\n}\n");
+                   "#version 300 es\n\nuniform vec2 viewSize;\nlayout(location = 0) in vec2 vertex;\nlayout(location = 1) in vec2 tcoord;\nout vec2 ftcoord;\nout vec2 fpos;\n\nvoid main(void) {\n\tftcoord = tcoord;\n\tfpos = vertex;\n\tgl_Position = vec4(2.0*vertex.x/viewSize.x - 1.0, 1.0 - 2.0*vertex.y/viewSize.y, 0, 1);\n}\n");
                  impl.shaderSource
                   (frag,
-                   "#version 100\nprecision highp float;\n\n#define EDGE_AA 1\n#define UNIFORMARRAY_SIZE 11\nuniform vec4 frag[UNIFORMARRAY_SIZE];\nuniform sampler2D tex;\nvarying vec2 ftcoord;\nvarying vec2 fpos;\n\n#define scissorMat mat3(frag[0].xyz, frag[1].xyz, frag[2].xyz)\n#define paintMat mat3(frag[3].xyz, frag[4].xyz, frag[5].xyz)\n#define innerCol frag[6]\n#define outerCol frag[7]\n#define scissorExt frag[8].xy\n#define scissorScale frag[8].zw\n#define extent frag[9].xy\n#define radius frag[9].z\n#define feather frag[9].w\n#define strokeMult frag[10].x\n#define strokeThr frag[10].y\n#define texType int(frag[10].z)\n#define type int(frag[10].w)\n\nfloat sdroundrect(vec2 pt, vec2 ext, float rad) {\n\tvec2 ext2 = ext - vec2(rad,rad);\n\tvec2 d = abs(pt) - ext2;\n\treturn min(max(d.x,d.y),0.0) + length(max(d,0.0)) - rad;\n}\n\n#ifdef EDGE_AA\nfloat strokeMask() {\n\treturn min(1.0, (1.0-abs(ftcoord.x*2.0-1.0))*strokeMult) * min(1.0, ftcoord.y);\n}\n#endif\n\n// Scissoring\nfloat scissorMask(vec2 p) {\n\tvec2 sc = (abs((scissorMat * vec3(p,1.0)).xy) - scissorExt);\n\tsc = vec2(0.5,0.5) - sc * scissorScale;\n\treturn clamp(sc.x,0.0,1.0) * clamp(sc.y,0.0,1.0);\n}\n\nvoid main(void) {\n   vec4 result = vec4(1, 1, 0, 1);\n\tfloat scissor = scissorMask(fpos);\n#ifdef EDGE_AA\n\tfloat strokeAlpha = strokeMask();\n\tif (strokeAlpha < strokeThr) discard;\n#else\n\tfloat strokeAlpha = 1.0;\n#endif\n\tif (type == 0) {\t\t\t// Gradient\n\t\t// Calculate gradient color using box gradient\n\t\tvec2 pt = (paintMat * vec3(fpos,1.0)).xy;\n\t\tfloat d = clamp((sdroundrect(pt, extent, radius) + feather*0.5) / feather, 0.0, 1.0);\n\t\tvec4 color = mix(innerCol,outerCol,d);\n\t\t// Combine alpha\n\t\tcolor *= strokeAlpha * scissor;\n\t\tresult = color;\n\t} else if (type == 1) {\t\t// Image\n\t\t// Calculate color fron texture\n\n\t\tvec2 pt = (paintMat * vec3(fpos,1.0)).xy / extent;\n\t\tvec4 color = texture2D(tex, pt);\n\n\t\tif (texType == 1) color = vec4(color.xyz*color.w,color.w);\n\t\tif (texType == 2) color = vec4(color.x);\n\t\t// Apply color tint and alpha.\n\t\tcolor *= innerCol;\n\t\t// Combine alpha\n\t\tcolor *= strokeAlpha * scissor;\n\t\tresult = color;\n\t} else if (type == 2) {\t\t// Stencil fill\n\t\tresult = vec4(1,1,1,1);\n\t} else if (type == 3) {\t\t// Textured tris\n\t\tvec4 color = texture2D(tex, ftcoord);\n\t\tif (texType == 1) color = vec4(color.xyz*color.w,color.w);\n\t\tif (texType == 2) color = vec4(color.x);\n\t\tcolor *= scissor;\n\t\tresult = color * innerCol;\n\t}\n\tgl_FragColor = result;\n}\n");
+                   "#version 300 es\nprecision highp float;\n\n#define EDGE_AA 1\n\nlayout(std140) uniform frag {\n    mat3 scissorMat;\n    mat3 paintMat;\n    vec4 innerCol;\n    vec4 outerCol;\n    vec2 scissorExt;\n    vec2 scissorScale;\n    vec2 extent;\n    float radius;\n    float feather;\n    float strokeMult;\n    float strokeThr;\n    float texType_;\n    float type_;\n};\n\n#define type int(type_)\n#define texType int(texType_)\n\n  /*\n#define UNIFORMARRAY_SIZE 11\nuniform vec4 frag[UNIFORMARRAY_SIZE];\n\n#define scissorMat mat3(frag[0].xyz, frag[1].xyz, frag[2].xyz)\n#define paintMat mat3(frag[3].xyz, frag[4].xyz, frag[5].xyz)\n#define innerCol frag[6]\n#define outerCol frag[7]\n#define scissorExt frag[8].xy\n#define scissorScale frag[8].zw\n#define extent frag[9].xy\n#define radius frag[9].z\n#define feather frag[9].w\n#define strokeMult frag[10].x\n#define strokeThr frag[10].y\n#define texType int(frag[10].z)\n#define type int(frag[10].w)\n  */\n\nuniform sampler2D tex;\nin vec2 ftcoord;\nin vec2 fpos;\nout vec4 fragColor;\n\nfloat sdroundrect(vec2 pt, vec2 ext, float rad) {\n\tvec2 ext2 = ext - vec2(rad,rad);\n\tvec2 d = abs(pt) - ext2;\n\treturn min(max(d.x,d.y),0.0) + length(max(d,0.0)) - rad;\n}\n\n#ifdef EDGE_AA\nfloat strokeMask() {\n\treturn min(1.0, (1.0-abs(ftcoord.x*2.0-1.0))*strokeMult) * min(1.0, ftcoord.y);\n}\n#endif\n\n// Scissoring\nfloat scissorMask(vec2 p) {\n\tvec2 sc = (abs((scissorMat * vec3(p,1.0)).xy) - scissorExt);\n\tsc = vec2(0.5,0.5) - sc * scissorScale;\n\treturn clamp(sc.x,0.0,1.0) * clamp(sc.y,0.0,1.0);\n}\n\nvoid main(void) {\n   vec4 result = vec4(1, 1, 0, 1);\n\tfloat scissor = scissorMask(fpos);\n#ifdef EDGE_AA\n\tfloat strokeAlpha = strokeMask();\n\tif (strokeAlpha < strokeThr) discard;\n#else\n\tfloat strokeAlpha = 1.0;\n#endif\n\tif (type == 0) {\t\t\t// Gradient\n\t\t// Calculate gradient color using box gradient\n\t\tvec2 pt = (paintMat * vec3(fpos,1.0)).xy;\n\t\tfloat d = clamp((sdroundrect(pt, extent, radius) + feather*0.5) / feather, 0.0, 1.0);\n\t\tvec4 color = mix(innerCol,outerCol,d);\n\t\t// Combine alpha\n\t\tcolor *= strokeAlpha * scissor;\n\t\tresult = color;\n\t} else if (type == 1) {\t\t// Image\n\t\t// Calculate color fron texture\n\n\t\tvec2 pt = (paintMat * vec3(fpos,1.0)).xy / extent;\n\t\tvec4 color = texture(tex, pt);\n\n\t\tif (texType == 1) color = vec4(color.xyz*color.w,color.w);\n\t\tif (texType == 2) color = vec4(color.x);\n\t\t// Apply color tint and alpha.\n\t\tcolor *= innerCol;\n\t\t// Combine alpha\n\t\tcolor *= strokeAlpha * scissor;\n\t\tresult = color;\n\t} else if (type == 2) {\t\t// Stencil fill\n\t\tresult = vec4(1,1,1,1);\n\t} else if (type == 3) {\t\t// Textured tris\n\t\tvec4 color = texture(tex, ftcoord);\n\t\tif (texType == 1) color = vec4(color.xyz*color.w,color.w);\n\t\tif (texType == 2) color = vec4(color.x);\n\t\tcolor *= scissor;\n\t\tresult = color * innerCol;\n\t}\n\tfragColor = result;\n}\n");
                  impl.compileShader(vert);
                  var status=impl.getShaderParameter(vert,impl.COMPILE_STATUS);
-                 if(1 - (status | 0)){print_endline(_bC_);caml_call1(r[1],0)}
+                 if(1 - (status | 0))
+                  {var log=impl.getShaderInfoLog(vert);
+                   print_endline(_bF_);
+                   print_endline(caml_string_of_jsstring(log));
+                   caml_call1(r[1],0)}
                  impl.compileShader(frag);
                  var
                   status$0=
                    impl.getShaderParameter(frag,impl.COMPILE_STATUS);
                  if(1 - (status$0 | 0))
-                  {print_endline(_bD_);caml_call1(r[1],0)}
+                  {var log$0=impl.getShaderInfoLog(frag);
+                   print_endline(_bG_);
+                   print_endline(caml_string_of_jsstring(log$0));
+                   caml_call1(r[1],0)}
                  impl.attachShader(prog,vert);
                  impl.attachShader(prog,frag);
                  impl.bindAttribLocation(prog,0,"vertex");
@@ -10484,7 +10504,7 @@
                  impl.linkProgram(prog);
                  var status$1=impl.getProgramParameter(prog,impl.LINK_STATUS);
                  if(1 - (status$1 | 0))
-                  {print_endline(_bE_);caml_call1(r[1],0)}
+                  {print_endline(_bH_);caml_call1(r[1],0)}
                  return [0,prog]});
            if(match)
             var
@@ -10493,60 +10513,81 @@
              tex=impl.getUniformLocation(prog,"tex"),
              frag=impl.getUniformLocation(prog,"frag"),
              vert_buf=impl.createBuffer(),
-             match$0=[0,[0,prog,[0,frag,tex,view_size,vert_buf]]];
+             frag_buf=impl.createBuffer(),
+             match$0=[0,[0,prog,[0,frag,tex,view_size,vert_buf,frag_buf]]];
            else
             var match$0=0;
            if(match$0)
-            {var match$1=match$0[1],locs=match$1[2],shader=match$1[1];
+            {var
+              match$1=match$0[1],
+              locs=match$1[2],
+              shader=match$1[1],
+              vao=impl.createVertexArray();
+             impl.bindVertexArray(vao);
+             impl.bindBuffer(array_buffer,locs[4]);
+             impl.enableVertexAttribArray(0);
+             impl.enableVertexAttribArray(1);
+             vertex_attrib_pointer(impl,0,2,float$0,0,16,0);
+             vertex_attrib_pointer(impl,1,2,float$0,0,16,8);
+             impl.bindVertexArray(no_handler);
+             impl.bindBuffer(array_buffer,locs[5]);
+             impl.uniformBlockBinding(shader,locs[1],0);
+             var align=impl.getParameter(p);
+             caml_call1(printf(_bI_),align);
+             caml_call1(printf(_bJ_),size);
+             var frag_size=(176 + align | 0) - caml_mod(176,align) | 0;
+             caml_call1(printf(_bK_),frag_size);
+             var frag_size$0=frag_size / 4 | 0;
              impl.finish();
              var
-              _eu_=create$3(128,init$1),
-              _ev_=init$0(128,empty$4),
-              _ew_=create$8(0),
-              _ex_=create$5(2),
-              _ey_=create(0,10),
-              _ez_=has(flags,antialias),
+              frag_uniforms=[0,create$6(17600),0],
+              _et_=create$3(128,init$1),
+              _eu_=init$0(128,empty$5),
+              _ev_=create$6(2),
+              _ew_=create(0,10),
+              _ex_=has(flags,antialias),
               t=
                [0,
                 impl,
                 shader,
                 locs,
+                vao,
                 locs[4],
-                _ez_,
-                _ey_,
-                0,
-                0,
+                locs[5],
+                frag_size$0,
                 _ex_,
                 _ew_,
-                flags,
+                0,
+                0,
                 _ev_,
+                frag_uniforms,
+                flags,
                 _eu_,
+                _et_,
                 0,
                 0,
                 equal$0,
                 0,
                 0,
-                empty$3],
-              o=create_texture(t,885266238,1,1,no_flags$0,create$4(4)),
+                empty$4],
+              o=create_texture(t,885266238,1,1,no_flags$0,create$5(4)),
               default$0=0;
-             if(o)var v=o[1],_eA_=v;else var _eA_=default$0;
-             t[8] = _eA_;
+             if(o)var v=o[1],_ey_=v;else var _ey_=default$0;
+             t[11] = _ey_;
              var param=[0,t]}
            else
             var param=0;
-           if(param)var t$0=param[1],_eS_=t$0;else var _eS_=failwith(_bM_);
+           if(param)var t$0=param[1],_eQ_=t$0;else var _eQ_=failwith(_bN_);
            var
             t$1=
              [0,
-              _eS_,
-              _eR_,
               _eQ_,
               _eP_,
               _eO_,
               _eN_,
-              _eB_,
               _eM_,
               _eL_,
+              _ez_,
               _eK_,
               _eJ_,
               _eI_,
@@ -10555,7 +10596,9 @@
               _eF_,
               _eE_,
               _eD_,
-              _eC_],
+              _eC_,
+              _eB_,
+              _eA_],
             match$2=caml_call1(Font[16],t$1[12]),
             h=match$2[3],
             w=match$2[2],
@@ -10564,7 +10607,7 @@
            if(value)
             {var image=value[1];add(t$1[13],image)}
            else
-            failwith(_bO_);
+            failwith(_bP_);
            save(t$1);
            reset$2(t$1);
            set_device_pixel_ratio(t$1,1.);
@@ -10572,7 +10615,7 @@
          return [0,
                  Buffer,
                  [0,begin,draw,save$0],
-                 create$10,
+                 create$7,
                  save,
                  restore,
                  reset$2,
@@ -10619,7 +10662,7 @@
                   circle,
                   rounded_rect,
                   rounded_rect_varying],
-                 [0,dummy,from_color,from_buffer,update_image,size],
+                 [0,dummy,from_color,from_buffer,update_image,size$0],
                  Paint,
                  set_fill_color,
                  set_fill_paint,
@@ -10636,7 +10679,7 @@
                   set_align,
                   set_font_face,
                   set_font_face_id,
-                  create$6,
+                  create$4,
                   bounds,
                   metrics,
                   break_lines,
@@ -10670,29 +10713,23 @@
      set_fill_paint=include[25],
      set_stroke_color=include[26],
      Text=include[28],
-     canvas=getElementById_exn(_bP_),
-     _bQ_=
-      to_option
-       (getContextWithAttributes
-         (canvas,{"antialias":false$0,"stencil":true$0})),
-     ctx_webgl=
-      function(param)
-        {if(param){var ctx=param[1];return ctx}return failwith(_bR_)}
-       (_bQ_);
+     canvas=getElementById_exn(_bQ_),
+     options={"antialias":false$0,"stencil":true$0},
+     ctx_webgl=canvas.getContext("webgl2",options);
     window.wctx = ctx_webgl;
     function clampf(a,mn,mx)
      {return caml_lessthan(a,mn)?mn:caml_greaterthan(a,mx)?mx:a}
     function is_black(c)
-     {var _ep_=c[1] == 0.?1:0;
-      if(_ep_)
-       {var _eq_=c[2] == 0.?1:0;
-        if(_eq_)
-         var _er_=c[3] == 0.?1:0,_es_=_er_?c[4] == 1.?1:0:_er_;
+     {var _eo_=c[1] == 0.?1:0;
+      if(_eo_)
+       {var _ep_=c[2] == 0.?1:0;
+        if(_ep_)
+         var _eq_=c[3] == 0.?1:0,_er_=_eq_?c[4] == 1.?1:0:_eq_;
         else
-         var _es_=_eq_}
+         var _er_=_ep_}
       else
-       var _es_=_ep_;
-      return _es_}
+       var _er_=_eo_;
+      return _er_}
     function to_utf8(c)
      {var
        n=
@@ -10704,9 +10741,9 @@
        b=caml_create_bytes(n);
       function symbol(b,i,v)
        {var switch$0=0;
-        if(0 <= v && ! (255 < v)){var _eo_=v;switch$0 = 1}
-        if(! switch$0)var _eo_=invalid_arg(_b_);
-        return caml_bytes_set(b,i,_eo_)}
+        if(0 <= v && ! (255 < v)){var _en_=v;switch$0 = 1}
+        if(! switch$0)var _en_=invalid_arg(_b_);
+        return caml_bytes_set(b,i,_en_)}
       var n$0=n,c$0=c;
       for(;;)
        {var switcher=n$0 - 1 | 0;
@@ -10737,17 +10774,17 @@
     var icon_search=128269,icon_circled_cross=10006,icon_chevron_right=59230;
     function draw_label(vg,text,x,y,w,h)
      {caml_call2(Text[4],vg,15.);
-      caml_call2(Text[9],vg,_bY_);
+      caml_call2(Text[9],vg,_bX_);
       caml_call2(set_fill_color,vg,rgba(255,255,255,128));
       caml_call2(Text[8],vg,17);
       return caml_call6(Text[1],vg,x,y + h * 0.5,0,0,text)}
     function draw_edit_box_base(vg,x,y,w,h)
      {var
-       _em_=rgba(32,32,32,32),
-       _en_=rgba(255,255,255,32),
+       _el_=rgba(32,32,32,32),
+       _em_=rgba(255,255,255,32),
        bg=
         caml_call9
-         (Paint[2],vg,x + 1.,y + 1. + 1.5,w - 2.,h - 2.,3.,4.,_en_,_em_);
+         (Paint[2],vg,x + 1.,y + 1. + 1.5,w - 2.,h - 2.,3.,4.,_em_,_el_);
       caml_call1(Path[1],vg);
       caml_call6(Path[13],vg,x + 1.,y + 1.,w - 2.,h - 2.,3.);
       caml_call2(set_fill_paint,vg,bg);
@@ -10759,17 +10796,17 @@
     function draw_edit_box(vg,text,x,y,w,h)
      {draw_edit_box_base(vg,x,y,w,h);
       caml_call2(Text[4],vg,17.);
-      caml_call2(Text[9],vg,_bZ_);
+      caml_call2(Text[9],vg,_bY_);
       caml_call2(set_fill_color,vg,rgba(255,255,255,64));
       caml_call2(Text[8],vg,17);
       return caml_call6(Text[1],vg,x + h * 0.3,y + h * 0.5,0,0,text)}
     function draw_button(vg,preicon,text,x,y,w,h,col)
      {var
-       _ei_=is_black(col)?16:32,
-       _ej_=rgba(0,0,0,_ei_),
-       _ek_=is_black(col)?16:32,
-       _el_=rgba(255,255,255,_ek_),
-       bg=caml_call7(Paint[1],vg,x,y,x,y + h,_el_,_ej_);
+       _eh_=is_black(col)?16:32,
+       _ei_=rgba(0,0,0,_eh_),
+       _ej_=is_black(col)?16:32,
+       _ek_=rgba(255,255,255,_ej_),
+       bg=caml_call7(Paint[1],vg,x,y,x,y + h,_ek_,_ei_);
       caml_call1(Path[1],vg);
       caml_call6(Path[13],vg,x + 1.,y + 1.,w - 2.,h - 2.,3.);
       if(1 - is_black(col))
@@ -10781,12 +10818,12 @@
       caml_call2(set_stroke_color,vg,rgba(0,0,0,48));
       caml_call1(stroke,vg);
       caml_call2(Text[4],vg,17.);
-      caml_call2(Text[9],vg,_b2_);
+      caml_call2(Text[9],vg,_b1_);
       var tw=caml_call6(Text[12],vg,0.,0.,0,0,text)[2],iw=[0,0.];
       if(preicon)
        {var icon=preicon[1];
         caml_call2(Text[4],vg,h * 1.3);
-        caml_call2(Text[9],vg,_b3_);
+        caml_call2(Text[9],vg,_b2_);
         iw[1] = caml_call6(Text[12],vg,0.,0.,0,0,icon)[2];
         iw[1] = iw[1] + h * 0.15;
         caml_call2(set_fill_color,vg,rgba(255,255,255,96));
@@ -10800,7 +10837,7 @@
           0,
           icon)}
       caml_call2(Text[4],vg,17.);
-      caml_call2(Text[9],vg,_b4_);
+      caml_call2(Text[9],vg,_b3_);
       caml_call2(Text[8],vg,17);
       caml_call2(set_fill_color,vg,rgba(0,0,0,160));
       caml_call6
@@ -10827,7 +10864,7 @@
      icon_trash=59177;
     function init$2(style,name)
      {return [0,style,name,caml_make_vect(100,0.),0]}
-    var t$0=init$2(0,_ch_),mx=[0,0.],my=[0,0.],blowup=[0,0];
+    var t$0=init$2(0,_cg_),mx=[0,0.],my=[0,0.],blowup=[0,0];
     function load_data(vg,k)
      {var
        img_canvas=document.createElement("canvas"),
@@ -10837,13 +10874,13 @@
        i=0;
       for(;;)
        {var
-         src=caml_call1(sprintf(_cj_),i + 1 | 0),
-         id=caml_call1(sprintf(_ck_),i + 1 | 0),
-         _ee_=function(pnode){return pnode},
-         _ef_=function(param){throw Not_found},
+         src=caml_call1(sprintf(_ci_),i + 1 | 0),
+         id=caml_call1(sprintf(_cj_),i + 1 | 0),
+         _ed_=function(pnode){return pnode},
+         _ee_=function(param){throw Not_found},
          img=
           case$0
-           (document.getElementById(caml_jsstring_of_string(id)),_ef_,_ee_);
+           (document.getElementById(caml_jsstring_of_string(id)),_ee_,_ed_);
         img.onload
         =
         handler
@@ -10861,14 +10898,14 @@
                if(img$0)
                 var img$1=img$0[1],img$2=img$1;
                else
-                var img$2=failwith(_ci_);
+                var img$2=failwith(_ch_);
                caml_check_bound(images,i)[1 + i] = img$2;
                count[1]++;
                return true$0}}
            (img,i));
         img.src = caml_jsstring_of_string(src);
-        var _eg_=i + 1 | 0;
-        if(11 !== i){var i=_eg_;continue}
+        var _ef_=i + 1 | 0;
+        if(11 !== i){var i=_ef_;continue}
         var
          callback=
           function(param)
@@ -10881,7 +10918,7 @@
                var remain=0.,step$0=step;
               var
                cb=
-                remain == 0.?callback:function(_eh_){return loop(remain,_eh_)};
+                remain == 0.?callback:function(_eg_){return loop(remain,_eg_)};
               id[1] = [0,window.setTimeout(caml_js_wrap_callback(cb),step$0)];
               return 0}
             loop(d,0);
@@ -10895,12 +10932,12 @@
        width=body.clientWidth * dpr$1 | 0,
        height=body.clientHeight * dpr$1 | 0,
        dpr=window.devicePixelRatio,
-       _ec_=caml_jsstring_of_string(caml_call1(sprintf(_cl_),width / dpr));
-      canvas.style.width = _ec_;
+       _eb_=caml_jsstring_of_string(caml_call1(sprintf(_ck_),width / dpr));
+      canvas.style.width = _eb_;
       var
-       _ed_=
-        caml_jsstring_of_string(caml_call1(sprintf(_cm_),height / dpr));
-      canvas.style.height = _ed_;
+       _ec_=
+        caml_jsstring_of_string(caml_call1(sprintf(_cl_),height / dpr));
+      canvas.style.height = _ec_;
       canvas.width = width;
       return canvas.height = height}
     var h=canvas.height,w=canvas.width;
@@ -10938,15 +10975,15 @@
             my[1] = evt$0.clientY * window.devicePixelRatio}
           return 1 < lst.length?true$0:false$0}),
       false$0);
-    var vg=caml_call2(create$10,3,ctx_webgl);
-    caml_call3(Text[11],vg,_co_,_cn_);
-    caml_call3(Text[11],vg,_cq_,_cp_);
-    caml_call3(Text[11],vg,_cs_,_cr_);
-    caml_call3(Text[11],vg,_cu_,_ct_);
-    caml_call3(Text[11],vg,_cw_,_cv_);
-    caml_call3(Text[11],vg,_cy_,_cx_);
-    caml_call3(Text[21],vg,_cA_,_cz_);
-    caml_call3(Text[21],vg,_cC_,_cB_);
+    var vg=caml_call2(create$10,11,ctx_webgl);
+    caml_call3(Text[11],vg,_cn_,_cm_);
+    caml_call3(Text[11],vg,_cp_,_co_);
+    caml_call3(Text[11],vg,_cr_,_cq_);
+    caml_call3(Text[11],vg,_ct_,_cs_);
+    caml_call3(Text[11],vg,_cv_,_cu_);
+    caml_call3(Text[11],vg,_cx_,_cw_);
+    caml_call3(Text[21],vg,_cz_,_cy_);
+    caml_call3(Text[21],vg,_cB_,_cA_);
     document.onkeyup
     =
     handler
@@ -10956,7 +10993,7 @@
      (vg,
       function(data)
        {scale_canvas_by_body(canvas);
-        var prev=[0,0.],_cH_=0.;
+        var prev=[0,0.],_cG_=0.;
         function closure(vg,data,now)
          {ctx_webgl.clearColor(0.3,0.3,0.32,1.);
           ctx_webgl.clear
@@ -10973,33 +11010,33 @@
           t$0[4] = caml_mod(t$0[4] + 1 | 0,t$0[3].length - 1);
           caml_array_set(t$0[3],t$0[4],dt);
           var
-           _d$_=my[1],
-           _ea_=mx[1],
+           _d__=my[1],
+           _d$_=mx[1],
            x$0=width$0 - 250.,
            lx=x$0 + 34.5,
            rx=x$0 + 150. - 34.5,
            blink=1. - Math.pow(Math.sin(t * 0.5),200.) * 0.8,
-           _d__=blowup[1],
-           _cL_=rgba(0,0,0,16),
-           _cM_=rgba(0,0,0,32),
-           bg=caml_call7(Paint[1],vg,x$0,100.,x$0 + 15.,150.,_cM_,_cL_);
+           _d9_=blowup[1],
+           _cK_=rgba(0,0,0,16),
+           _cL_=rgba(0,0,0,32),
+           bg=caml_call7(Paint[1],vg,x$0,100.,x$0 + 15.,150.,_cL_,_cK_);
           caml_call1(Path[1],vg);
           caml_call5(Path[11],vg,lx + 3.,116.,34.5,50.);
           caml_call5(Path[11],vg,rx + 3.,116.,34.5,50.);
           caml_call2(set_fill_paint,vg,bg);
           caml_call1(fill,vg);
           var
-           _cN_=rgba(128,128,128,255),
-           _cO_=rgba(220,220,220,255),
-           bg$0=caml_call7(Paint[1],vg,x$0,75.,x$0 + 15.,150.,_cO_,_cN_);
+           _cM_=rgba(128,128,128,255),
+           _cN_=rgba(220,220,220,255),
+           bg$0=caml_call7(Paint[1],vg,x$0,75.,x$0 + 15.,150.,_cN_,_cM_);
           caml_call1(Path[1],vg);
           caml_call5(Path[11],vg,lx,100.,34.5,50.);
           caml_call5(Path[11],vg,rx,100.,34.5,50.);
           caml_call2(set_fill_paint,vg,bg$0);
           caml_call1(fill,vg);
           var
-           dx=(_ea_ - rx) / 345.,
-           dy=(_d$_ - 100.) / 500.,
+           dx=(_d$_ - rx) / 345.,
+           dy=(_d__ - 100.) / 500.,
            d=Math.sqrt(dx * dx + dy * dy),
            ex=34.5,
            ey=50.,
@@ -11032,18 +11069,18 @@
           caml_call2(set_fill_color,vg,rgba(32,32,32,255));
           caml_call1(fill,vg);
           var
-           _cP_=rgba(255,255,255,0),
-           _cQ_=rgba(255,255,255,128),
-           gloss=caml_call7(Paint[3],vg,lx - 8.625,75.,3.45,25.875,_cQ_,_cP_);
+           _cO_=rgba(255,255,255,0),
+           _cP_=rgba(255,255,255,128),
+           gloss=caml_call7(Paint[3],vg,lx - 8.625,75.,3.45,25.875,_cP_,_cO_);
           caml_call1(Path[1],vg);
           caml_call5(Path[11],vg,lx,ly,ex,ey);
           caml_call2(set_fill_paint,vg,gloss);
           caml_call1(fill,vg);
           var
-           _cR_=rgba(255,255,255,0),
-           _cS_=rgba(255,255,255,128),
+           _cQ_=rgba(255,255,255,0),
+           _cR_=rgba(255,255,255,128),
            gloss$0=
-            caml_call7(Paint[3],vg,rx - 8.625,75.,3.45,25.875,_cS_,_cR_);
+            caml_call7(Paint[3],vg,rx - 8.625,75.,3.45,25.875,_cR_,_cQ_);
           caml_call1(Path[1],vg);
           caml_call5(Path[11],vg,rx,ry,ex,ey);
           caml_call2(set_fill_paint,vg,gloss$0);
@@ -11051,7 +11088,7 @@
           var x$1=width$0 - 450.;
           caml_call1(save,vg);
           caml_call2(Text[4],vg,15.);
-          caml_call2(Text[9],vg,_b7_);
+          caml_call2(Text[9],vg,_b6_);
           caml_call2(Text[8],vg,9);
           var
            line_h=caml_call1(Text[13],vg)[3],
@@ -11070,7 +11107,7 @@
               caml_call7(Text[14],vg,width,3,[0,start[1]],[0,end],lines,text);
             if(0 === count)
              {if(0 < gutter[1])
-               {var _dT_=gutter[1],txt=caml_call1(sprintf(_b8_),_dT_);
+               {var _dS_=gutter[1],txt=caml_call1(sprintf(_b7_),_dS_);
                 caml_call2(Text[4],vg,12.);
                 caml_call2(Text[8],vg,20);
                 var b=caml_call6(Text[12],vg,gx[1],gy[1],0,0,txt);
@@ -11093,8 +11130,8 @@
               caml_call2(Text[6],vg,1.2);
               var
                bounds=caml_call7(Text[19],vg,x$1,y$0[1],150.,0,0,hover_text),
-               gx$1=clampf(_ea_,bounds[1],bounds[3]) - _ea_,
-               gy$0=clampf(_d$_,bounds[2],bounds[4]) - _d$_,
+               gx$1=clampf(_d$_,bounds[1],bounds[3]) - _d$_,
+               gy$0=clampf(_d__,bounds[2],bounds[4]) - _d__,
                a$0=Math.sqrt(gx$1 * gx$1 + gy$0 * gy$0) / 30.,
                a$1=clampf(a$0,0.,1.);
               caml_call2(Global[4],vg,a$1);
@@ -11155,12 +11192,12 @@
                {caml_array_set(sx,i$5,0. + i$5 * dx$2);
                 caml_array_set
                  (sy,i$5,y$1 + h * caml_array_get(samples,i$5) * 0.8);
-                var _de_=i$5 + 1 | 0;
-                if(5 !== i$5){var i$5=_de_;continue}
+                var _dd_=i$5 + 1 | 0;
+                if(5 !== i$5){var i$5=_dd_;continue}
                 var
-                 _c7_=rgba(0,160,192,64),
-                 _c8_=rgba(0,160,192,0),
-                 bg$6=caml_call7(Paint[1],vg,x$2,y$1,x$2,y$1 + h,_c8_,_c7_);
+                 _c6_=rgba(0,160,192,64),
+                 _c7_=rgba(0,160,192,0),
+                 bg$6=caml_call7(Paint[1],vg,x$2,y$1,x$2,y$1 + h,_c7_,_c6_);
                 caml_call1(Path[1],vg);
                 caml_call3
                  (Path[3],vg,caml_array_get(sx,0),caml_array_get(sy,0));
@@ -11175,8 +11212,8 @@
                     caml_array_get(sy,i$4),
                     caml_array_get(sx,i$4),
                     caml_array_get(sy,i$4));
-                  var _dd_=i$4 + 1 | 0;
-                  if(5 !== i$4){var i$4=_dd_;continue}
+                  var _dc_=i$4 + 1 | 0;
+                  if(5 !== i$4){var i$4=_dc_;continue}
                   caml_call3(Path[4],vg,0. + width$0,y$1 + h);
                   caml_call3(Path[4],vg,x$2,y$1 + h);
                   caml_call2(set_fill_paint,vg,bg$6);
@@ -11195,8 +11232,8 @@
                       caml_array_get(sy,i$3) + 2.,
                       caml_array_get(sx,i$3),
                       caml_array_get(sy,i$3) + 2.);
-                    var _dc_=i$3 + 1 | 0;
-                    if(5 !== i$3){var i$3=_dc_;continue}
+                    var _db_=i$3 + 1 | 0;
+                    if(5 !== i$3){var i$3=_db_;continue}
                     caml_call2(set_stroke_color,vg,rgba(0,0,0,32));
                     caml_call2(set_stroke_width,vg,3.);
                     caml_call1(stroke,vg);
@@ -11214,15 +11251,15 @@
                         caml_array_get(sy,i$2),
                         caml_array_get(sx,i$2),
                         caml_array_get(sy,i$2));
-                      var _db_=i$2 + 1 | 0;
-                      if(5 !== i$2){var i$2=_db_;continue}
+                      var _da_=i$2 + 1 | 0;
+                      if(5 !== i$2){var i$2=_da_;continue}
                       caml_call2(set_stroke_color,vg,rgba(0,160,192,255));
                       caml_call2(set_stroke_width,vg,3.);
                       caml_call1(stroke,vg);
                       var i$1=0;
                       for(;;)
                        {var
-                         _c$_=rgba(0,0,0,32),
+                         _c__=rgba(0,0,0,32),
                          bg$7=
                           caml_call7
                            (Paint[3],
@@ -11231,7 +11268,7 @@
                             caml_array_get(sy,i$1),
                             3.,
                             8.,
-                            _c$_,
+                            _c__,
                             transparent);
                         caml_call1(Path[1],vg);
                         caml_call5
@@ -11243,8 +11280,8 @@
                           20.);
                         caml_call2(set_fill_paint,vg,bg$7);
                         caml_call1(fill,vg);
-                        var _da_=i$1 + 1 | 0;
-                        if(5 !== i$1){var i$1=_da_;continue}
+                        var _c$_=i$1 + 1 | 0;
+                        if(5 !== i$1){var i$1=_c$_;continue}
                         caml_call1(Path[1],vg);
                         var i$0=0;
                         for(;;)
@@ -11254,8 +11291,8 @@
                             caml_array_get(sx,i$0),
                             caml_array_get(sy,i$0),
                             4.);
-                          var _c__=i$0 + 1 | 0;
-                          if(5 !== i$0){var i$0=_c__;continue}
+                          var _c9_=i$0 + 1 | 0;
+                          if(5 !== i$0){var i$0=_c9_;continue}
                           caml_call2(set_fill_color,vg,rgba(0,160,192,255));
                           caml_call1(fill,vg);
                           caml_call1(Path[1],vg);
@@ -11263,8 +11300,8 @@
                           for(;;)
                            {caml_call4
                              (Path[12],vg,caml_array_get(sx,i),caml_array_get(sy,i),2.);
-                            var _c9_=i + 1 | 0;
-                            if(5 !== i){var i=_c9_;continue}
+                            var _c8_=i + 1 | 0;
+                            if(5 !== i){var i=_c8_;continue}
                             caml_call2(set_fill_color,vg,rgba(220,220,220,255));
                             caml_call1(fill,vg);
                             caml_call2(set_stroke_width,vg,1.);
@@ -11305,13 +11342,13 @@
                                ay=cy$0 + Math.sin(a0) * 220. * 0.5,
                                bx=cx + Math.cos(a1) * 220. * 0.5,
                                by=cy$0 + Math.sin(a1) * 220. * 0.5,
-                               _dm_=hsla(a1 / 6.28318530717958623,1.,0.55,255),
-                               _dn_=hsla(a0 / 6.28318530717958623,1.,0.55,255),
-                               paint$3=caml_call7(Paint[1],vg,ax,ay,bx,by,_dn_,_dm_);
+                               _dl_=hsla(a1 / 6.28318530717958623,1.,0.55,255),
+                               _dm_=hsla(a0 / 6.28318530717958623,1.,0.55,255),
+                               paint$3=caml_call7(Paint[1],vg,ax,ay,bx,by,_dm_,_dl_);
                               caml_call2(set_fill_paint,vg,paint$3);
                               caml_call1(fill,vg);
-                              var _do_=i$9 + 1 | 0;
-                              if(5 !== i$9){var i$9=_do_;continue}
+                              var _dn_=i$9 + 1 | 0;
+                              if(5 !== i$9){var i$9=_dn_;continue}
                               caml_call1(Path[1],vg);
                               caml_call4(Path[12],vg,cx,cy$0,99.5);
                               caml_call4(Path[12],vg,cx,cy$0,120.5);
@@ -11327,10 +11364,10 @@
                               caml_call2(set_stroke_color,vg,rgba(255,255,255,192));
                               caml_call1(stroke,vg);
                               var
-                               _dj_=rgba(0,0,0,128),
+                               _di_=rgba(0,0,0,128),
                                paint=
                                 caml_call9
-                                 (Paint[2],vg,97.,-5.,26.,10.,2.,4.,_dj_,transparent);
+                                 (Paint[2],vg,97.,-5.,26.,10.,2.,4.,_di_,transparent);
                               caml_call1(Path[1],vg);
                               caml_call5(Path[7],vg,88.,-14.,44.,28.);
                               caml_call5(Path[7],vg,98.,-4.,24.,8.);
@@ -11345,7 +11382,7 @@
                                (Path[4],vg,-46.9999999999999787,-81.4063879557372445);
                               caml_call1(Path[2],vg);
                               var
-                               _dk_=hsla(hue,1.,0.5,255),
+                               _dj_=hsla(hue,1.,0.5,255),
                                paint$0=
                                 caml_call7
                                  (Paint[1],
@@ -11354,7 +11391,7 @@
                                   0.,
                                   -46.9999999999999787,
                                   81.4063879557372445,
-                                  _dk_,
+                                  _dj_,
                                   white);
                               caml_call2(set_fill_paint,vg,paint$0);
                               caml_call1(fill,vg);
@@ -11380,7 +11417,7 @@
                               caml_call2(set_stroke_color,vg,rgba(255,255,255,192));
                               caml_call1(stroke,vg);
                               var
-                               _dl_=rgba(0,0,0,64),
+                               _dk_=rgba(0,0,0,64),
                                paint$2=
                                 caml_call7
                                  (Paint[3],
@@ -11389,7 +11426,7 @@
                                   32.5625551822949,
                                   7.,
                                   9.,
-                                  _dl_,
+                                  _dk_,
                                   transparent);
                               caml_call1(Path[1],vg);
                               caml_call5
@@ -11502,10 +11539,10 @@
                                     fx + caml_array_get(pts,6),
                                     fy + caml_array_get(pts,7));
                                   caml_call1(stroke,vg);
-                                  var _dg_=j + 1 | 0;
-                                  if(2 !== j){var j=_dg_;continue}
-                                  var _df_=i$6 + 1 | 0;
-                                  if(2 !== i$6){var i$6=_df_;continue c}
+                                  var _df_=j + 1 | 0;
+                                  if(2 !== j){var j=_df_;continue}
+                                  var _de_=i$6 + 1 | 0;
+                                  if(2 !== i$6){var i$6=_de_;continue c}
                                   caml_call1(restore,vg);
                                   caml_call1(save,vg);
                                   caml_call2(set_stroke_color,vg,black);
@@ -11518,8 +11555,8 @@
                                     caml_call3(Path[4],vg,40.,y[1] + 9.);
                                     caml_call1(stroke,vg);
                                     y[1] = y[1] + 10.;
-                                    var _dh_=i$7 + 1 | 0;
-                                    if(19 !== i$7){var i$7=_dh_;continue}
+                                    var _dg_=i$7 + 1 | 0;
+                                    if(19 !== i$7){var i$7=_dg_;continue}
                                     caml_call1(restore,vg);
                                     var caps$0=[0,0,1,2];
                                     caml_call1(save,vg);
@@ -11541,14 +11578,14 @@
                                       caml_call3(Path[3],vg,x$5,300. + i$8 * 10. + 5.);
                                       caml_call3(Path[4],vg,40.,300. + i$8 * 10. + 5.);
                                       caml_call1(stroke,vg);
-                                      var _di_=i$8 + 1 | 0;
-                                      if(2 !== i$8){var i$8=_di_;continue}
+                                      var _dh_=i$8 + 1 | 0;
+                                      if(2 !== i$8){var i$8=_dh_;continue}
                                       caml_call1(restore,vg);
                                       var y$4=height - 80.;
                                       caml_call1(save,vg);
                                       caml_call3(Transform[3],vg,50.,y$4);
-                                      var _dp_=caml_call1(Transform[9],5.);
-                                      caml_call2(Transform[4],vg,_dp_);
+                                      var _do_=caml_call1(Transform[9],5.);
+                                      caml_call2(Transform[4],vg,_do_);
                                       caml_call1(Path[1],vg);
                                       caml_call5(Path[7],vg,-20.,-20.,60.,40.);
                                       caml_call2(set_fill_color,vg,rgba(255,0,0,255));
@@ -11570,7 +11607,7 @@
                                       caml_call1(fill,vg);
                                       caml_call1(restore,vg);
                                       caml_call1(save,vg);
-                                      if(_d__)
+                                      if(_d9_)
                                        {caml_call2
                                          (Transform[4],
                                           vg,
@@ -11582,10 +11619,10 @@
                                       caml_call2(set_fill_color,vg,rgba(28,30,34,192));
                                       caml_call1(fill,vg);
                                       var
-                                       _cI_=rgba(0,0,0,128),
+                                       _cH_=rgba(0,0,0,128),
                                        shadow=
                                         caml_call9
-                                         (Paint[2],vg,50.,52.,300.,400.,6.,10.,_cI_,transparent);
+                                         (Paint[2],vg,50.,52.,300.,400.,6.,10.,_cH_,transparent);
                                       caml_call1(Path[1],vg);
                                       caml_call5(Path[7],vg,40.,40.,320.,430.);
                                       caml_call6(Path[13],vg,50.,50.,300.,400.,3.);
@@ -11593,9 +11630,9 @@
                                       caml_call2(set_fill_paint,vg,shadow);
                                       caml_call1(fill,vg);
                                       var
-                                       _cJ_=rgba(0,0,0,16),
-                                       _cK_=rgba(255,255,255,8),
-                                       header=caml_call7(Paint[1],vg,50.,50.,50.,65.,_cK_,_cJ_);
+                                       _cI_=rgba(0,0,0,16),
+                                       _cJ_=rgba(255,255,255,8),
+                                       header=caml_call7(Paint[1],vg,50.,50.,50.,65.,_cJ_,_cI_);
                                       caml_call1(Path[1],vg);
                                       caml_call6(Path[13],vg,51.,51.,298.,30.,2.);
                                       caml_call2(set_fill_paint,vg,header);
@@ -11606,7 +11643,7 @@
                                       caml_call2(set_stroke_color,vg,rgba(0,0,0,32));
                                       caml_call1(stroke,vg);
                                       caml_call2(Text[4],vg,15.);
-                                      caml_call2(Text[9],vg,_bS_);
+                                      caml_call2(Text[9],vg,_bR_);
                                       caml_call2(Text[8],vg,18);
                                       caml_call2(Text[5],vg,2.);
                                       caml_call2(set_fill_color,vg,rgba(0,0,0,128));
@@ -11617,135 +11654,135 @@
                                       caml_call1(restore,vg);
                                       var
                                        y$5=[0,95.],
-                                       _dU_=y$5[1],
-                                       _cT_=rgba(0,0,0,92),
-                                       _cU_=rgba(0,0,0,16),
+                                       _dT_=y$5[1],
+                                       _cS_=rgba(0,0,0,92),
+                                       _cT_=rgba(0,0,0,16),
                                        bg$1=
                                         caml_call9
-                                         (Paint[2],vg,60.,_dU_ + 1.5,280.,25.,12.5,5.,_cU_,_cT_);
+                                         (Paint[2],vg,60.,_dT_ + 1.5,280.,25.,12.5,5.,_cT_,_cS_);
                                       caml_call1(Path[1],vg);
-                                      caml_call6(Path[13],vg,60.,_dU_,280.,25.,11.5);
+                                      caml_call6(Path[13],vg,60.,_dT_,280.,25.,11.5);
                                       caml_call2(set_fill_paint,vg,bg$1);
                                       caml_call1(fill,vg);
                                       caml_call2(Text[4],vg,32.5);
-                                      caml_call2(Text[9],vg,_bT_);
+                                      caml_call2(Text[9],vg,_bS_);
                                       caml_call2(set_fill_color,vg,rgba(255,255,255,64));
                                       caml_call2(Text[8],vg,18);
-                                      var _cV_=to_utf8(icon_search);
+                                      var _cU_=to_utf8(icon_search);
                                       caml_call6
-                                       (Text[1],vg,73.75,_dU_ + 13.7500000000000018,0,0,_cV_);
+                                       (Text[1],vg,73.75,_dT_ + 13.7500000000000018,0,0,_cU_);
                                       caml_call2(Text[4],vg,17.);
-                                      caml_call2(Text[9],vg,_bU_);
+                                      caml_call2(Text[9],vg,_bT_);
                                       caml_call2(set_fill_color,vg,rgba(255,255,255,32));
                                       caml_call2(Text[8],vg,17);
-                                      caml_call6(Text[1],vg,86.25,_dU_ + 12.5,0,0,text$0);
+                                      caml_call6(Text[1],vg,86.25,_dT_ + 12.5,0,0,text$0);
                                       caml_call2(Text[4],vg,32.5);
-                                      caml_call2(Text[9],vg,_bV_);
+                                      caml_call2(Text[9],vg,_bU_);
                                       caml_call2(set_fill_color,vg,rgba(255,255,255,32));
                                       caml_call2(Text[8],vg,18);
-                                      var _cW_=to_utf8(icon_circled_cross);
+                                      var _cV_=to_utf8(icon_circled_cross);
                                       caml_call6
-                                       (Text[1],vg,326.25,_dU_ + 13.7500000000000018,0,0,_cW_);
+                                       (Text[1],vg,326.25,_dT_ + 13.7500000000000018,0,0,_cV_);
                                       y$5[1] = y$5[1] + 40.;
                                       var
-                                       _dV_=y$5[1],
-                                       _cX_=rgba(0,0,0,16),
-                                       _cY_=rgba(255,255,255,16),
+                                       _dU_=y$5[1],
+                                       _cW_=rgba(0,0,0,16),
+                                       _cX_=rgba(255,255,255,16),
                                        bg$2=
-                                        caml_call7(Paint[1],vg,60.,_dV_,60.,_dV_ + 28.,_cY_,_cX_);
+                                        caml_call7(Paint[1],vg,60.,_dU_,60.,_dU_ + 28.,_cX_,_cW_);
                                       caml_call1(Path[1],vg);
-                                      caml_call6(Path[13],vg,61.,_dV_ + 1.,278.,26.,3.);
+                                      caml_call6(Path[13],vg,61.,_dU_ + 1.,278.,26.,3.);
                                       caml_call2(set_fill_paint,vg,bg$2);
                                       caml_call1(fill,vg);
                                       caml_call1(Path[1],vg);
-                                      caml_call6(Path[13],vg,60.5,_dV_ + 0.5,279.,27.,3.5);
+                                      caml_call6(Path[13],vg,60.5,_dU_ + 0.5,279.,27.,3.5);
                                       caml_call2(set_stroke_color,vg,rgba(0,0,0,48));
                                       caml_call1(stroke,vg);
                                       caml_call2(Text[4],vg,17.);
-                                      caml_call2(Text[9],vg,_bW_);
+                                      caml_call2(Text[9],vg,_bV_);
                                       caml_call2(set_fill_color,vg,rgba(255,255,255,160));
                                       caml_call2(Text[8],vg,17);
-                                      caml_call6(Text[1],vg,68.4,_dV_ + 14.,0,0,text$1);
+                                      caml_call6(Text[1],vg,68.4,_dU_ + 14.,0,0,text$1);
                                       caml_call2(Text[4],vg,36.4);
-                                      caml_call2(Text[9],vg,_bX_);
+                                      caml_call2(Text[9],vg,_bW_);
                                       caml_call2(set_fill_color,vg,rgba(255,255,255,64));
                                       caml_call2(Text[8],vg,18);
-                                      var _cZ_=to_utf8(icon_chevron_right);
-                                      caml_call6(Text[1],vg,326.,_dV_ + 14.,0,0,_cZ_);
+                                      var _cY_=to_utf8(icon_chevron_right);
+                                      caml_call6(Text[1],vg,326.,_dU_ + 14.,0,0,_cY_);
                                       var popy=y$5[1] + 14.;
                                       y$5[1] = y$5[1] + 45.;
-                                      draw_label(vg,_b9_,60.,y$5[1],280.,20.);
+                                      draw_label(vg,_b8_,60.,y$5[1],280.,20.);
                                       y$5[1] = y$5[1] + 25.;
-                                      draw_edit_box(vg,_b__,60.,y$5[1],280.,28.);
+                                      draw_edit_box(vg,_b9_,60.,y$5[1],280.,28.);
                                       y$5[1] = y$5[1] + 35.;
-                                      draw_edit_box(vg,_b$_,60.,y$5[1],280.,28.);
+                                      draw_edit_box(vg,_b__,60.,y$5[1],280.,28.);
                                       y$5[1] = y$5[1] + 38.;
-                                      var _dW_=y$5[1];
+                                      var _dV_=y$5[1];
                                       caml_call2(Text[4],vg,15.);
-                                      caml_call2(Text[9],vg,_b5_);
+                                      caml_call2(Text[9],vg,_b4_);
                                       caml_call2(set_fill_color,vg,rgba(255,255,255,160));
                                       caml_call2(Text[8],vg,17);
-                                      caml_call6(Text[1],vg,88.,_dW_ + 14.,0,0,text$2);
+                                      caml_call6(Text[1],vg,88.,_dV_ + 14.,0,0,text$2);
                                       var
-                                       _c0_=rgba(0,0,0,92),
-                                       _c1_=rgba(0,0,0,32),
+                                       _cZ_=rgba(0,0,0,92),
+                                       _c0_=rgba(0,0,0,32),
                                        bg$3=
                                         caml_call9
                                          (Paint[2],
                                           vg,
                                           61.,
-                                          _dW_ + 14. - 9. + 1.,
+                                          _dV_ + 14. - 9. + 1.,
                                           18.,
                                           18.,
                                           3.,
                                           3.,
-                                          _c1_,
-                                          _c0_);
+                                          _c0_,
+                                          _cZ_);
                                       caml_call1(Path[1],vg);
-                                      caml_call6(Path[13],vg,61.,_dW_ + 14. - 9.,18.,18.,3.);
+                                      caml_call6(Path[13],vg,61.,_dV_ + 14. - 9.,18.,18.,3.);
                                       caml_call2(set_fill_paint,vg,bg$3);
                                       caml_call1(fill,vg);
                                       caml_call2(Text[4],vg,33.);
-                                      caml_call2(Text[9],vg,_b6_);
+                                      caml_call2(Text[9],vg,_b5_);
                                       caml_call2(set_fill_color,vg,rgba(255,255,255,128));
                                       caml_call2(Text[8],vg,18);
-                                      caml_call6(Text[1],vg,71.,_dW_ + 14.,0,0,icon_check);
-                                      var _dX_=rgba(0,96,128,255),_dY_=y$5[1];
+                                      caml_call6(Text[1],vg,71.,_dV_ + 14.,0,0,icon_check);
+                                      var _dW_=rgba(0,96,128,255),_dX_=y$5[1];
                                       draw_button
-                                       (vg,[0,to_utf8(icon_login)],_ca_,198.,_dY_,140.,28.,_dX_);
+                                       (vg,[0,to_utf8(icon_login)],_b$_,198.,_dX_,140.,28.,_dW_);
                                       y$5[1] = y$5[1] + 45.;
-                                      draw_label(vg,_cb_,60.,y$5[1],280.,20.);
+                                      draw_label(vg,_ca_,60.,y$5[1],280.,20.);
                                       y$5[1] = y$5[1] + 25.;
-                                      var _dZ_=y$5[1];
-                                      draw_edit_box_base(vg,240.,_dZ_,100.,28.);
+                                      var _dY_=y$5[1];
+                                      draw_edit_box_base(vg,240.,_dY_,100.,28.);
                                       var uw=caml_call6(Text[12],vg,0.,0.,0,0,units);
                                       caml_call2(Text[4],vg,15.);
-                                      caml_call2(Text[9],vg,_b0_);
+                                      caml_call2(Text[9],vg,_bZ_);
                                       caml_call2(set_fill_color,vg,rgba(255,255,255,64));
                                       caml_call2(Text[8],vg,20);
-                                      caml_call6(Text[1],vg,331.6,_dZ_ + 14.,0,0,units);
+                                      caml_call6(Text[1],vg,331.6,_dY_ + 14.,0,0,units);
                                       caml_call2(Text[4],vg,17.);
-                                      caml_call2(Text[9],vg,_b1_);
+                                      caml_call2(Text[9],vg,_b0_);
                                       caml_call2(set_fill_color,vg,rgba(255,255,255,128));
                                       caml_call2(Text[8],vg,20);
                                       caml_call6
-                                       (Text[1],vg,340. - uw[2] - 14.,_dZ_ + 14.,0,0,text$3);
+                                       (Text[1],vg,340. - uw[2] - 14.,_dY_ + 14.,0,0,text$3);
                                       var cy=y$5[1] + 14.;
                                       caml_call1(save,vg);
                                       var
-                                       _c2_=rgba(0,0,0,128),
-                                       _c3_=rgba(0,0,0,32),
+                                       _c1_=rgba(0,0,0,128),
+                                       _c2_=rgba(0,0,0,32),
                                        bg$4=
                                         caml_call9
-                                         (Paint[2],vg,60.,cy - 2. + 1.,170.,4.,2.,2.,_c3_,_c2_);
+                                         (Paint[2],vg,60.,cy - 2. + 1.,170.,4.,2.,2.,_c2_,_c1_);
                                       caml_call1(Path[1],vg);
                                       caml_call6(Path[13],vg,60.,cy - 2.,170.,4.,2.);
                                       caml_call2(set_fill_paint,vg,bg$4);
                                       caml_call1(fill,vg);
                                       var
-                                       _c4_=rgba(0,0,0,64),
+                                       _c3_=rgba(0,0,0,64),
                                        bg$5=
-                                        caml_call7(Paint[3],vg,128.,cy + 1.,4.,10.,_c4_,transparent);
+                                        caml_call7(Paint[3],vg,128.,cy + 1.,4.,10.,_c3_,transparent);
                                       caml_call1(Path[1],vg);
                                       caml_call5(Path[7],vg,116.,cy - 7. - 5.,24.,27.);
                                       caml_call4(Path[12],vg,128.,cy,7.);
@@ -11753,10 +11790,10 @@
                                       caml_call2(set_fill_paint,vg,bg$5);
                                       caml_call1(fill,vg);
                                       var
-                                       _c5_=rgba(0,0,0,16),
-                                       _c6_=rgba(255,255,255,16),
+                                       _c4_=rgba(0,0,0,16),
+                                       _c5_=rgba(255,255,255,16),
                                        knob=
-                                        caml_call7(Paint[1],vg,60.,cy - 7.,60.,cy + 7.,_c6_,_c5_);
+                                        caml_call7(Paint[1],vg,60.,cy - 7.,60.,cy + 7.,_c5_,_c4_);
                                       caml_call1(Path[1],vg);
                                       caml_call4(Path[12],vg,128.,cy,6.);
                                       caml_call2(set_fill_color,vg,rgba(40,43,48,255));
@@ -11769,20 +11806,20 @@
                                       caml_call1(stroke,vg);
                                       caml_call1(restore,vg);
                                       y$5[1] = y$5[1] + 55.;
-                                      var _d0_=rgba(128,16,8,255),_d1_=y$5[1];
+                                      var _dZ_=rgba(128,16,8,255),_d0_=y$5[1];
                                       draw_button
-                                       (vg,[0,to_utf8(icon_trash)],_cc_,60.,_d1_,160.,28.,_d0_);
-                                      draw_button(vg,0,_cd_,230.,y$5[1],110.,28.,transparent);
+                                       (vg,[0,to_utf8(icon_trash)],_cb_,60.,_d0_,160.,28.,_dZ_);
+                                      draw_button(vg,0,_cc_,230.,y$5[1],110.,28.,transparent);
                                       var
-                                       _d2_=data[1],
+                                       _d1_=data[1],
                                        y$6=popy - 30.,
-                                       len=_d2_.length - 1,
+                                       len=_d1_.length - 1,
                                        stack_h=len / 2. * 70. + 10.,
                                        u=(1. + Math.cos(t * 0.5)) * 0.5,
                                        u2=(1. + Math.cos(t * 0.2)) * 0.5;
                                       caml_call1(save,vg);
                                       var
-                                       _dr_=rgba(0,0,0,128),
+                                       _dq_=rgba(0,0,0,128),
                                        shadow_paint=
                                         caml_call9
                                          (Paint[2],
@@ -11793,7 +11830,7 @@
                                           300.,
                                           6.,
                                           20.,
-                                          _dr_,
+                                          _dq_,
                                           transparent);
                                       caml_call1(Path[1],vg);
                                       caml_call5(Path[7],vg,355.,y$6 - 10.,180.,330.);
@@ -11813,19 +11850,19 @@
                                       caml_call3(Transform[3],vg,0.,- (stack_h - 300.) * u);
                                       var
                                        dv=1. / (len - 1.),
-                                       _dt_=_d2_.length - 1 - 1 | 0,
+                                       _ds_=_d1_.length - 1 - 1 | 0,
                                        x$6=365.,
                                        thumb=60.,
-                                       _ds_=0;
-                                      if(! (_dt_ < 0))
-                                       {var i$10=_ds_;
+                                       _dr_=0;
+                                      if(! (_ds_ < 0))
+                                       {var i$10=_dr_;
                                         for(;;)
                                          {var
                                            ty=y$6 + 10.,
                                            tx=375. + (i$10 % 2 | 0) * 70.,
                                            ty$0=ty + (i$10 / 2 | 0) * 70.,
-                                           _dC_=caml_check_bound(_d2_,i$10)[1 + i$10],
-                                           match=caml_call2(Image[5],vg,_dC_),
+                                           _dB_=caml_check_bound(_d1_,i$10)[1 + i$10],
+                                           match=caml_call2(Image[5],vg,_dB_),
                                            imgh=match[2],
                                            imgw=match[1];
                                           if(imgw < imgh)
@@ -11861,26 +11898,26 @@
                                              ay$0=cy$1 + Math.sin(a0$0) * 26.25 * 0.5,
                                              bx$0=cx$0 + Math.cos(a1$0) * 26.25 * 0.5,
                                              by$0=cy$1 + Math.sin(a1$0) * 26.25 * 0.5,
-                                             _dq_=rgba(0,0,0,128),
+                                             _dp_=rgba(0,0,0,128),
                                              paint$4=
-                                              caml_call7(Paint[1],vg,ax$0,ay$0,bx$0,by$0,transparent,_dq_);
+                                              caml_call7(Paint[1],vg,ax$0,ay$0,bx$0,by$0,transparent,_dp_);
                                             caml_call2(set_fill_paint,vg,paint$4);
                                             caml_call1(fill,vg);
                                             caml_call1(restore,vg)}
                                           var
-                                           _dD_=caml_check_bound(_d2_,i$10)[1 + i$10],
+                                           _dC_=caml_check_bound(_d1_,i$10)[1 + i$10],
                                            img_paint=
                                             caml_call8
-                                             (Paint[4],vg,tx + ix,ty$0 + iy$0,iw,ih$0,0.,_dD_,a);
+                                             (Paint[4],vg,tx + ix,ty$0 + iy$0,iw,ih$0,0.,_dC_,a);
                                           caml_call1(Path[1],vg);
                                           caml_call6(Path[13],vg,tx,ty$0,thumb,thumb,5.);
                                           caml_call2(set_fill_paint,vg,img_paint);
                                           caml_call1(fill,vg);
                                           var
-                                           _dE_=rgba(0,0,0,128),
+                                           _dD_=rgba(0,0,0,128),
                                            shadow_paint$2=
                                             caml_call9
-                                             (Paint[2],vg,tx - 1.,ty$0,62.,62.,5.,3.,_dE_,transparent);
+                                             (Paint[2],vg,tx - 1.,ty$0,62.,62.,5.,3.,_dD_,transparent);
                                           caml_call1(Path[1],vg);
                                           caml_call5(Path[7],vg,tx - 5.,ty$0 - 5.,70.,70.);
                                           caml_call6(Path[13],vg,tx,ty$0,thumb,thumb,6.);
@@ -11892,43 +11929,43 @@
                                           caml_call2(set_stroke_width,vg,1.);
                                           caml_call2(set_stroke_color,vg,rgba(255,255,255,192));
                                           caml_call1(stroke,vg);
-                                          var _dF_=i$10 + 1 | 0;
-                                          if(_dt_ !== i$10){var i$10=_dF_;continue}
+                                          var _dE_=i$10 + 1 | 0;
+                                          if(_ds_ !== i$10){var i$10=_dE_;continue}
                                           break}}
                                       caml_call1(restore,vg);
                                       var
-                                       _du_=rgba(200,200,200,0),
-                                       _dv_=rgba(200,200,200,255),
+                                       _dt_=rgba(200,200,200,0),
+                                       _du_=rgba(200,200,200,255),
                                        fade_paint=
-                                        caml_call7(Paint[1],vg,x$6,y$6,x$6,y$6 + 6.,_dv_,_du_);
+                                        caml_call7(Paint[1],vg,x$6,y$6,x$6,y$6 + 6.,_du_,_dt_);
                                       caml_call1(Path[1],vg);
                                       caml_call5(Path[7],vg,369.,y$6,152.,6.);
                                       caml_call2(set_fill_paint,vg,fade_paint);
                                       caml_call1(fill,vg);
                                       var
-                                       _dw_=rgba(200,200,200,0),
-                                       _dx_=rgba(200,200,200,255),
+                                       _dv_=rgba(200,200,200,0),
+                                       _dw_=rgba(200,200,200,255),
                                        fade_paint$0=
                                         caml_call7
-                                         (Paint[1],vg,x$6,y$6 + 300.,x$6,y$6 + 300. - 6.,_dx_,_dw_);
+                                         (Paint[1],vg,x$6,y$6 + 300.,x$6,y$6 + 300. - 6.,_dw_,_dv_);
                                       caml_call1(Path[1],vg);
                                       caml_call5(Path[7],vg,369.,y$6 + 300. - 6.,152.,6.);
                                       caml_call2(set_fill_paint,vg,fade_paint$0);
                                       caml_call1(fill,vg);
                                       var
-                                       _dy_=rgba(0,0,0,92),
-                                       _dz_=rgba(0,0,0,32),
+                                       _dx_=rgba(0,0,0,92),
+                                       _dy_=rgba(0,0,0,32),
                                        shadow_paint$0=
                                         caml_call9
-                                         (Paint[2],vg,514.,y$6 + 4. + 1.,8.,292.,3.,4.,_dz_,_dy_);
+                                         (Paint[2],vg,514.,y$6 + 4. + 1.,8.,292.,3.,4.,_dy_,_dx_);
                                       caml_call1(Path[1],vg);
                                       caml_call6(Path[13],vg,513.,y$6 + 4.,8.,292.,3.);
                                       caml_call2(set_fill_paint,vg,shadow_paint$0);
                                       caml_call1(fill,vg);
                                       var
                                        scroll_h=300. / stack_h * 292.,
-                                       _dA_=rgba(128,128,128,255),
-                                       _dB_=rgba(220,220,220,255),
+                                       _dz_=rgba(128,128,128,255),
+                                       _dA_=rgba(220,220,220,255),
                                        shadow_paint$1=
                                         caml_call9
                                          (Paint[2],
@@ -11939,8 +11976,8 @@
                                           scroll_h,
                                           3.,
                                           4.,
-                                          _dB_,
-                                          _dA_);
+                                          _dA_,
+                                          _dz_);
                                       caml_call1(Path[1],vg);
                                       caml_call6
                                        (Path[13],
@@ -11956,16 +11993,16 @@
                                       caml_call1(restore,vg);
                                       var
                                        avg=[0,0.],
-                                       _d4_=t$0[3].length - 1 - 1 | 0,
+                                       _d3_=t$0[3].length - 1 - 1 | 0,
                                        y$7=5.,
                                        x$7=5.,
-                                       _d3_=0;
-                                      if(! (_d4_ < 0))
-                                       {var i$13=_d3_;
+                                       _d2_=0;
+                                      if(! (_d3_ < 0))
+                                       {var i$13=_d2_;
                                         for(;;)
                                          {avg[1] = avg[1] + caml_array_get(t$0[3],i$13);
-                                          var _d5_=i$13 + 1 | 0;
-                                          if(_d4_ !== i$13){var i$13=_d5_;continue}
+                                          var _d4_=i$13 + 1 | 0;
+                                          if(_d3_ !== i$13){var i$13=_d4_;continue}
                                           break}}
                                       var avg$0=avg[1] / (t$0[3].length - 1);
                                       caml_call1(Path[1],vg);
@@ -11977,19 +12014,19 @@
                                       var len$0=t$0[3].length - 1;
                                       switch(t$0[1])
                                        {case 0:
-                                         var _d7_=len$0 - 1 | 0,_d6_=0;
-                                         if(! (_d7_ < 0))
-                                          {var i$14=_d6_;
+                                         var _d6_=len$0 - 1 | 0,_d5_=0;
+                                         if(! (_d6_ < 0))
+                                          {var i$14=_d5_;
                                            for(;;)
                                             {var
-                                              _d8_=caml_mod(t$0[4] + i$14 | 0,len$0),
-                                              v$0=1. / (1e-05 + caml_array_get(t$0[3],_d8_)),
+                                              _d7_=caml_mod(t$0[4] + i$14 | 0,len$0),
+                                              v$0=1. / (1e-05 + caml_array_get(t$0[3],_d7_)),
                                               v$1=80. < v$0?80.:v$0,
                                               vx=5. + i$14 / (len$0 - 1.) * 200.,
                                               vy=40. - v$1 / 80. * 35.;
                                              caml_call3(Path[4],vg,vx,vy);
-                                             var _d9_=i$14 + 1 | 0;
-                                             if(_d7_ !== i$14){var i$14=_d9_;continue}
+                                             var _d8_=i$14 + 1 | 0;
+                                             if(_d6_ !== i$14){var i$14=_d8_;continue}
                                              break}}
                                          break;
                                         case 1:break
@@ -11997,7 +12034,7 @@
                                       caml_call3(Path[4],vg,205.,40.);
                                       caml_call2(set_fill_color,vg,rgba(255,192,0,128));
                                       caml_call1(fill,vg);
-                                      caml_call2(Text[9],vg,_ce_);
+                                      caml_call2(Text[9],vg,_cd_);
                                       caml_call2(Text[4],vg,12.);
                                       caml_call2(Text[8],vg,9);
                                       caml_call2(set_fill_color,vg,rgba(240,240,240,192));
@@ -12007,12 +12044,12 @@
                                          caml_call2(Text[4],vg,15.);
                                          caml_call2(Text[8],vg,12);
                                          caml_call2(set_fill_color,vg,rgba(240,240,240,255));
-                                         var s=caml_call1(sprintf(_cf_),1. / avg$0);
+                                         var s=caml_call1(sprintf(_ce_),1. / avg$0);
                                          caml_call6(Text[1],vg,202.,8.,0,0,s);
                                          caml_call2(Text[4],vg,13.);
                                          caml_call2(Text[8],vg,68);
                                          caml_call2(set_fill_color,vg,rgba(240,240,240,160));
-                                         var s$0=caml_call1(sprintf(_cg_),avg$0 * 1000.);
+                                         var s$0=caml_call1(sprintf(_cf_),avg$0 * 1000.);
                                          caml_call6(Text[1],vg,202.,37.,0,0,s$0);
                                          break;
                                         case 1:break
@@ -12020,29 +12057,29 @@
                                       caml_call1(end_frame,vg);
                                       window.requestAnimationFrame
                                        (caml_js_wrap_callback
-                                         (function(_eb_){return closure(vg,data,_eb_)}));
+                                         (function(_ea_){return closure(vg,data,_ea_)}));
                                       return 0}}}}}}}}}}}}}
-            var _dH_=count - 1 | 0,_dG_=0;
-            if(! (_dH_ < 0))
-             {var i$11=_dG_;
+            var _dG_=count - 1 | 0,_dF_=0;
+            if(! (_dG_ < 0))
+             {var i$11=_dF_;
               for(;;)
                {var
                  row=caml_check_bound(lines,i$11)[1 + i$11],
-                 _dI_=x$1 < _ea_?1:0;
-                if(_dI_)
-                 {var _dJ_=_ea_ < x$1 + 150.?1:0;
-                  if(_dJ_)
+                 _dH_=x$1 < _d$_?1:0;
+                if(_dH_)
+                 {var _dI_=_d$_ < x$1 + 150.?1:0;
+                  if(_dI_)
                    var
-                    _dK_=y$0[1] <= _d$_?1:0,
-                    hit=_dK_?_d$_ < y$0[1] + line_h?1:0:_dK_;
+                    _dJ_=y$0[1] <= _d__?1:0,
+                    hit=_dJ_?_d__ < y$0[1] + line_h?1:0:_dJ_;
                   else
-                   var hit=_dJ_}
+                   var hit=_dI_}
                 else
-                 var hit=_dI_;
+                 var hit=_dH_;
                 r[1]++;
                 caml_call1(Path[1],vg);
-                var _dL_=hit?64:16;
-                caml_call2(set_fill_color,vg,rgba(255,255,255,_dL_));
+                var _dK_=hit?64:16;
+                caml_call2(set_fill_color,vg,rgba(255,255,255,_dK_));
                 caml_call5
                  (Path[7],vg,x$1 + row[4],y$0[1],row[5] - row[4],line_h);
                 caml_call1(fill,vg);
@@ -12050,34 +12087,34 @@
                 caml_call6(Text[1],vg,x$1,y$0[1],[0,row[1]],[0,row[2]],text);
                 if(hit)
                  {var
-                   x=_ea_ < x$1 + row[3] / 2.?x$1:x$1 + row[3],
+                   x=_d$_ < x$1 + row[3] / 2.?x$1:x$1 + row[3],
                    caretx=[0,x],
                    px=[0,x$1],
                    nglyphs=
                     caml_call7
                      (Text[17],vg,x$1,y$0[1],[0,row[1]],[0,row[2]],glyphs,text),
-                   _dN_=nglyphs - 1 | 0,
-                   _dM_=0;
-                  if(! (_dN_ < 0))
-                   {var i$12=_dM_;
+                   _dM_=nglyphs - 1 | 0,
+                   _dL_=0;
+                  if(! (_dM_ < 0))
+                   {var i$12=_dL_;
                     for(;;)
                      {var
                        glyph=caml_check_bound(glyphs,i$12)[1 + i$12],
                        x0=glyph[2];
                       if((i$12 + 1 | 0) < nglyphs)
                        var
-                        _dP_=i$12 + 1 | 0,
-                        x1=caml_check_bound(glyphs,_dP_)[1 + _dP_][2];
+                        _dO_=i$12 + 1 | 0,
+                        x1=caml_check_bound(glyphs,_dO_)[1 + _dO_][2];
                       else
                        var x1=x$1 + row[3];
                       var
                        gx$0=x0 * 0.3 + x1 * 0.7,
-                       _dQ_=px[1] <= _ea_?1:0,
-                       _dR_=_dQ_?_ea_ < gx$0?1:0:_dQ_;
-                      if(_dR_)caretx[1] = glyph[2];
+                       _dP_=px[1] <= _d$_?1:0,
+                       _dQ_=_dP_?_d$_ < gx$0?1:0:_dP_;
+                      if(_dQ_)caretx[1] = glyph[2];
                       px[1] = gx$0;
-                      var _dS_=i$12 + 1 | 0;
-                      if(_dN_ !== i$12){var i$12=_dS_;continue}
+                      var _dR_=i$12 + 1 | 0;
+                      if(_dM_ !== i$12){var i$12=_dR_;continue}
                       break}}
                   caml_call1(Path[1],vg);
                   caml_call2(set_fill_color,vg,rgba(255,192,0,255));
@@ -12089,11 +12126,11 @@
                 lnum[1]++;
                 y$0[1] = y$0[1] + line_h;
                 start[1] = row[6];
-                var _dO_=i$11 + 1 | 0;
-                if(_dH_ !== i$11){var i$11=_dO_;continue}
+                var _dN_=i$11 + 1 | 0;
+                if(_dG_ !== i$11){var i$11=_dN_;continue}
                 break}}
             continue}}
-        return closure(vg,data,_cH_)});
+        return closure(vg,data,_cG_)});
     do_at_exit(0);
     return}
   (function(){return this}()));
