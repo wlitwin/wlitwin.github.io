@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Graph Generator</title>
+        <style>
+            html {
+                width: 100%;
+                height: 100%;
+                background-color: white;
+                margin: 0;
+            }
+
+            body {
+                padding: 10px;
+                display: flex-row;
+            }
+
+            #graph-div {
+                display: flex;
+            }
+
+            #json-div {
+                width: 100%;
+            }
+
+            #json-area {
+                width: 100%;
+                height: 500px;
+                cursor:text
+            }
+
+            #controls {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            #outer-controls {
+                margin-top: -15px;
+                margin-bottom: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Graph Generator</h1>
+        <div>
+            <div>
+                <label for="input-width">Width</label>
+                <input id="input-width" onchange="onInputSizeChange()" type="number" value="10"/>
+                <label for="input-height">Height</label>
+                <input id="input-height" onchange="onInputSizeChange()" type="number" value="5"/>
+                <button onclick="randomWeld()">Random Weld</button>
+                <button id="toggle-anim" onclick="toggleAnimate()">Relax Graph</button>
+                <button id="btn-reset" onclick="initialize()">Reset</button>
+                <button id="btn-swap" onclick="swapCanvas()">Swap X/Y</button>
+            </div>
+            <div>
+                <div>Click and drag a node to move it</div>
+                <div>Hold shift + drag to manual weld</div>
+            </div>
+            <div>
+                <h4>Settings</h4>
+                <div id="outer-controls">
+                <div id="controls">
+                    <div>
+                        <label for="showAttractions">Show Attractors</label>
+                        <input id="showAttractions" onchange="toggleAttractors()" type="checkbox">
+                    </div>
+                    <div>
+                        <label for="showEdgeAttractions">Show Edge Attractors</label>
+                        <input id="showEdgeAttractions" onchange="toggleEdgeAttractors()" type="checkbox">
+                    </div>
+                    <div>
+                        <label for="gravityForce">Gravity Force</label>
+                        <input id="gravityForce" onchange="changeGravityForce()" type="number" step="0.01" value="6.5">
+                    </div>
+                    <div>
+                        <label for="edgePushStrength">Edge Push Strength</label>
+                        <input id="edgePushStrength" onchange="changeEdgePushStrength()" type="number" step="0.01" value="20">
+                    </div>
+                    <div>
+                        <label for="forceConstant">Force Scale</label>
+                        <input id="forceConstant" onchange="changeForceScale()" type="number" step="0.01" value="0.05">
+                    </div>
+                    <div>
+                        <label for="maxRadScale">Max Radius Scale</label>
+                        <input id="maxRadScale" onchange="changeMaxRadScale()" type="number" step="0.01" value="0.05">
+                    </div>
+                    <div>
+                        <label for="maxDistScale">Max Distance Scale</label>
+                        <input id="maxDistScale" onchange="changeMaxDistScale()" type="number" step="0.01" value="0.05">
+                    </div>
+                    <div>
+                        <a href="https://medium.com/@1basudevpatel/random-paths-in-gamedev-beatdown-a913a1d8c5e6">More Info</a>
+                    </div>
+                </div>
+                    <button id="btn-reset-settings" onclick="resetSettings()">Reset Settings</button>
+            </div>
+            </div>
+        </div>
+        <div id="graph-div">
+            <canvas id="grid" width="800" height="600">
+            </canvas>
+        </div>
+        <div id="json-div">
+            <h4>Json<h4>
+            <textarea id="json-area" readonly></textarea>
+        </div>
+    </body>
+    <script type="text/javascript">
+        const elem = (id) => document.getElementById(id);
+        const canvas = elem('grid');
+        const ctx = canvas.getContext('2d');
+        const jsonArea = elem('json-area');
+        const toggleAnim = elem('toggle-anim');
+        const widthInput = elem('input-width');
+        const heightInput = elem('input-height');
+        const btnReset = elem('btn-reset');
+        const nodeDrawSize = 10;
+        const weldCaptures = new Set();
+
+        let showAttractions = false;
+        let showEdgeAttractions = false;
+        let shouldAnimate = false;
+        let swap = false;
+
+        let width = 0;
+        let height = 0;
+
+        let gravityConstant = 6.5;
+        let forceConstant = .05;
+        let edge_push_strength = 20;
+        let max_dist_scale = 0.5;
+        let max_rad_scale = 0.2;
+
+        function toggleAttractors() {
+            showAttractions = !showAttractions;
+        }
+
+        function toggleEdgeAttractors() {
+            showEdgeAttractions = !showEdgeAttractions;
+        }
+
+        function changeGravityForce() {
+            gravityConstant = parseFloat(elem("gravityForce").value);
+        }
+
+        function changeEdgePushStrength() {
+            edge_push_strength = parseFloat(elem("edgePushStrength").value);
+        }
+
+        function changeForceScale() {
+            forceConstant = parseFloat(elem("forceConstant").value);
+        }
+
+        function changeMaxRadScale() {
+            max_rad_scale = parseFloat(elem("maxRadScale").value);
+        }
+
+        function changeMaxDistScale() {
+            max_dist_scale = parseFloat(elem("maxDistScale").value);
+        }
+
+        function resetSettings() {
+            gravityConstant = 6.5;
+            forceConstant = 0.05;
+            edge_push_strength = 20;
+            max_dist_scale = 0.5;
+            max_rad_scale = 0.2;
+            showAttractions = false;
+            showEdgeAttractions = false;
+
+            elem("showAttractions").checked = showAttractions;
+            elem("showEdgeAttractions").checked = showEdgeAttractions;
+            elem("gravityForce").value = gravityConstant;
+            elem("edgePushStrength").value = edge_push_strength;
+            elem("forceConstant").value = forceConstant;
+            elem("maxDistScale").value = max_dist_scale;
+            elem("maxRadScale").value = max_rad_scale;
+        }
+
+        (function setupSimulationVars() {
+            showAttractions = elem("showAttractions").checked;
+            showEdgeAttractions = elem("showEdgeAttractions").checked;
+            changeGravityForce();
+            changeEdgePushStrength();
+            changeForceScale();
+            changeMaxDistScale();
+            changeMaxRadScale();
+        })();
+
+        /************************************************
+         * 
+         * Map functions
+         * 
+        ************************************************/
+
+        let graph = {
+            verts: new Map(),
+            edges: new Map(),
+        }
+
+        function mkGraph() {
+            graph.verts.clear();
+            graph.edges.clear();
+        }
+
+        function mkKey(col, row) {
+            return `${col}-${row}`
+        }
+
+        function mkNode(col, row, pos) {
+            return { row, col, pos, key: mkKey(col, row), repulse: 1, attraction: 1}
+        }
+
+        function addVert(node) {
+            graph.verts.set(node.key, node);
+        }
+
+        function removeVert(node) {
+            graph.verts.delete(node.key);
+            const neighbors = getEdges(node);
+            graph.edges.delete(node.key);
+            neighbors.forEach((n) => {
+                getEdges(n).delete(node);
+            })
+        }
+
+        function getVert(x, y) {
+            return getVertById(mkKey(x, y));
+        }
+
+        function getVertById(id) {
+            return graph.verts.get(id);
+        }
+
+        function getEdges(node) {
+            return graph.edges.get(node.key) ?? []
+        }
+
+        function addEdge(node1, node2) {
+            function addEdgeHelper(n1, n2) {
+                if (graph.edges.has(n1.key)) {
+                    graph.edges.get(n1.key).add(n2)
+                } else {
+                    let set = new Set();
+                    set.add(n2);
+                    graph.edges.set(n1.key, set);
+                }
+            }
+
+            addEdgeHelper(node1, node2);
+            addEdgeHelper(node2, node1);
+        }
+
+        function getValidCols() {
+            const counts = new Map(); 
+            graph.verts.forEach((v) => {
+                let entry = counts.get(v.col)
+                if (!entry) {
+                    counts.set(v.col, {count:1, nodes:[v]})
+                } else {
+                    entry.nodes.push(v);
+                    entry.count += 1;
+                }
+            })
+            const validColumns = []
+            for (let [col, value] of counts.entries()) {
+                if (value.count > 1) {
+                    value.nodes.sort((a, b) => a.row < b.row);
+                    validColumns.push(value.nodes)
+                }
+            }
+            return validColumns;
+        }
+
+        /************************************************
+         * 
+         * End Map functions
+         * 
+        ************************************************/
+
+        function generateGrid() {
+            // Start point
+            const offsetX = 1./width * .5
+            const offsetY = 1./height * .5
+
+            let start = mkNode(0, 0, {nx:offsetX, ny:0.5});
+            start.repulse = 4;
+            start.attraction = -4;
+            start.isStart = true;
+            start.isEndpoint = true;
+            let end = mkNode(width-1, 0, {nx:1 - offsetX, ny:0.5});
+            end.repulse = 4;
+            end.attraction = -4;
+            end.isEnd = true;
+            end.isEndpoint = true;
+            addVert(start);
+            addVert(end);
+
+            for (let x = 1; x < width-1; ++x) {
+                for (let y = 0; y < height; ++y) {
+                    let vert = mkNode(x, y, {nx:x/width+offsetX, ny:y/height+offsetY});
+                    addVert(vert);
+                    if (x === 1) {
+                        addEdge(start, vert);
+                    } else if (x === width-2) {
+                        addEdge(vert, getVert(x-1, y));
+                        addEdge(vert, end);
+                    } else {
+                        addEdge(vert, getVert(x-1, y));
+                    }
+                }
+            }
+        }
+
+        function randomInt(min, max) {
+            return min + Math.floor(Math.random() * (max-min));
+        }
+
+        function randomWeld() {
+            const columns = getValidCols();
+            const col = randomInt(0, columns.length);
+            const nodes = columns[col];
+            const row = randomInt(0, nodes.length - 1);
+
+            // Find all valid nodes in that column
+            let node1 = nodes[row]
+            let node2 = nodes[row+1]
+
+            weld(node1, node2);
+        }
+
+        function weld(node1, node2) {
+            if (!node1 || !node2) {
+                console.log("No node", node1, node2, row, col, columns, nodes);
+                return;
+            }
+
+            let neighbors = getEdges(node2);
+            removeVert(node2);
+
+            neighbors.forEach((n) => {
+                addEdge(node1, n);
+            });
+
+            node1.pos.ny = 0.5 * (node1.pos.ny + node2.pos.ny);
+
+            drawPoints(graph);
+            dumpJson();
+        }
+
+        function forEachEdge(callback) {
+            let seen = new Set();
+            graph.verts.forEach((node) => {
+                getEdges(node).forEach((neighborNode) => {
+                    const key1 = node.key + "-" + neighborNode.key;
+                    const key2 = neighborNode.key + "-" + node.key;
+                    if (seen.has(key1) || seen.has(key2)) {
+                        return;
+                    }
+                    seen.add(key1);
+                    seen.add(key2);
+
+                    callback(node, neighborNode);
+                })
+            })
+        }
+
+        function toScreenPt(x, y) {
+            const canvasOffsetX = canvas.width - nodeDrawSize;
+            const canvasOffsetY = canvas.height - nodeDrawSize;
+            if (swap) {
+                return [y * canvasOffsetX + nodeDrawSize/2,
+                        x * canvasOffsetY + nodeDrawSize/2];
+            }
+            return [x * canvasOffsetX + nodeDrawSize/2,
+                    y * canvasOffsetY + nodeDrawSize/2];
+
+        }
+
+        function toScreen(node, swap) {
+            return toScreenPt(node.pos.nx, node.pos.ny);
+        }
+
+        function drawPoints(graph) {
+            ctx.fillStyle = 'black';
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 1;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.strokeRect(1, 1, canvas.width-1, canvas.height-1);
+
+            if (shouldAnimate && false) {
+                ctx.font = "12px serif"
+                const text = ctx.measureText("Simulating");
+                const height = text.actualBoundingBoxDescent + text.actualBoundingBoxAscent;
+                ctx.fillText("Simulating", canvas.width - text.width - 5, 5 + height);
+            }
+
+            ctx.strokeStyle = 'black';
+            let drawn = new Set();
+            graph.verts.forEach((node) => {
+                let [px, py] = toScreen(node, swap);
+
+                getEdges(node).forEach((neighborNode) => {
+                    const key1 = node.key + "-" + neighborNode.key;
+                    const key2 = neighborNode.key + "-" + node.key;
+                    if (drawn.has(key1) || drawn.has(key2)) {
+                        return;
+                    }
+
+                    drawn.add(key1);
+                    drawn.add(key2);
+                    let [ex, ey] = toScreen(neighborNode, swap);
+                    ctx.beginPath();
+                    ctx.moveTo(px, py);
+                    ctx.lineTo(ex, ey);
+                    ctx.stroke();
+                });
+
+                ctx.fillStyle = 
+                    (node.isCaptured || node.isWeldCompatible) ? 'orange' :
+                        (node.isEndpoint ? 'red' : 'black');
+                ctx.fillRect(px-nodeDrawSize/2, py-nodeDrawSize/2, 
+                    nodeDrawSize, nodeDrawSize);
+            });
+        }
+
+        let initializing = false;
+        function onInputSizeChange() {
+            width = widthInput.value | 0
+            height = heightInput.value | 0
+            if (!initializing) {
+                initialize();
+            }
+        }
+
+        function dumpJson() {
+            const jsonOutput = {};
+
+            let nodes = [];
+            graph.verts.forEach((v) => {
+                nodes.push({
+                    id: v.key,
+                    x: v.pos.nx,
+                    y: v.pos.ny
+                })
+            })
+
+
+            let edges = {};
+            nodes.forEach((node) => {
+                const neighbors = graph.edges.get(node.id);
+                if (!neighbors) {
+                    return;
+                }
+                // skip back edges
+                const outEdges = [];
+                neighbors.forEach((e) => {
+                    if (getVertById(node.id).col < e.col) {
+                        outEdges.push(e.key);
+                    }
+                });
+
+                edges[node.id] = outEdges;
+            })
+
+            jsonOutput.nodes = nodes;
+            jsonOutput.edges = edges;
+
+            jsonArea.value = JSON.stringify(jsonOutput, null, 2);
+        }
+
+        function swapCanvas() {
+            swap = !swap;
+            let t = canvas.width;
+            canvas.width = canvas.height;
+            canvas.height = t;
+
+            drawPoints(graph);
+        }
+
+        function initialize() {
+            initializing = true;
+            mkGraph();
+            onInputSizeChange();
+            generateGrid();
+            drawPoints(graph);
+            dumpJson();
+            initializing = false;
+        }
+
+        initialize();
+
+        let mouseDown = false;
+        let weldMode = false;
+        let capturedNode = null;
+        let lastPos = null;
+
+        function clientToNormalized(ev) {
+            const rect = canvas.getBoundingClientRect() 
+            const x = (ev.clientX - rect.left) / canvas.width;
+            const y = (ev.clientY - rect.top) / canvas.height;
+            return {x, y};
+        }
+
+        function normalizedToClient(pos) {
+            return {x: pos.x*canvas.width, y:pos.y*canvas.height};
+        }
+
+        function getNodeUnderLoc(loc, hitSize) {
+            const tl_x = loc.x - hitSize/2;
+            const tl_y = loc.y - hitSize/2;
+
+            for (let node of graph.verts.values()) {
+                if (tl_x <= node.pos.nx 
+                    && node.pos.nx <= tl_x+hitSize
+                    && tl_y <= node.pos.ny
+                    && node.pos.ny <= tl_y+hitSize) 
+                {
+                    return node;
+                }
+            }
+
+            return null;
+        }
+
+        function markWelds(clearWelds) {
+            if (clearWelds) {
+                graph.verts.forEach((v) => v.isWeldCompatible = false);
+                drawPoints(graph);
+                return;
+            }
+
+            if (weldCaptures.size <= 0) {
+                return;
+            }
+
+            const node1 = weldCaptures.values().next().value;
+            graph.verts.forEach((v) => {
+                v.isWeldCompatible = (node1.col == v.col)
+            });
+            drawPoints(graph);
+        }
+
+        function canvasMouseDown(ev) {
+            lastPos = clientToNormalized(ev);
+            if (ev.shiftKey) {
+                // Weld mode
+                weldMode = true;
+                weldCaptures.clear();
+
+                const start = getNodeUnderLoc(lastPos, nodeDrawSize*3/canvas.width);
+                if (start) {
+                    weldCaptures.add(start);
+                    markWelds(false);
+                }
+
+                drawPoints(graph);
+                return;
+            }
+
+            const sz = nodeDrawSize*2 / canvas.width;
+            capturedNode = getNodeUnderLoc(lastPos, sz);
+            if (capturedNode) {
+                capturedNode.isCaptured = true;
+            }
+            drawPoints(graph);
+        }
+
+        function attemptWeld(captures) {
+            if (captures.size < 2) {
+                return;
+            }
+
+            captures = Array.from(captures);
+            const node1 = captures[0];
+            const node2 = captures[1];
+
+            if (node1.col != node2.col) {
+                return;
+            }
+
+            weld(node1, node2);
+        }
+
+        function canvasMouseUp(ev) {
+            if (capturedNode) {
+                capturedNode.isCaptured = false;
+            }
+
+            if (weldMode) {
+                // Try to perform weld
+                attemptWeld(weldCaptures);
+                markWelds(true);
+            }
+
+            drawPoints(graph);
+            weldMode = false;
+            capturedNode = null;
+            lastPos = null;
+        }
+
+        function canvasMouseMove(ev) {
+            const pos = clientToNormalized(ev);
+            if (weldMode) {
+                drawPoints(graph);
+
+                const node = getNodeUnderLoc(pos, nodeDrawSize*3/canvas.width);
+                if (node && (weldCaptures.size == 0 || node.isWeldCompatible)) {
+                    weldCaptures.add(node);
+                    markWelds(false);
+                }
+
+                ctx.strokeStyle = "orange";
+                ctx.lineWidth = nodeDrawSize;
+                ctx.beginPath();
+                const lpos = normalizedToClient(lastPos);
+                const cpos = normalizedToClient(pos);
+                ctx.moveTo(lpos.x, lpos.y);
+                ctx.lineTo(cpos.x, cpos.y);
+                ctx.stroke();
+
+                if (weldCaptures.size >= 2 && false) {
+                    attemptWeld(weldCaptures);
+                    weldMode = false;
+                    markWelds(true);
+                }
+
+                return;
+            }
+
+            if (!capturedNode) {
+                lastPos = pos;
+                return;
+            }
+
+            // Look for node under cursor
+            const dx = pos.x - lastPos.x;
+            const dy = pos.y - lastPos.y;
+
+            capturedNode.pos.nx += dx;
+            capturedNode.pos.ny += dy;
+
+            lastPos = pos;
+
+            drawPoints(graph);
+        }
+
+        function setupCanvasMouse() {
+            canvas.addEventListener("mousedown", canvasMouseDown);
+            canvas.addEventListener("mousemove", canvasMouseMove);
+            canvas.addEventListener("mouseup", canvasMouseUp);
+        }
+
+        setupCanvasMouse();
+
+        /************************************************
+         * 
+         * Graph Relaxtion
+         * 
+        ************************************************/
+
+        function clamp(v, _min, _max) {
+            return Math.min(Math.max(v, _min), _max)
+        }
+
+        function mag(x, y) {
+            return Math.sqrt(x*x + y*y);
+        }
+
+        function applyForces() {
+            const max_x = 1./width;
+            const max_y = 1./height;
+            const value = Math.min(max_x, max_y);
+            const max_dist = mag(value, value) * max_dist_scale;
+            const max_rad = max_dist*max_rad_scale;
+
+            // Small pull towards center
+            graph.verts.forEach((n) => {
+                n.force = {fx:0, fy:0}
+                n.force.fx = (0.5 - n.pos.nx)*gravityConstant;
+                n.force.fy = (0.5 - n.pos.ny)*gravityConstant;
+            })
+
+            // Repulsion between 
+            graph.verts.forEach((n1) => {
+                graph.verts.forEach((n2) => {
+                    if (n1 == n2) {
+                        return;
+                    }
+
+                    let dx = n2.pos.nx - n1.pos.nx;
+                    let dy = n2.pos.ny - n1.pos.ny;
+
+                    if (dx > max_dist*3 || dy > max_dist*3) {
+                        return
+                    }
+
+                    const dmag = mag(dx, dy)
+                    let fx = (dx / (dmag * dmag)) * forceConstant * n1.repulse;
+                    let fy = (dy / (dmag * dmag)) * forceConstant * n1.repulse;
+
+                    n1.force.fx += -fx;
+                    n1.force.fy += -fy;
+
+                    n2.force.fx += fx;
+                    n2.force.fy += fy;
+                })
+            })
+
+            // Repulse along edges
+            graph.verts.forEach((v) => {
+                getEdges(v).forEach((e) => {
+                const dx = e.pos.nx - v.pos.nx;
+                const dy = e.pos.ny - v.pos.ny;
+                const dis = mag(dx, dy) 
+
+                if (showAttractions) {
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    let [a, b] = toScreen(v);
+                    let [c, d] = toScreen(e);
+                    ctx.moveTo(a, b);
+                    ctx.lineTo(
+                        a + (dx / dis) * max_dist*canvas.width, 
+                        b + (dy / dis) * max_dist*canvas.width
+                    );
+                    ctx.stroke();
+                }
+
+                const diff = (dis - max_dist)*20;
+                v.force.fx += (dx / dis) * diff;
+                v.force.fy += (dx / dis) * diff;
+
+                e.force.fx -= (dx / dis) * diff;
+                e.force.fy -= (dy / dis) * diff;
+                });
+            })
+
+            function drawCircle(px, py, rad) {
+                const [a, b] = toScreenPt(px, py);
+                const [px_rad, _] = toScreenPt(rad, rad);
+                ctx.strokeStyle = '#EECC00';
+                ctx.lineWidth = 2;
+                ctx.beginPath()
+                ctx.arc(a, b, px_rad, 0, Math.PI*2);
+                ctx.stroke();
+            }
+
+            // Repulse away from edges
+            forEachEdge((n1, n2) => {
+                // Calculate edge center
+                const px = n2.pos.nx + (n1.pos.nx - n2.pos.nx) * 0.5;
+                const py = n2.pos.ny + (n1.pos.ny - n2.pos.ny) * 0.5;
+
+                if (showEdgeAttractions) {
+                    const [a, b] = toScreenPt(px, py);
+                    ctx.fillStyle = '#EECC00';
+                    ctx.fillRect(a - 5, b - 5, 10, 10);
+                    drawCircle(px, py, max_rad);
+                }
+
+                graph.verts.forEach((v) => {
+                    const dx = v.pos.nx - px;
+                    const dy = v.pos.ny - py;
+
+                    const dist = mag(dx, dy);                    
+                    if (dist > max_rad) {
+                        return;
+                    }
+
+                    // Apply a force perpendicular to the edge
+                    v.force.fx += dy*edge_push_strength;
+                    v.force.fy += -dx*edge_push_strength;
+                });
+            });
+
+            // Repulse away from start/end
+            const s = getVert(0, 0);
+            const e = getVert(width-1, 0);
+            const endpoint_rad = max_dist;
+
+            if (showEdgeAttractions) {
+                drawCircle(s.pos.nx, s.pos.ny, endpoint_rad);
+                drawCircle(e.pos.nx, e.pos.ny, endpoint_rad);
+            }
+
+            function repulse(from, radius, v) {
+                const dx = v.pos.nx - from.pos.nx;
+                const dy = v.pos.ny - from.pos.ny;
+
+                const dist = mag(dx, dy);                    
+                if (dist > radius) {
+                    return;
+                }
+
+                // Apply a force perpendicular to the edge
+                v.force.fx += dx*30;
+                v.force.fy += dy*30;
+            }
+
+            graph.verts.forEach((v) => {
+                if (v.isEndpoint) {
+                    return;
+                }
+
+                repulse(s, endpoint_rad, v);
+                repulse(e, endpoint_rad, v);
+            })
+
+            // Update positions
+            graph.verts.forEach((node) => {
+                if ((node.col == 0 && node.row == 0) 
+                    || (node.col == width-1 && node.row == 0)
+                    || node.isCaptured) 
+                {
+                    return;
+                }
+                const mass = (2 * Math.PI * 100) / 1.5;
+
+                const vx = node.force.fx / mass;
+                const vy = node.force.fy / mass;
+
+                node.pos.nx += vx*0.05;
+                node.pos.ny += vy*0.05;
+
+                const _min_x = node.isEndpoint ? 0 : (1./width);
+                const _max_x = node.isEndpoint ? 1 : 1 - (1./width);
+                const _min_y = node.isEndpoint ? 0 : (1./height);
+                const _max_y = node.isEndpoint ? 1 : 1 - (1./height);
+
+                node.pos.nx = clamp(node.pos.nx, _min_x, _max_x);
+                node.pos.ny = clamp(node.pos.ny, _min_y, _max_y);
+            })
+        }
+
+        function animate() {
+            drawPoints(graph);
+            applyForces()
+
+            if (shouldAnimate) {
+                window.requestAnimationFrame(animate);
+            }
+        }
+
+        function toggleAnimate() {
+            shouldAnimate = !shouldAnimate;
+            if (shouldAnimate) {
+                toggleAnim.innerText = "RELAXING!";
+                animate();
+            } else {
+                toggleAnim.innerText = "Relax Graph";
+            }
+        }
+
+
+        /************************************************
+         * 
+         * End Graph Relaxtion
+         * 
+        ************************************************/
+
+    </script>
+</html>
