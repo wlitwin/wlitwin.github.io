@@ -83,11 +83,11 @@
                     </div>
                     <div>
                         <label for="maxRadScale">Max Radius Scale</label>
-                        <input id="maxRadScale" onchange="changeMaxRadScale()" type="number" step="0.01" value="0.05">
+                        <input id="maxRadScale" onchange="changeMaxRadScale()" type="number" step="0.01" value="0.5">
                     </div>
                     <div>
                         <label for="maxDistScale">Max Distance Scale</label>
-                        <input id="maxDistScale" onchange="changeMaxDistScale()" type="number" step="0.01" value="0.05">
+                        <input id="maxDistScale" onchange="changeMaxDistScale()" type="number" step="0.01" value="0.2">
                     </div>
                     <div>
                         <a href="https://medium.com/@1basudevpatel/random-paths-in-gamedev-beatdown-a913a1d8c5e6">More Info</a>
@@ -179,6 +179,7 @@
         }
 
         (function setupSimulationVars() {
+            resetSettings();
             showAttractions = elem("showAttractions").checked;
             showEdgeAttractions = elem("showEdgeAttractions").checked;
             changeGravityForce();
