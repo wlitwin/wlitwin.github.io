@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiniML Playground</title>
+<style>
+  /* Ayu Mirage palette */
+  :root {
+    --bg: #1F2430;
+    --bg-sunk: #181C26;
+    --bg-lift: #242936;
+    --bg-panel: #282E3B;
+    --fg: #CCCAC2;
+    --fg-ui: #707A8C;
+    --fg-dim: #5C6773;
+    --line: #171B24;
+    --line-ui: #1A1F29;
+    --accent: #FFCC66;
+    --accent-dim: #E6B450;
+    --blue: #73D0FF;
+    --green: #D5FF80;
+    --red: #F28779;
+    --orange: #FFA659;
+    --yellow: #FFCD66;
+    --teal: #95E6CB;
+    --purple: #DFBFFF;
+    --string: #AAD94C;
+    --error: #FF6666;
+    --select: rgba(99, 117, 153, 0.15);
+    /* Syntax highlighting (Ayu Mirage) */
+    --syn-keyword: #FFA759;
+    --syn-string: #D5FF80;
+    --syn-comment: #5C6773;
+    --syn-number: #D4BFFF;
+    --syn-operator: #F29E74;
+    --syn-type: #73D0FF;
+    --syn-tyvar: #95E6CB;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--fg); padding: 20px; }
+  h1 { font-size: 1.4em; margin-bottom: 4px; color: var(--accent); }
+  .subtitle { font-size: 0.8em; color: var(--fg-ui); margin-bottom: 16px; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .panel { background: var(--bg-panel); border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  label { display: block; font-size: 0.85em; color: var(--fg-ui); margin-bottom: 6px; }
+  textarea {
+    width: 100%; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 14px; line-height: 1.5; background: var(--bg-sunk); color: var(--fg);
+    border: 1px solid var(--bg-panel); border-radius: 4px; padding: 12px; resize: vertical;
+    tab-size: 2; outline: none;
+  }
+  textarea:focus { border-color: var(--fg-dim); }
+  #source { height: 300px; }
+  #output {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 14px; background: var(--bg-sunk); border: 1px solid var(--bg-panel);
+    border-radius: 4px; padding: 12px; min-height: 80px; white-space: pre-wrap;
+    max-height: 400px; overflow-y: auto; line-height: 1.5;
+  }
+  .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+  button {
+    padding: 8px 20px; font-size: 14px; border: none; border-radius: 4px;
+    cursor: pointer; font-weight: 600;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  #runBtn { background: var(--accent); color: var(--bg); }
+  #runBtn:hover:not(:disabled) { background: var(--accent-dim); }
+  #clearBtn { background: var(--bg-panel); color: var(--fg-ui); }
+  #clearBtn:hover { background: var(--bg-lift); }
+  select {
+    padding: 8px 12px; font-size: 14px; border: 1px solid var(--bg-panel);
+    border-radius: 4px; background: var(--bg-lift); color: var(--fg); cursor: pointer;
+  }
+  .spacer { flex: 1; }
+  .status { font-size: 0.8em; color: var(--fg-ui); }
+  .error { color: var(--error); }
+  .compile-error { color: var(--orange); }
+  .timing { color: var(--string); }
+
+  /* Syntax highlighting */
+  .hl-keyword { color: var(--syn-keyword); }
+  .hl-string { color: var(--syn-string); }
+  .hl-comment { color: var(--syn-comment); font-style: italic; }
+  .hl-number { color: var(--syn-number); }
+  .hl-operator { color: var(--syn-operator); }
+  .hl-constructor { color: var(--syn-type); }
+  .hl-tyvar { color: var(--syn-tyvar); font-style: italic; }
+
+  /* Editor overlay for syntax highlighting */
+  .editor-container { position: relative; }
+  .editor-highlight {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 14px; line-height: 1.5;
+    padding: 12px; margin: 0;
+    border: 1px solid transparent; border-radius: 4px;
+    overflow: hidden; pointer-events: none;
+    white-space: pre-wrap; overflow-wrap: break-word;
+    tab-size: 2; color: var(--fg);
+  }
+  #source {
+    position: relative; color: transparent; caret-color: var(--fg);
+    background: transparent;
+  }
+  #source::selection { background: rgba(99, 117, 153, 0.4); }
+  #source::placeholder { color: var(--fg-dim); }
+  .editor-container { background: var(--bg-sunk); border-radius: 4px; }
+  .info { color: var(--blue); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--fg-dim);
+    border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite;
+    vertical-align: middle; margin-right: 6px; }
+
+  /* Tab bar */
+  .tab-bar { display: flex; gap: 0; margin-bottom: 12px; border-bottom: 2px solid var(--bg-panel); }
+  .tab-bar button {
+    padding: 10px 24px; font-size: 14px; font-weight: 600; border: none;
+    background: transparent; color: var(--fg-dim); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    border-radius: 0; transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-bar button:hover { color: var(--fg); }
+  .tab-bar button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Tab views */
+  .tab-view { display: none; }
+  .tab-view.active { display: block; }
+
+  /* Docs layout */
+  .docs-layout { display: flex; gap: 16px; min-height: 500px; }
+  .docs-sidebar {
+    width: 200px; flex-shrink: 0; background: var(--bg-panel);
+    border-radius: 8px; padding: 12px 0;
+  }
+  .docs-sidebar a {
+    display: block; padding: 8px 16px; color: var(--fg-ui); text-decoration: none;
+    font-size: 0.9em; border-left: 3px solid transparent;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .docs-sidebar a:hover { color: var(--fg); background: var(--select); }
+  .docs-sidebar a.active {
+    color: var(--accent); border-left-color: var(--accent); background: rgba(255, 204, 102, 0.06);
+  }
+  .docs-content { flex: 1; min-width: 0; overflow-y: auto; max-height: 80vh; }
+
+  /* Markdown content styling */
+  .docs-content h1 { font-size: 1.6em; color: var(--accent); margin: 0 0 16px 0; }
+  .docs-content h2 { font-size: 1.3em; color: var(--blue); margin: 24px 0 12px 0; border-bottom: 1px solid var(--bg-panel); padding-bottom: 6px; }
+  .docs-content h3 { font-size: 1.1em; color: var(--blue); margin: 20px 0 8px 0; }
+  .docs-content h4 { font-size: 1.0em; color: var(--blue); margin: 16px 0 6px 0; }
+  .docs-content p { line-height: 1.7; margin: 0 0 12px 0; }
+  .docs-content a { color: var(--blue); }
+  .docs-content a:hover { text-decoration: underline; }
+  .docs-content ul, .docs-content ol { margin: 0 0 12px 24px; line-height: 1.7; }
+  .docs-content li { margin-bottom: 4px; }
+  .docs-content code {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    background: var(--bg-sunk); padding: 2px 6px; border-radius: 3px;
+    font-size: 0.9em; color: var(--orange);
+  }
+  .docs-content pre {
+    background: var(--bg-sunk); border: 1px solid var(--bg-panel); border-radius: 4px;
+    padding: 12px; overflow-x: auto; margin: 0 0 16px 0; line-height: 1.5;
+  }
+  .docs-content pre code {
+    background: none; padding: 0; font-size: 14px; color: var(--fg);
+  }
+  .docs-content table { width: 100%; border-collapse: collapse; margin: 0 0 16px 0; font-size: 0.9em; }
+  .docs-content th { text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--bg-panel); color: var(--accent); }
+  .docs-content td { padding: 6px 12px; border-bottom: 1px solid var(--bg-lift); }
+  .docs-content tr:hover td { background: var(--select); }
+  .docs-content blockquote {
+    border-left: 3px solid var(--fg-dim); padding: 8px 16px; margin: 0 0 12px 0;
+    color: var(--fg-ui); background: var(--select); border-radius: 0 4px 4px 0;
+  }
+  .docs-content hr { border: none; border-top: 1px solid var(--bg-panel); margin: 24px 0; }
+  .docs-content strong { color: #E8E8E8; }
+  .docs-content em { color: var(--teal); }
+  .docs-loading { color: var(--fg-ui); padding: 40px; text-align: center; }
+
+  @media (max-width: 700px) {
+    .docs-layout { flex-direction: column; }
+    .docs-sidebar {
+      width: 100%; display: flex; overflow-x: auto; padding: 0;
+      border-radius: 8px 8px 0 0;
+    }
+    .docs-sidebar a {
+      white-space: nowrap; border-left: none;
+      border-bottom: 3px solid transparent; padding: 10px 14px; font-size: 0.85em;
+    }
+    .docs-sidebar a.active { border-left-color: transparent; border-bottom-color: var(--accent); }
+    .docs-content { max-height: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>MiniML Playground</h1>
+  <div class="subtitle">Self-hosted compiler running in the browser</div>
+
+  <div class="tab-bar">
+    <button class="active" data-tab="playground">Playground</button>
+    <button data-tab="docs">Docs</button>
+  </div>
+
+  <div id="playground-view" class="tab-view active">
+    <div class="panel">
+      <label for="source">Source Code</label>
+      <div class="editor-container">
+      <pre class="editor-highlight" id="sourceHighlight" aria-hidden="true"></pre>
+      <textarea id="source" spellcheck="false" placeholder="Write MiniML code here...">-- Try some MiniML!
+let () = print "Hello, MiniML!"
+
+let rec fib n =
+  if n <= 1 do n
+  else fib (n - 1) + fib (n - 2)
+
+let () = print $"fib(10) = {fib 10}"
+let () = print $"fib(20) = {fib 20}"
+</textarea>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button id="runBtn">Run</button>
+      <button id="clearBtn">Clear Output</button>
+      <select id="samples">
+        <option value="">Load example...</option>
+        <option value="hello">Hello World</option>
+        <option value="fib">Fibonacci</option>
+        <option value="lists">List Operations</option>
+        <option value="variants">Variants &amp; Pattern Matching</option>
+        <option value="higher">Higher-Order Functions</option>
+        <option value="modules">Modules</option>
+        <option value="hashtbl">Hash Tables</option>
+        <option value="effects">Effect Handlers</option>
+        <option value="typeclasses">Type Classes</option>
+        <option value="generators">Generators</option>
+        <option value="iterators">Custom Iterators</option>
+      </select>
+      <div class="spacer"></div>
+      <span id="statusText" class="status"></span>
+    </div>
+
+    <div class="panel">
+      <label>Output</label>
+      <div id="output"></div>
+    </div>
+  </div>
+
+  <div id="docs-view" class="tab-view" style="display:none">
+    <div class="docs-layout">
+      <nav class="docs-sidebar" id="docsSidebar"></nav>
+      <div class="docs-content panel" id="docsContent">
+        <div class="docs-loading">Select a topic from the sidebar.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="miniml.bundle.js"></script>
+<script>
+const source = document.getElementById("source");
+const output = document.getElementById("output");
+const runBtn = document.getElementById("runBtn");
+const clearBtn = document.getElementById("clearBtn");
+const samples = document.getElementById("samples");
+const statusText = document.getElementById("statusText");
+const sourceHighlight = document.getElementById("sourceHighlight");
+
+// --- Syntax Highlighting ---
+
+const HL_KEYWORDS = new Set([
+  'let','rec','in','if','else','fn','match','with','type','of','not','mod',
+  'true','false','class','instance','effect','extern','perform','handle','try',
+  'resume','return','continue','mut','for','do','break','when','where','module',
+  'pub','open','end','opaque','and','deriving','land','lor','lxor','lnot','lsl','lsr'
+]);
+
+const HL_OPS2 = new Set(['->', '=>', '|>', '::', ':=', '<>', '<=', '>=', '&&', '||', ';;']);
+const HL_OPS1 = new Set(['+', '-', '*', '/', '^', '=', '<', '>', '|', ';']);
+
+function escHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function highlightMiniML(code) {
+  let r = '', i = 0;
+  const n = code.length;
+  const isDig = c => c >= '0' && c <= '9';
+  const isHex = c => isDig(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+  const isIdS = c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
+  const isIdC = c => isIdS(c) || isDig(c) || c === "'";
+  const sp = (cls, t) => `<span class="hl-${cls}">${escHtml(t)}</span>`;
+
+  while (i < n) {
+    // Line comment --
+    if (code[i] === '-' && code[i+1] === '-') {
+      let j = i; while (i < n && code[i] !== '\n') i++;
+      r += sp('comment', code.slice(j, i)); continue;
+    }
+    // Block comment (* ... *) with nesting
+    // But not operator-in-parens like let (*) =
+    if (code[i] === '(' && code[i+1] === '*') {
+      // Check if this is (* used as an operator: (*) pattern
+      if (code[i+2] === ')') {
+        // It's (*) — emit as operator, not comment
+        r += sp('operator', '(*)'); i += 3; continue;
+      }
+      let j = i; i += 2; let d = 1;
+      while (i < n && d > 0) {
+        if (code[i] === '(' && code[i+1] === '*') { d++; i += 2; }
+        else if (code[i] === '*' && code[i+1] === ')') { d--; i += 2; }
+        else i++;
+      }
+      r += sp('comment', code.slice(j, i)); continue;
+    }
+    // Interpolated string $"..."
+    if (code[i] === '$' && code[i+1] === '"') {
+      r += '<span class="hl-string">' + escHtml('$"'); i += 2;
+      while (i < n && code[i] !== '"') {
+        if (code[i] === '\\' && i+1 < n) { r += escHtml(code.slice(i, i+2)); i += 2; }
+        else if (code[i] === '{') {
+          r += '</span>' + escHtml('{'); i++;
+          let d = 1, expr = '';
+          while (i < n && d > 0) {
+            if (code[i] === '{') d++;
+            else if (code[i] === '}') { d--; if (d === 0) break; }
+            expr += code[i]; i++;
+          }
+          r += highlightMiniML(expr);
+          if (i < n) { r += escHtml('}'); i++; }
+          r += '<span class="hl-string">';
+        } else { r += escHtml(code[i]); i++; }
+      }
+      if (i < n) { r += escHtml('"'); i++; }
+      r += '</span>'; continue;
+    }
+    // String "..."
+    if (code[i] === '"') {
+      let j = i; i++;
+      while (i < n && code[i] !== '"') { if (code[i] === '\\') i++; i++; }
+      if (i < n) i++;
+      r += sp('string', code.slice(j, i)); continue;
+    }
+    // Raw string {|...|}
+    if (code[i] === '{' && code[i+1] === '|') {
+      let j = i; i += 2;
+      while (i < n && !(code[i] === '|' && code[i+1] === '}')) i++;
+      if (i < n) i += 2;
+      r += sp('string', code.slice(j, i)); continue;
+    }
+    // Rune literal `c
+    if (code[i] === '`') {
+      let j = i; i++;
+      if (i < n && code[i] === '\\') i += 2;
+      else if (i < n) i++;
+      r += sp('string', code.slice(j, i)); continue;
+    }
+    // Byte literal #XX
+    if (code[i] === '#' && i+1 < n && isHex(code[i+1]) && i+2 < n && isHex(code[i+2])) {
+      r += sp('number', code.slice(i, i+3)); i += 3; continue;
+    }
+    // Type variable 'a
+    if (code[i] === "'" && i+1 < n && code[i+1] >= 'a' && code[i+1] <= 'z') {
+      let j = i; i++;
+      while (i < n && isIdC(code[i])) i++;
+      r += sp('tyvar', code.slice(j, i)); continue;
+    }
+    // Number
+    if (isDig(code[i])) {
+      let j = i;
+      while (i < n && isDig(code[i])) i++;
+      if (i < n && code[i] === '.' && i+1 < n && isDig(code[i+1])) { i++; while (i < n && isDig(code[i])) i++; }
+      r += sp('number', code.slice(j, i)); continue;
+    }
+    // Identifier or keyword
+    if (isIdS(code[i])) {
+      let j = i;
+      while (i < n && isIdC(code[i])) i++;
+      const w = code.slice(j, i);
+      if (HL_KEYWORDS.has(w)) r += sp('keyword', w);
+      else if (w[0] >= 'A' && w[0] <= 'Z') r += sp('constructor', w);
+      else r += escHtml(w);
+      continue;
+    }
+    // Two-char operators
+    if (i+1 < n && HL_OPS2.has(code[i] + code[i+1])) {
+      r += sp('operator', code[i] + code[i+1]); i += 2; continue;
+    }
+    // Single-char operators
+    if (HL_OPS1.has(code[i])) {
+      r += sp('operator', code[i]); i++; continue;
+    }
+    // Default
+    r += escHtml(code[i]); i++;
+  }
+  return r;
+}
+
+function updateHighlight() {
+  sourceHighlight.innerHTML = highlightMiniML(source.value) + '\n';
+}
+
+source.addEventListener("input", updateHighlight);
+source.addEventListener("scroll", () => {
+  sourceHighlight.scrollTop = source.scrollTop;
+  sourceHighlight.scrollLeft = source.scrollLeft;
+});
+updateHighlight();
+
+// Configure marked.js to highlight code blocks
+marked.use({
+  renderer: {
+    code(src, lang) {
+      const text = typeof src === 'object' ? (src.text || '') : src;
+      const language = typeof src === 'object' ? (src.lang || '') : (lang || '');
+      const hl = (!language || language === 'ocaml' || language === 'miniml' || language === 'ml')
+        ? highlightMiniML(text) : escHtml(text);
+      return '<pre><code>' + hl + '</code></pre>\n';
+    }
+  }
+});
+
+// Compiler bundle cache
+let compilerJson = null;
+let compilerLoading = false;
+
+function appendOutput(text, cls) {
+  const span = document.createElement("span");
+  if (cls) span.className = cls;
+  span.textContent = text + "\n";
+  output.appendChild(span);
+  output.scrollTop = output.scrollHeight;
+}
+
+function setStatus(html) {
+  statusText.innerHTML = html;
+}
+
+async function loadCompiler() {
+  if (compilerJson) return compilerJson;
+  if (compilerLoading) return null;
+  compilerLoading = true;
+  setStatus('<span class="spinner"></span>Loading compiler...');
+  try {
+    const resp = await fetch("compiler.json");
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    compilerJson = await resp.text();
+    setStatus("Compiler loaded");
+    return compilerJson;
+  } catch (e) {
+    setStatus("");
+    appendOutput("Failed to load compiler: " + e.message, "error");
+    return null;
+  } finally {
+    compilerLoading = false;
+  }
+}
+
+// Pre-fetch compiler on page load
+loadCompiler();
+
+async function runProgram() {
+  output.textContent = "";
+  runBtn.disabled = true;
+
+  const code = source.value;
+  if (!code.trim()) {
+    appendOutput("No source code provided.", "error");
+    runBtn.disabled = false;
+    return;
+  }
+
+  // Load compiler if needed
+  const compiler = await loadCompiler();
+  if (!compiler) {
+    runBtn.disabled = false;
+    return;
+  }
+
+  // Stage 1: Compile
+  setStatus('<span class="spinner"></span>Compiling...');
+  // Yield to let browser paint the status update before blocking
+  await new Promise(r => setTimeout(r, 10));
+  const compileOutput = [];
+
+  globalThis._vmArgs = ["compiler", "--emit-json", "input.mml"];
+  globalThis._vmReadFile = (filename) => {
+    if (filename === "input.mml") return code;
+    throw new Error("File not found: " + filename);
+  };
+  globalThis._vmOutput = (s) => compileOutput.push(s);
+
+  let compiledJson;
+  const t0 = performance.now();
+  try {
+    MiniML.loadBundle(compiler);
+    compiledJson = compileOutput.join("\n");
+  } catch (e) {
+    const elapsed = (performance.now() - t0).toFixed(1);
+    globalThis._vmArgs = null;
+    globalThis._vmReadFile = null;
+    globalThis._vmOutput = null;
+    setStatus("");
+    // Strip outer VM's [line N] prefix - the compiler's own line is noise
+    let msg = e.message || String(e);
+    msg = msg.replace(/^\[line \d+\] /, "");
+    appendOutput("Compile error: " + msg, "compile-error");
+    appendOutput(`\n--- failed in ${elapsed}ms ---`, "timing");
+    runBtn.disabled = false;
+    return;
+  }
+
+  globalThis._vmArgs = null;
+  globalThis._vmReadFile = null;
+  globalThis._vmOutput = null;
+
+  const compileTime = (performance.now() - t0).toFixed(1);
+
+  if (!compiledJson || !compiledJson.trim()) {
+    setStatus("");
+    appendOutput("Compiler produced no output.", "error");
+    runBtn.disabled = false;
+    return;
+  }
+
+  // Stage 2: Execute
+  setStatus('<span class="spinner"></span>Running...');
+  globalThis._vmOutput = (s) => appendOutput(s);
+
+  const t1 = performance.now();
+  try {
+    const result = MiniML.loadBundle(compiledJson);
+    const runTime = (performance.now() - t1).toFixed(1);
+    if (result !== MiniML.VUNIT && result.tag !== "unit") {
+      appendOutput(MiniML.ppValue(result));
+    }
+    setStatus("");
+    appendOutput(`\n--- compiled in ${compileTime}ms, ran in ${runTime}ms ---`, "timing");
+  } catch (e) {
+    const runTime = (performance.now() - t1).toFixed(1);
+    setStatus("");
+    if (e instanceof MiniML.RuntimeError) {
+      appendOutput("Runtime error: " + e.message, "error");
+    } else {
+      appendOutput("Error: " + e.message, "error");
+    }
+    appendOutput(`\n--- compiled in ${compileTime}ms, failed in ${runTime}ms ---`, "timing");
+  }
+
+  globalThis._vmOutput = null;
+  runBtn.disabled = false;
+}
+
+runBtn.addEventListener("click", runProgram);
+
+clearBtn.addEventListener("click", () => {
+  output.textContent = "";
+  setStatus("");
+});
+
+// Tab key support in textarea
+source.addEventListener("keydown", (e) => {
+  if (e.key === "Tab") {
+    e.preventDefault();
+    const start = source.selectionStart;
+    const end = source.selectionEnd;
+    source.value = source.value.substring(0, start) + "  " + source.value.substring(end);
+    source.selectionStart = source.selectionEnd = start + 2;
+    updateHighlight();
+  }
+  // Ctrl/Cmd+Enter to run
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    runProgram();
+  }
+});
+
+// Sample programs
+const SAMPLES = {
+  hello: `let () = print "Hello, MiniML!"
+let () = print $"1 + 2 = {1 + 2}"
+let () = print $"pi ~ {3.14159}"
+`,
+  fib: `let rec fib n =
+  if n <= 1 do n
+  else fib (n - 1) + fib (n - 2)
+
+let () = print $"fib(10) = {fib 10}"
+let () = print $"fib(20) = {fib 20}"
+let () = print $"fib(30) = {fib 30}"
+`,
+  lists: `let nums = [1; 2; 3; 4; 5]
+let () = print $"nums = {show nums}"
+
+let doubled = List.map (fn x -> x * 2) nums
+let () = print $"doubled = {show doubled}"
+
+let total = List.fold (fn acc x -> acc + x) 0 nums
+let () = print $"sum = {total}"
+
+let evens = List.filter (fn x -> x mod 2 = 0) nums
+let () = print $"evens = {show evens}"
+
+let sorted = List.sort (fn a b -> b - a) [3; 1; 4; 1; 5; 9]
+let () = print $"sorted desc = {show sorted}"
+
+let reversed = List.rev nums
+let () = print $"reversed = {show reversed}"
+`,
+  variants: `type shape =
+  | Circle of float
+  | Rect of float * float
+  | Triangle of float * float
+
+let area s = match s with
+  | Circle r -> 3.14159 * r * r
+  | Rect (w, h) -> w * h
+  | Triangle (b, h) -> 0.5 * b * h
+
+let shapes = [Circle 5.0; Rect (3.0, 4.0); Triangle (6.0, 8.0)]
+
+let () = List.fold (fn _ s ->
+  print $"area = {area s}"
+) () shapes
+
+type animal = Cat of string | Dog of string
+
+let speak a = match a with
+  | Cat name -> $"{name} says meow"
+  | Dog name -> $"{name} says woof"
+
+let () = print (speak (Cat "Whiskers"))
+let () = print (speak (Dog "Rex"))
+`,
+  higher: `-- Function composition
+let compose f g x = f (g x)
+let add1 x = x + 1
+let double x = x * 2
+
+let add1_then_double = compose double add1
+let () = print $"add1_then_double 5 = {add1_then_double 5}"
+
+-- Currying
+let add a b = a + b
+let add10 = add 10
+let () = print $"add10 25 = {add10 25}"
+
+-- Map with lambda
+let squares = List.map (fn x -> x * x) [1; 2; 3; 4; 5]
+let () = print $"squares = {show squares}"
+
+-- Fold to build a string
+let words = ["hello"; "functional"; "world"]
+let sentence = List.fold (fn acc w ->
+  if acc = "" do w else acc ^ " " ^ w
+) "" words
+let () = print sentence
+`,
+  modules: `module Counter =
+  let mut state = 0
+
+  pub let increment () =
+    state := state + 1
+
+  pub let get () = state
+end
+
+let () = Counter.increment ()
+let () = Counter.increment ()
+let () = Counter.increment ()
+let () = print $"counter = {Counter.get ()}"
+
+module Point =
+  type t = { x: float; y: float }
+
+  pub let make x y = { x = x; y = y }
+
+  pub let distance p1 p2 =
+    let dx = p1.x - p2.x in
+    let dy = p1.y - p2.y in
+    Math.sqrt (dx * dx + dy * dy)
+end
+
+let p1 = Point.make 0.0 0.0
+let p2 = Point.make 3.0 4.0
+let () = print $"distance = {Point.distance p1 p2}"
+`,
+  hashtbl: `let h = Hashtbl.create 16
+let () = Hashtbl.set h "name" "MiniML"
+let () = Hashtbl.set h "version" "1.0"
+let () = Hashtbl.set h "author" "Walter"
+
+let () = print (Hashtbl.get h "name")
+let () = print (Hashtbl.has h "version")
+let () = print (Hashtbl.length h)
+
+let () = Hashtbl.remove h "version"
+let () = print (Hashtbl.length h)
+
+let keys = Hashtbl.keys h
+let () = print keys
+`,
+  effects: `-- Effect handlers: exceptions
+effect Exn =
+  raise : string -> 'a
+
+let safe_div a b =
+  if b = 0 do perform raise "division by zero"
+  else a / b
+
+let result =
+  try safe_div 10 0
+  with
+  | raise msg -> $"caught: {msg}"; 0
+
+let () = print result
+
+-- Effect handlers: state
+effect State =
+  get : unit -> int
+  put : int -> unit
+
+let stateful () =
+  let x = perform get () in
+  perform put (x + 1);
+  let y = perform get () in
+  perform put (y * 2);
+  perform get ()
+
+let run_state init f =
+  let mut s = init in
+  handle f () with
+  | return x -> (x, s)
+  | get () k ->
+    resume k s
+  | put v k ->
+    s := v;
+    resume k ()
+
+let (result, final) = run_state 10 stateful
+let () = print $"result = {result}, final state = {final}"
+`,
+  typeclasses: `-- Operator overloading with type classes
+
+type vec2 = { x: float; y: float } deriving Show
+
+instance Num vec2 =
+  let (+) a b = { x = a.x + b.x; y = a.y + b.y }
+  let (-) a b = { x = a.x - b.x; y = a.y - b.y }
+  let (*) a b = { x = a.x * b.x; y = a.y * b.y }
+  let (/) a b = { x = a.x / b.x; y = a.y / b.y }
+  let neg a = { x = neg a.x; y = neg a.y }
+;;
+
+let dot (a: vec2) (b: vec2) =
+  let p = a * b in p.x + p.y
+
+let magnitude v = Math.sqrt (dot v v)
+
+let normalize v =
+  let m = magnitude v in
+  v / { x = m; y = m }
+
+let v1 = { x = 3.0; y = 4.0 }
+let v2 = { x = 1.0; y = 2.0 }
+
+let () = print $"v1 + v2 = {show (v1 + v2)}"
+let () = print $"|v1| = {magnitude v1:.4f}"
+let () = print $"norm = {show (normalize v1)}"
+let () = print $"v1 · v2 = {dot v1 v2:.1f}"
+
+-- Generic: works on int, float, or vec2
+let sum zero xs = List.fold (+) zero xs
+
+let () = print $"sum ints = {sum 0 [10; 20; 30]}"
+let () = print $"sum vecs = {show (sum { x = 0.0; y = 0.0 } [v1; v2; { x = 0.0; y = 1.0 }])}"
+`,
+  generators: `-- Generators with algebraic effects
+
+effect Emit =
+  emit : int -> unit
+
+-- Infinite fibonacci generator
+let fib_gen () =
+  let mut a = 0 in
+  let mut b = 1 in
+  for do
+    perform emit a;
+    let t = b in
+    b := a + b;
+    a := t
+  end
+
+-- Infinite squares generator
+let squares_gen () =
+  let mut n = 1 in
+  for do
+    perform emit (n * n);
+    n := n + 1
+  end
+
+-- Reusable handler: collect first N values
+let take n gen =
+  let mut result = [] in
+  let mut count = 0 in
+  handle gen () with
+  | return _ -> List.rev result
+  | emit x k ->
+    result := x :: result;
+    count := count + 1;
+    if count < n do resume k ()
+    else List.rev result
+
+let () = print $"fibs    = {show (take 15 fib_gen)}"
+let () = print $"squares = {show (take 10 squares_gen)}"
+
+-- Reusable handler: sum first N values
+let sum_first n gen =
+  let mut total = 0 in
+  let mut count = 0 in
+  handle gen () with
+  | return _ -> total
+  | emit x k ->
+    total := total + x;
+    count := count + 1;
+    if count < n do resume k ()
+    else total
+
+let () = print $"sum of first 20 fibs = {sum_first 20 fib_gen}"
+`,
+  iterators: `-- Custom iterators with type classes
+
+type 'a tree =
+  | Leaf of 'a
+  | Node of 'a tree * 'a * 'a tree
+
+-- Implement Iter to enable for-loops and Enum
+instance Iter ('a tree) 'a =
+  let fold f acc t = match t with
+    | Leaf x -> f acc x
+    | Node (l, x, r) ->
+      let acc = fold f acc l in
+      let acc = f acc x in
+      fold f acc r
+;;
+
+let tree =
+  Node (
+    Node (Leaf 1, 2, Leaf 3),
+    4,
+    Node (Leaf 5, 6, Leaf 7)
+  )
+
+-- For-in loops work on any Iter type
+let sum = for x in tree with acc = 0 do acc + x end
+let () = print $"sum = {sum}"
+
+let elems : int list = for x in tree with acc = [] do x :: acc end
+let () = print $"in-order = {show (List.rev elems)}"
+
+-- Collect to list, then use Enum
+let items : int list = List.rev elems
+let () = print $"total = {Enum.sum items}"
+let () = print $"evens = {Enum.count (fn x -> x mod 2 = 0) items}"
+let () = print $"doubled = {show (List.map (fn x -> x * 2) items)}"
+`,
+};
+
+samples.addEventListener("change", () => {
+  const key = samples.value;
+  if (key && SAMPLES[key]) {
+    source.value = SAMPLES[key];
+    samples.value = "";
+    updateHighlight();
+  }
+});
+
+// --- Docs Tab ---
+
+const DOCS = [
+  { file: "language.md", title: "Language Overview" },
+  { file: "syntax.md",   title: "Syntax Reference" },
+  { file: "types.md",    title: "Type System" },
+  { file: "effects.md",  title: "Algebraic Effects" },
+  { file: "stdlib.md",   title: "Standard Library" },
+  { file: "modules.md",  title: "Module System" },
+];
+
+const docsCache = {};
+
+// Tab switching
+document.querySelectorAll(".tab-bar button").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab-bar button").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-view").forEach(v => {
+      v.classList.remove("active");
+      v.style.display = "none";
+    });
+    tab.classList.add("active");
+    const view = document.getElementById(tab.dataset.tab + "-view");
+    if (view) {
+      view.classList.add("active");
+      view.style.display = "block";
+    }
+    // Auto-load first doc when switching to docs tab
+    if (tab.dataset.tab === "docs" && !document.querySelector(".docs-sidebar a.active")) {
+      loadDoc(DOCS[0].file);
+    }
+  });
+});
+
+// Build sidebar
+const docsSidebar = document.getElementById("docsSidebar");
+DOCS.forEach(doc => {
+  const a = document.createElement("a");
+  a.href = "#";
+  a.textContent = doc.title;
+  a.dataset.file = doc.file;
+  a.addEventListener("click", (e) => {
+    e.preventDefault();
+    loadDoc(doc.file);
+  });
+  docsSidebar.appendChild(a);
+});
+
+async function loadDoc(file) {
+  // Update sidebar active state
+  document.querySelectorAll(".docs-sidebar a").forEach(a => {
+    a.classList.toggle("active", a.dataset.file === file);
+  });
+
+  const content = document.getElementById("docsContent");
+
+  if (docsCache[file]) {
+    content.innerHTML = docsCache[file];
+    content.scrollTop = 0;
+    return;
+  }
+
+  content.innerHTML = '<div class="docs-loading"><span class="spinner"></span> Loading...</div>';
+
+  try {
+    const resp = await fetch("./docs/" + file);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const md = await resp.text();
+    const html = marked.parse(md);
+    docsCache[file] = html;
+    content.innerHTML = html;
+    content.scrollTop = 0;
+  } catch (e) {
+    content.innerHTML = '<div class="docs-loading error">Failed to load document: ' + e.message + '</div>';
+  }
+}
+</script>
+</body>
+</html>
