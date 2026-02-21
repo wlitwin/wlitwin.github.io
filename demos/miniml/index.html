@@ -241,6 +241,8 @@ let () = print $"fib(20) = {fib 20}"
         <option value="generators">Generators</option>
         <option value="iterators">Custom Iterators</option>
         <option value="evaluator">Expression Evaluator</option>
+        <option value="gadts">GADTs</option>
+        <option value="fundeps">Functional Dependencies</option>
       </select>
       <div class="spacer"></div>
       <span id="statusText" class="status"></span>
@@ -1041,6 +1043,224 @@ end
 
 print "";
 print $"Summary: {ok} ok, {List.length tests - ok} errors out of {List.length tests} tests"
+`,
+  gadts: `-- Type-Safe Expression Language with GADTs
+-- Features: GADTs, polymorphic recursion via (type 'a),
+-- pattern matching, type classes, string interpolation
+
+-- A GADT where each constructor encodes its result type
+type 'a expr =
+  | IntLit : int -> int expr
+  | BoolLit : bool -> bool expr
+  | Add : int expr * int expr -> int expr
+  | Mul : int expr * int expr -> int expr
+  | Neg : int expr -> int expr
+  | Eq : int expr * int expr -> bool expr
+  | Lt : int expr * int expr -> bool expr
+  | And : bool expr * bool expr -> bool expr
+  | Not : bool expr -> bool expr
+  | If : bool expr * 'a expr * 'a expr -> 'a expr
+
+-- Type-safe evaluator using polymorphic recursion
+-- (type 'a) introduces a locally abstract type so the return
+-- type varies per GADT branch: int for IntLit, bool for BoolLit
+let rec (type 'a) eval (e : 'a expr) : 'a =
+  match e with
+  | IntLit n -> n
+  | BoolLit b -> b
+  | Add (a, b) -> eval a + eval b
+  | Mul (a, b) -> eval a * eval b
+  | Neg a -> 0 - eval a
+  | Eq (a, b) -> eval a = eval b
+  | Lt (a, b) -> eval a < eval b
+  | And (a, b) -> eval a && eval b
+  | Not a -> not (eval a)
+  | If (cond, t, f) -> if eval cond do eval t else eval f
+
+-- Pretty-printer: also polymorphic over the GADT index
+let rec (type 'a) to_string (e : 'a expr) : string =
+  match e with
+  | IntLit n -> string_of_int n
+  | BoolLit b -> if b do "true" else "false"
+  | Add (a, b) -> $"({to_string a} + {to_string b})"
+  | Mul (a, b) -> $"({to_string a} * {to_string b})"
+  | Neg a -> $"(-{to_string a})"
+  | Eq (a, b) -> $"({to_string a} = {to_string b})"
+  | Lt (a, b) -> $"({to_string a} < {to_string b})"
+  | And (a, b) -> $"({to_string a} && {to_string b})"
+  | Not a -> $"(!{to_string a})"
+  | If (c, t, f) -> $"(if {to_string c} then {to_string t} else {to_string f})"
+
+-- Evaluate and display (type class constraint for Show)
+let run (e : 'a expr) where Show 'a =
+  print $"{to_string e}  =>  {show (eval e)}"
+;;
+
+-- abs(x) = if x < 0 then -x else x
+let abs_expr x = If (Lt (x, IntLit 0), Neg x, x)
+;;
+
+-- Arithmetic
+print "-- Arithmetic --";
+run (Add (IntLit 3, IntLit 4));
+run (Mul (IntLit 6, IntLit 7));
+run (Add (IntLit 10, Neg (IntLit 3)));
+
+-- Comparisons
+print "";
+print "-- Comparisons --";
+run (Eq (IntLit 3, IntLit 3));
+run (Lt (IntLit 2, IntLit 5));
+run (And (BoolLit true, Not (BoolLit false)));
+
+-- Conditionals (both branches must have matching types)
+print "";
+print "-- Conditionals --";
+run (If (BoolLit true, IntLit 1, IntLit 0));
+run (If (Eq (IntLit 2, IntLit 2), IntLit 42, IntLit 0));
+run (If (Lt (IntLit 10, IntLit 5), BoolLit true, BoolLit false));
+
+-- Nested expression
+print "";
+print "-- Nested --";
+run (If (Eq (Add (IntLit 3, IntLit 4), IntLit 7),
+         If (Lt (IntLit 2, IntLit 1), IntLit 0, Mul (IntLit 100, IntLit 2)),
+         Neg (IntLit 1)));
+
+run (abs_expr (IntLit 5));
+run (abs_expr (Neg (IntLit 5)))
+
+-- The type checker prevents ill-typed expressions at compile time:
+-- Add (IntLit 1, BoolLit true)       -- rejected: bool expr != int expr
+-- If (IntLit 1, IntLit 2, IntLit 3)  -- rejected: int expr != bool expr
+`,
+  fundeps: `-- Functional Dependencies & Multi-Parameter Type Classes
+-- Features: fundeps, multi-param type classes, ADTs, pattern matching,
+-- type inference guided by fundeps, unit conversion pattern
+
+-- Collection class: the container 'c determines the element type 'e.
+-- Once the compiler knows the container, elements are inferred.
+class Collection 'c 'e where 'c -> 'e =
+  empty : 'c
+  insert : 'e -> 'c -> 'c
+  to_list : 'c -> 'e list
+  size : 'c -> int
+end
+
+-- Sorted list: maintains ascending order
+type sorted_list = SortedList of int list
+
+instance Collection sorted_list int =
+  let empty = SortedList []
+  let insert x (SortedList xs) =
+    let rec go xs = match xs with
+      | [] -> [x]
+      | h :: t -> if x <= h do x :: h :: t else h :: go t
+    in SortedList (go xs)
+  let to_list (SortedList xs) = xs
+  let size (SortedList xs) = List.length xs
+end
+
+-- Unique set: no duplicates, preserves insertion order
+type string_set = StringSet of string list
+
+instance Collection string_set string =
+  let empty = StringSet []
+  let insert x (StringSet xs) =
+    if List.exists (fn s -> s = x) xs do StringSet xs
+    else StringSet (x :: xs)
+  let to_list (StringSet xs) = List.rev xs
+  let size (StringSet xs) = List.length xs
+end
+
+-- Generic from_list: fundep lets compiler infer element types
+let from_list xs =
+  List.fold (fn c x -> insert x c) empty xs
+;;
+
+-- Sorted list: compiler infers int elements from sorted_list
+let () = print "=== Sorted List ==="
+let nums = (from_list [5; 3; 8; 1; 3; 7; 1; 4] : sorted_list)
+let () = print $"sorted:  {show (to_list nums)}"
+let () = print $"size:    {size nums}"
+let () = print $"doubled: {show (List.map (fn x -> x * 2) (to_list nums))}"
+
+-- String set: compiler infers string elements from string_set
+let () = print ""
+let () = print "=== String Set ==="
+let names = (from_list ["alice"; "bob"; "alice"; "carol"; "bob"] : string_set)
+let () = print $"unique:  {show (to_list names)}"
+let () = print $"size:    {size names}"
+let () = print $"upper:   {show (List.map String.uppercase (to_list names))}"
+
+-- Convertible: source type determines target type
+class Convertible 'a 'b where 'a -> 'b =
+  convert : 'a -> 'b
+end
+
+type celsius = C of float deriving Show
+type fahrenheit = F of float deriving Show
+type meters = M of float deriving Show
+type feet = Ft of float deriving Show
+
+instance Convertible celsius fahrenheit =
+  let convert (C c) = F (c * 1.8 + 32.0)
+end
+
+instance Convertible fahrenheit celsius =
+  let convert (F f) = C ((f - 32.0) / 1.8)
+end
+
+instance Convertible meters feet =
+  let convert (M m) = Ft (m * 3.28084)
+end
+
+instance Convertible feet meters =
+  let convert (Ft f) = M (f / 3.28084)
+end
+
+-- convert is unambiguous: C 100.0 can only produce fahrenheit
+let () = print ""
+let () = print "=== Unit Conversions ==="
+
+let (F f) = convert (C 100.0)
+let () = print $"100 C   = {f:.1f} F"
+
+let (C c) = convert (F 32.0)
+let () = print $"32 F    = {c:.1f} C"
+
+let (Ft ft) = convert (M 1.8)
+let () = print $"1.8 m   = {ft:.2f} ft"
+
+let (M m) = convert (Ft 5280.0)
+let () = print $"5280 ft = {m:.2f} m"
+
+-- Round-trip conversions
+let () = print ""
+let () = print "=== Round Trips ==="
+
+let temp = C 37.0
+let (F as_f) = convert temp
+let (C back) = convert (F as_f)
+let () = print $"37 C -> {as_f:.1f} F -> {back:.1f} C"
+
+let dist = M 100.0
+let (Ft as_ft) = convert dist
+let (M back_m) = convert (Ft as_ft)
+let () = print $"100 m -> {as_ft:.2f} ft -> {back_m:.2f} m"
+
+-- Using the built-in Iter fundep (Iter 'a 'b where 'a -> 'b)
+-- for-in loops: collection type determines element type
+let () = print ""
+let () = print "=== Built-in Iter Fundep ==="
+
+let sum = for x in to_list nums with acc = 0 do acc + x end
+let () = print $"sum of sorted: {sum}"
+
+let joined = for name in to_list names with acc = "" do
+  if acc = "" do name else acc ^ ", " ^ name
+end
+let () = print $"joined: {joined}"
 `,
 };
 
