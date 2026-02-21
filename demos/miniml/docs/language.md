@@ -12,19 +12,21 @@ type 'a tree = Leaf | Node of 'a tree * 'a * 'a tree
   deriving Show
 
 -- Insert into a binary search tree (requires Ord constraint)
-let rec insert x t where Ord 'a =
+let rec insert x (t : 'a tree) where Ord 'a =
   match t with
   | Leaf -> Node (Leaf, x, Leaf)
   | Node (left, v, right) ->
     if x < v do Node (insert x left, v, right)
     else if x > v do Node (left, v, insert x right)
     else t
+;;
 
 -- Build a tree from a list using fold
 let tree =
   for x in [5; 3; 7; 1; 4; 6; 8] with t = Leaf do
     insert x t
   end
+;;
 
 print $"tree: {show tree}"
 
@@ -40,12 +42,18 @@ let rec emit t =
     emit left;
     perform yield v;
     emit right
+;;
 
 let sorted =
   let mut result = [] in
-  try emit tree
-  with yield (v) -> result := v :: result;
-  List.rev result
+  handle
+    emit tree
+  with
+  | return _ -> List.rev result
+  | yield v k ->
+    result := v :: result;
+    resume k ()
+;;
 
 print $"sorted: {show sorted}"
 ```

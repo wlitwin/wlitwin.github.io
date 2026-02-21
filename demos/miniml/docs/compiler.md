@@ -56,17 +56,17 @@ Here's the compilation pipeline:
 
   1. Between 3c and 4 — typed AST optimization (new pass over tprogram/texpr). This is the richest IR since you have full type info +
   tree structure. Good for:
-  - Constant folding: 3 + 5 → 8, "a" ^ "b" → "ab"
-  - Dead branch elimination: if true do X else Y → X
-  - Match simplification: single-arm matches, wildcard-only, known-tag matches
-  - Inlining simple functions: let f x = x + 1 in f 3 → 4
-  - Let flattening: let x = 5 in x → 5
+    - Constant folding: 3 + 5 → 8, "a" ^ "b" → "ab"
+    - Dead branch elimination: if true do X else Y → X
+    - Match simplification: single-arm matches, wildcard-only, known-tag matches
+    - Inlining simple functions: let f x = x + 1 in f 3 → 4
+    - Let flattening: let x = 5 in x → 5
   2. After 4 — bytecode peephole optimization (new pass over opcode array). Good for:
-  - Redundant load/store: SET_LOCAL n; GET_LOCAL n → DUP; SET_LOCAL n
-  - Jump threading: JUMP A where A is JUMP B → JUMP B
-  - Constant propagation through stack: CONST 1; CONST 2; ADD → CONST 3
-  - Pop after push: CONST x; POP → nothing
-  - Tail call detection improvements
+    - Redundant load/store: SET_LOCAL n; GET_LOCAL n → DUP; SET_LOCAL n
+    - Jump threading: JUMP A where A is JUMP B → JUMP B
+    - Constant propagation through stack: CONST 1; CONST 2; ADD → CONST 3
+    - Pop after push: CONST x; POP → nothing
+    - Tail call detection improvements
 
   The typed AST pass (option 1) is probably the bigger win since it can do structural transformations. The bytecode peephole (option 2)
   catches mechanical redundancies the compiler generates. Both are additive — they'd be new files/functions without changing existing
