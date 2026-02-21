@@ -240,6 +240,7 @@ let () = print $"fib(20) = {fib 20}"
         <option value="typeclasses">Type Classes</option>
         <option value="generators">Generators</option>
         <option value="iterators">Custom Iterators</option>
+        <option value="evaluator">Expression Evaluator</option>
       </select>
       <div class="spacer"></div>
       <span id="statusText" class="status"></span>
@@ -736,9 +737,9 @@ let safe_div a b =
 let result =
   try safe_div 10 0
   with
-  | raise msg -> $"caught: {msg}"; 0
+  | raise msg -> print $"caught: {msg}"; 0
 
-let () = print result
+let () = print $"result = {result}"
 
 -- Effect handlers: state
 effect State =
@@ -891,6 +892,156 @@ let () = print $"total = {Enum.sum items}"
 let () = print $"evens = {Enum.count (fn x -> x mod 2 = 0) items}"
 let () = print $"doubled = {show (List.map (fn x -> x * 2) items)}"
 `,
+  evaluator: `-- Mini Expression Evaluator
+-- Features: ADTs, type classes (custom instances + where constraints),
+-- algebraic effects (handle/with + try/with), pattern matching (or-patterns,
+-- guards, destructuring), modules, for/in and fold loops, pipes, mutability
+
+type op = Add | Sub | Mul | Div
+
+instance Show op =
+  let show o = match o with
+    | Add -> "+" | Sub -> "-" | Mul -> "*" | Div -> "/"
+end
+
+type expr =
+  | Num of float
+  | Var of string
+  | Bin of op * expr * expr
+  | Let of string * expr * expr
+
+-- Constructor helpers in a module
+module E =
+  pub let num n = Num (float_of_int n)
+  pub let var s = Var s
+  pub let add a b = Bin (Add, a, b)
+  pub let sub a b = Bin (Sub, a, b)
+  pub let mul a b = Bin (Mul, a, b)
+  pub let div a b = Bin (Div, a, b)
+  pub let let_ n v b = Let (n, v, b)
+end
+
+-- Effects for tracing and errors
+effect Trace =
+  trace : string -> unit
+end
+
+effect Fail =
+  fail : string -> 'a
+end
+
+-- Classify ops with or-patterns
+let classify op = match op with
+  | Add | Sub -> "additive"
+  | Mul | Div -> "multiplicative"
+;;
+
+-- Generic display using type class constraint
+let labeled (tag: string) (x: 'a) : string where Show 'a =
+  $"{tag}: {show x}"
+;;
+
+-- Environment lookup with destructuring and guard
+let rec lookup name env =
+  match env with
+  | [] -> perform fail $"undefined: {name}"
+  | (k, v) :: _ when k = name -> v
+  | _ :: rest -> lookup name rest
+;;
+
+-- Recursive evaluator with effects
+let rec eval env expr =
+  match expr with
+  | Num n -> n
+  | Var name ->
+    let v = lookup name env in
+    perform trace $"  {name} => {v}";
+    v
+  | Bin (op, left, right) ->
+    let a = eval env left in
+    let b = eval env right in
+    let is_div = match op with Div -> true | _ -> false in
+    if is_div && b = 0.0 do
+      perform fail "division by zero"
+    end;
+    let result = match op with
+      | Add -> a + b | Sub -> a - b
+      | Mul -> a * b | Div -> a / b
+    in
+    perform trace $"  {a} {show op} {b} = {result}  [{classify op}]";
+    result
+  | Let (name, val_expr, body) ->
+    let v = eval env val_expr in
+    perform trace $"  let {name} = {v}";
+    eval ((name, v) :: env) body
+;;
+
+-- Run with nested effect handlers (handle for trace, try for errors)
+let run expr =
+  let mut log = [] in
+  let value =
+    try
+      handle eval [] expr with
+      | return x -> Some x
+      | trace msg k ->
+        log := msg :: log;
+        resume k ()
+    with
+    | fail msg ->
+      log := $"  ERROR: {msg}" :: log;
+      None
+  in
+  (value, List.rev log)
+;;
+
+-- Display a single result with its trace
+let show_result (desc, value, log) =
+  print $">> {desc}";
+  for msg in log do print msg end;
+  match value with
+  | Some v -> print (labeled "   result" v)
+  | None -> print "   failed"
+;;
+
+-- Test expressions
+let tests = [
+  (E.add (E.num 1) (E.num 2), "1 + 2");
+  (E.mul (E.num 6) (E.num 7), "6 * 7");
+  (E.let_ "x" (E.num 5) (E.mul (E.var "x") (E.var "x")),
+    "let x=5 in x*x");
+  (E.let_ "a" (E.num 10)
+    (E.let_ "b" (E.num 3)
+      (E.add (E.mul (E.var "a") (E.var "b")) (E.num 2))),
+    "let a=10 in let b=3 in a*b+2");
+  (E.div (E.num 1) (E.num 0), "1 / 0")
+]
+
+-- Evaluate all, collecting results with fold loop + destructuring + pipe
+let results =
+  for (expr, desc) in tests with acc = [] do
+    let (value, log) = run expr in
+    (desc, value, log) :: acc
+  end |> List.rev
+;;
+
+-- Display results
+print "=== Expression Evaluator ===";
+print "";
+
+for (desc, value, log) in results do
+  show_result (desc, value, log)
+end
+;;
+
+-- Summary: count successes with fold + destructuring
+let ok = for (_, value, _) in results with n = 0 do
+  match value with Some _ -> n + 1 | None -> n
+end
+;;
+
+print "";
+print $"Summary: {ok} ok, {List.length tests - ok} errors out of {List.length tests} tests"
+`,
 };
 
 samples.addEventListener("change", () => {
@@ -985,7 +1136,7 @@ async function loadDoc(file) {
   content.innerHTML = '<div class="docs-loading"><span class="spinner"></span> Loading...</div>';
 
   try {
-    const resp = await fetch("docs/" + file);
+    const resp = await fetch("../docs/" + file);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const md = await resp.text();
     const html = marked.parse(md);
