@@ -87,6 +87,7 @@
   .hl-operator { color: var(--syn-operator); }
   .hl-constructor { color: var(--syn-type); }
   .hl-tyvar { color: var(--syn-tyvar); font-style: italic; }
+  .hl-annotation { color: var(--syn-keyword); font-style: italic; }
 
   /* Editor overlay for syntax highlighting */
   .editor-container { position: relative; }
@@ -300,7 +301,10 @@ function highlightMiniML(code) {
     // Line comment --
     if (code[i] === '-' && code[i+1] === '-') {
       let j = i; while (i < n && code[i] !== '\n') i++;
-      r += sp('comment', code.slice(j, i)); continue;
+      const cmt = escHtml(code.slice(j, i));
+      // Highlight @annotations inside comments
+      r += '<span class="hl-comment">' + cmt.replace(/@(\w+)/g, '</span><span class="hl-annotation">@$1</span><span class="hl-comment">') + '</span>';
+      continue;
     }
     // Block comment (* ... *) with nesting
     // But not operator-in-parens like let (*) =
@@ -353,28 +357,36 @@ function highlightMiniML(code) {
       if (i < n) i += 2;
       r += sp('string', code.slice(j, i)); continue;
     }
-    // Rune literal `c
-    if (code[i] === '`') {
-      let j = i; i++;
-      if (i < n && code[i] === '\\') i += 2;
-      else if (i < n) i++;
-      r += sp('string', code.slice(j, i)); continue;
-    }
     // Byte literal #XX
     if (code[i] === '#' && i+1 < n && isHex(code[i+1]) && i+2 < n && isHex(code[i+2])) {
       r += sp('number', code.slice(i, i+3)); i += 3; continue;
     }
-    // Type variable 'a
-    if (code[i] === "'" && i+1 < n && code[i+1] >= 'a' && code[i+1] <= 'z') {
-      let j = i; i++;
-      while (i < n && isIdC(code[i])) i++;
-      r += sp('tyvar', code.slice(j, i)); continue;
+    // Rune literal 'c' or type variable 'ident
+    if (code[i] === "'") {
+      let j = i;
+      if (i+1 < n && code[i+1] >= 'a' && code[i+1] <= 'z' && (i+2 >= n || code[i+2] !== "'")) {
+        // Type variable 'ident
+        i++;
+        while (i < n && isIdC(code[i])) i++;
+        r += sp('tyvar', code.slice(j, i)); continue;
+      }
+      // Rune literal 'c'
+      i++;
+      if (i < n && code[i] === '\\') i += 2; else if (i < n) i++;
+      if (i < n && code[i] === "'") i++;
+      r += sp('string', code.slice(j, i)); continue;
     }
-    // Number
+    // Number (decimal, hex 0xFF, binary 0b1010, float)
     if (isDig(code[i])) {
       let j = i;
-      while (i < n && isDig(code[i])) i++;
-      if (i < n && code[i] === '.' && i+1 < n && isDig(code[i+1])) { i++; while (i < n && isDig(code[i])) i++; }
+      if (code[i] === '0' && i+1 < n && (code[i+1] === 'x' || code[i+1] === 'X')) {
+        i += 2; while (i < n && isHex(code[i])) i++;
+      } else if (code[i] === '0' && i+1 < n && (code[i+1] === 'b' || code[i+1] === 'B')) {
+        i += 2; while (i < n && (code[i] === '0' || code[i] === '1')) i++;
+      } else {
+        while (i < n && isDig(code[i])) i++;
+        if (i < n && code[i] === '.' && i+1 < n && isDig(code[i+1])) { i++; while (i < n && isDig(code[i])) i++; }
+      }
       r += sp('number', code.slice(j, i)); continue;
     }
     // Identifier or keyword
@@ -386,6 +398,12 @@ function highlightMiniML(code) {
       else if (w[0] >= 'A' && w[0] <= 'Z') r += sp('constructor', w);
       else r += escHtml(w);
       continue;
+    }
+    // Polymorphic variant `Tag
+    if (code[i] === '`' && i+1 < n && code[i+1] >= 'A' && code[i+1] <= 'Z') {
+      let j = i; i++;
+      while (i < n && isIdC(code[i])) i++;
+      r += sp('constructor', code.slice(j, i)); continue;
     }
     // Two-char operators
     if (i+1 < n && HL_OPS2.has(code[i] + code[i+1])) {
@@ -426,7 +444,7 @@ marked.use({
 });
 
 // Compiler bundle cache
-let compilerJson = null;
+let compilerJson = null;  // JSON string for compiler bundle
 let compilerLoading = false;
 
 function appendOutput(text, cls) {
@@ -491,6 +509,7 @@ async function runProgram() {
   globalThis._vmArgs = ["compiler", "--emit-json", "input.mml"];
   globalThis._vmReadFile = (filename) => {
     if (filename === "input.mml") return code;
+    if (MiniML.STDLIB_SOURCES[filename]) return MiniML.STDLIB_SOURCES[filename];
     throw new Error("File not found: " + filename);
   };
   globalThis._vmOutput = (s) => compileOutput.push(s);
@@ -708,6 +727,7 @@ let () = print keys
   effects: `-- Effect handlers: exceptions
 effect Exn =
   raise : string -> 'a
+end
 
 let safe_div a b =
   if b = 0 do perform raise "division by zero"
@@ -724,6 +744,7 @@ let () = print result
 effect State =
   get : unit -> int
   put : int -> unit
+end
 
 let stateful () =
   let x = perform get () in
@@ -755,7 +776,7 @@ instance Num vec2 =
   let (*) a b = { x = a.x * b.x; y = a.y * b.y }
   let (/) a b = { x = a.x / b.x; y = a.y / b.y }
   let neg a = { x = neg a.x; y = neg a.y }
-;;
+end
 
 let dot (a: vec2) (b: vec2) =
   let p = a * b in p.x + p.y
@@ -784,6 +805,7 @@ let () = print $"sum vecs = {show (sum { x = 0.0; y = 0.0 } [v1; v2; { x = 0.0; 
 
 effect Emit =
   emit : int -> unit
+end
 
 -- Infinite fibonacci generator
 let fib_gen () =
@@ -847,7 +869,7 @@ instance Iter ('a tree) 'a =
       let acc = fold f acc l in
       let acc = f acc x in
       fold f acc r
-;;
+end
 
 let tree =
   Node (
@@ -889,6 +911,17 @@ const DOCS = [
   { file: "effects.md",  title: "Algebraic Effects" },
   { file: "stdlib.md",   title: "Standard Library" },
   { file: "modules.md",  title: "Module System" },
+  { file: "compiler.md", title: "Compiler Pipeline" },
+  { file: "js-vm.md",    title: "JavaScript VM" },
+  { separator: true, title: "Type System Internals" },
+  { file: "typesystem/00-overview.md",        title: "Overview" },
+  { file: "typesystem/01-types.md",           title: "Types & Representation" },
+  { file: "typesystem/02-unification.md",     title: "Unification" },
+  { file: "typesystem/03-inference.md",       title: "Type Inference" },
+  { file: "typesystem/04-generalization.md",  title: "Generalization" },
+  { file: "typesystem/05-typeclasses.md",     title: "Type Classes" },
+  { file: "typesystem/06-patterns.md",        title: "Pattern Matching" },
+  { file: "typesystem/07-advanced.md",        title: "Advanced Topics" },
 ];
 
 const docsCache = {};
@@ -917,6 +950,13 @@ document.querySelectorAll(".tab-bar button").forEach(tab => {
 // Build sidebar
 const docsSidebar = document.getElementById("docsSidebar");
 DOCS.forEach(doc => {
+  if (doc.separator) {
+    const sep = document.createElement("div");
+    sep.textContent = doc.title;
+    sep.style.cssText = "padding: 10px 16px 4px; font-size: 0.75em; color: var(--fg-dim); text-transform: uppercase; letter-spacing: 0.05em;";
+    docsSidebar.appendChild(sep);
+    return;
+  }
   const a = document.createElement("a");
   a.href = "#";
   a.textContent = doc.title;
@@ -945,7 +985,7 @@ async function loadDoc(file) {
   content.innerHTML = '<div class="docs-loading"><span class="spinner"></span> Loading...</div>';
 
   try {
-    const resp = await fetch("./docs/" + file);
+    const resp = await fetch("docs/" + file);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const md = await resp.text();
     const html = marked.parse(md);

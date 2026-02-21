@@ -22,19 +22,20 @@ modules.
 12. [Arrays](#arrays)
 13. [Maps](#maps)
 14. [Sets](#sets)
-15. [Type Declarations](#type-declarations)
-16. [Type Classes](#type-classes)
-17. [Modules](#modules)
-18. [Algebraic Effects](#algebraic-effects)
-19. [For Loops](#for-loops)
-20. [Sequences](#sequences)
-21. [String Interpolation](#string-interpolation)
-22. [Pipe Operator](#pipe-operator)
-23. [Semicolons and Sequencing](#semicolons-and-sequencing)
-24. [Do/End Blocks](#doend-blocks)
-25. [Mutable State](#mutable-state)
-26. [Type Annotations](#type-annotations)
-27. [Extern Declarations](#extern-declarations)
+15. [Polymorphic Variants](#polymorphic-variants)
+16. [Type Declarations](#type-declarations)
+17. [Type Classes](#type-classes)
+18. [Modules](#modules)
+19. [Algebraic Effects](#algebraic-effects)
+20. [For Loops](#for-loops)
+21. [Sequences](#sequences)
+22. [String Interpolation](#string-interpolation)
+23. [Pipe Operator](#pipe-operator)
+24. [Semicolons and Sequencing](#semicolons-and-sequencing)
+25. [Do/End Blocks](#doend-blocks)
+26. [Mutable State](#mutable-state)
+27. [Type Annotations](#type-annotations)
+28. [Extern Declarations](#extern-declarations)
 
 ---
 
@@ -78,12 +79,14 @@ match some_option with
 
 ### Integers
 
-Decimal integer literals.
+Decimal, hexadecimal, and binary integer literals.
 
 ```
 0
 42
 1000000
+0xFF            -- hexadecimal (255)
+0b1010          -- binary (10)
 ```
 
 ### Floats
@@ -168,27 +171,27 @@ a value from 0 to 255.
 
 ### Runes
 
-Rune literals represent Unicode code points, delimited by backticks.
+Rune literals represent Unicode code points, delimited by single quotes.
 
 ```
-`a          -- code point 97
-`A          -- code point 65
+'a'         -- code point 97
+'A'         -- code point 65
 ```
 
 Escape sequences in rune literals:
 
 ```
-`\n         -- newline (code point 10)
-`\t         -- tab (code point 9)
-`\0         -- null (code point 0)
-`\\         -- backslash
-`\`         -- backtick
+'\n'        -- newline (code point 10)
+'\t'        -- tab (code point 9)
+'\0'        -- null (code point 0)
+'\\'        -- backslash
+'\''        -- single quote
 ```
 
 Runes support full UTF-8:
 
 ```
-`?          -- Unicode lambda (multi-byte)
+'?'         -- Unicode lambda (multi-byte)
 ```
 
 ### Unit
@@ -620,6 +623,40 @@ x :: xs             -- head :: tail
 a :: b :: rest      -- right-associative
 ```
 
+### Pin patterns
+
+Pin patterns match against the current value of an existing variable, rather
+than binding a new variable. Written with a caret prefix `^`:
+
+```
+let x = 42 in
+match 42 with
+| ^x -> "matched"       -- matches because the value equals x
+| _ -> "nope"
+
+let tag = "ok" in
+match ("ok", 42) with
+| (^tag, n) -> n         -- pin in a tuple
+| _ -> 0
+
+let x = 1 in
+match [1; 2; 3] with
+| ^x :: _ -> "yes"       -- pin as list head
+| _ -> "no"
+```
+
+Pin patterns are useful for matching against a value computed before the
+`match`, without needing a `when` guard.
+
+### Polymorphic variant patterns
+
+```
+`Foo                -- nullary polymorphic variant
+`Bar n              -- polymorphic variant with payload
+```
+
+See [Polymorphic Variants](#polymorphic-variants) for full details.
+
 ---
 
 ## Operators
@@ -830,6 +867,23 @@ type point = {x: int; y: int}
 type person = {name: string; age: int}
 ```
 
+### Open record types (row polymorphism)
+
+Record type annotations can end with `..` to indicate an open record -- one
+that may have additional fields beyond those listed. This makes row polymorphism
+explicit in type annotations:
+
+```
+let get_x (r : {x: int; ..}) : int = r.x
+
+get_x {x = 1; y = 2}           -- works: extra field y is fine
+get_x {x = 10; y = 20; z = 30} -- works: extra fields y and z are fine
+```
+
+Without the `..`, a record type annotation is closed and matches only records
+with exactly those fields. With `..`, the function accepts any record that has
+at least the listed fields with compatible types.
+
 ### Mutable fields
 
 Record fields can be declared mutable:
@@ -1023,6 +1077,21 @@ to_list m                       -- list of (key, value) tuples
 of_list [("a", 1); ("b", 2)]   -- create map from association list
 ```
 
+### Map update
+
+Create a new map based on an existing one with some keys added or changed,
+using `#{ base with key: value }` syntax:
+
+```
+let m = #{"a": 1; "b": 2}
+let m2 = #{m with "a": 10}            -- "a" updated to 10, "b" unchanged
+let m3 = #{m with "c": 3}             -- adds new key "c"
+let m4 = #{m with "a": 10; "b": 20}   -- update multiple keys
+```
+
+Map update desugars to nested `set` calls:
+`#{m with "a": 10; "b": 20}` is equivalent to `set "b" 20 (set "a" 10 m)`.
+
 ### Pattern matching
 
 ```
@@ -1098,6 +1167,79 @@ for x in Set.of_list [10; 20; 30] with acc = 0 do
   acc + x
 end
 ```
+
+---
+
+## Polymorphic Variants
+
+Polymorphic variants are structural variants -- they do not require a `type`
+declaration. A polymorphic variant tag is written with a backtick prefix.
+
+### Creation
+
+```
+`Foo                        -- nullary polymorphic variant
+`Bar 42                     -- with an int payload
+`Name "hello"               -- with a string payload
+`Pair (1, 2)                -- with a tuple payload
+```
+
+### Pattern matching
+
+```
+match `B 42 with
+| `A -> 0
+| `B n -> n + 1             -- 43
+
+let f x = if x do `True else `False
+f true                      -- `True
+```
+
+### Type annotations
+
+Polymorphic variant types are written with square brackets and backtick-prefixed
+tags, separated by `|`:
+
+```
+[`Foo | `Bar]                        -- exact: only `Foo or `Bar
+[`Foo of int | `Bar of string]       -- with payloads
+[> `Foo | `Bar]                      -- lower bound (at least these tags)
+[< `Foo | `Bar]                      -- upper bound (at most these tags)
+```
+
+Exact types match only the listed tags. Lower-bound types (`[> ...]`) accept
+the listed tags and possibly more -- this is how polymorphic variant subtyping
+works. Upper-bound types (`[< ...]`) guarantee no tags beyond those listed.
+
+```
+let f (x : [> `A | `B of int]) = match x with
+  | `A -> 0
+  | `B n -> n
+  | _ -> -1
+
+f (`B 7)                    -- 7
+f `A                        -- 0
+```
+
+### Coercion
+
+Use `:>` inside parentheses to widen a polymorphic variant to a larger type:
+
+```
+let x = `A in
+(x :> [> `A | `B])          -- coerce to a wider type
+```
+
+### When to use polymorphic variants
+
+Polymorphic variants are useful when you want lightweight, ad-hoc alternatives
+without defining a named type. They compose well across module boundaries since
+they are structural -- any two functions using `` `Ok `` and `` `Error `` are
+automatically compatible, with no shared type definition needed.
+
+For large, well-defined data types, named variants (`type color = Red | Green | Blue`)
+are still preferred -- they give you exhaustiveness checking, clearer error
+messages, and `deriving` support.
 
 ---
 
@@ -1206,6 +1348,7 @@ GADTs must be written manually.
 ```
 class Show 'a =
   show : 'a -> string
+end
 ```
 
 Multi-method classes:
@@ -1214,6 +1357,7 @@ Multi-method classes:
 class Describable 'a =
   describe : 'a -> string
   label : 'a -> string
+end
 ```
 
 Multi-parameter classes:
@@ -1221,11 +1365,42 @@ Multi-parameter classes:
 ```
 class Convert 'a 'b =
   convert : 'a -> 'b
+end
 
 class Container 'c 'e =
   size : 'c -> int
   first : 'c -> 'e
+end
 ```
+
+### Functional dependencies
+
+Multi-parameter type classes can declare functional dependencies using `where`
+after the type parameters. A functional dependency `'a -> 'b` states that the
+type `'a` uniquely determines `'b`, allowing the compiler to infer `'b`
+automatically once `'a` is known.
+
+```
+class Container 'c 'e where 'c -> 'e =
+  elements : 'c -> 'e list
+end
+```
+
+This says: given the container type `'c`, the element type `'e` is uniquely
+determined. So `Container (int list) int` is the only valid instance for
+`int list` -- the compiler can infer `'e = int` from `'c = int list` alone.
+
+Multiple dependencies are separated by commas:
+
+```
+class Convert 'a 'b 'c where 'a 'b -> 'c =
+  convert : 'a -> 'b -> 'c
+end
+```
+
+The built-in `Iter`, `Map`, and `Index` classes all use functional dependencies
+to guide type inference. For example, `Index` has `'c -> 'k 'v`, meaning the
+container type determines both the key and value types.
 
 ### Effect-polymorphic class methods
 
@@ -1235,6 +1410,7 @@ perform different effects:
 ```
 class Apply 'f =
   do_thing : 'a -> 'a / 'e
+end
 ```
 
 The effect variable `'e` is polymorphic, so each instance can specify its own
@@ -1245,13 +1421,16 @@ effect (or none at all).
 ```
 instance Show int =
   let show x = string_of_int x
+end
 
 instance Describable int =
   let describe x = string_of_int x
   let label _ = "integer"
+end
 
 instance Convert int string =
   let convert (x: int) = string_of_int x
+end
 ```
 
 ### Operator instances
@@ -1265,10 +1444,12 @@ instance Num vec2 =
   let (*) a b = {x = a.x * b.x; y = a.y * b.y}
   let (/) a b = {x = a.x / b.x; y = a.y / b.y}
   let neg a = {x = 0 - a.x; y = 0 - a.y}
+end
 
 instance Eq point =
   let (=) a b = a.px = b.px
   let (<>) a b = a.px <> b.px
+end
 ```
 
 ### Constrained instances
@@ -1279,6 +1460,7 @@ Instance definitions can have type class constraints:
 instance Show ('a box) where Show 'a =
   let show b = match b with
     | Box x -> "Box(" ^ show x ^ ")"
+end
 ```
 
 ### Built-in type classes
@@ -1392,8 +1574,10 @@ module M =
 
   pub class Pretty 'a =
     pretty : 'a -> string
+  end
   instance Pretty int =
     let pretty x = "<" ^ string_of_int x ^ ">"
+  end
 end
 
 M.to_int M.Green        -- 1
@@ -1407,6 +1591,7 @@ Instances for classes defined in other modules:
 ```
 instance PP.Pretty string =
   let pretty s = "(" ^ s ^ ")"
+end
 ```
 
 ---
@@ -1418,10 +1603,12 @@ instance PP.Pretty string =
 ```
 effect Ask =
   ask : unit -> string
+end
 
 effect State =
   get : unit -> int
   put : int -> unit
+end
 ```
 
 ### Parameterized effects
@@ -1432,6 +1619,7 @@ Effects can take type parameters, placed between the effect name and `=`.
 effect State 'a =
   get : unit -> 'a
   put : 'a -> unit
+end
 ```
 
 This declares a family of effects parameterized by a type. For example,
@@ -1475,7 +1663,7 @@ with
 
 ### Copying continuations
 
-Continuations are one-shot by default. Use `copy` to create a reusable copy
+Continuations are one-shot by default. Use `copy_continuation` to create a reusable copy
 for multi-shot semantics:
 
 ```
@@ -1485,7 +1673,7 @@ handle
 with
 | return x -> [x]
 | choose () k ->
-  let k2 = copy k in
+  let k2 = copy_continuation k in
   let a = resume k true in
   let b = resume k2 false in
   append a b
@@ -1573,6 +1761,37 @@ for x in [1; 2; 3] do
 end
 ```
 
+### Pattern destructuring in for loops
+
+The iteration variable in `for`/`in` loops can be a destructuring pattern.
+Tuples, records, lists, and other patterns are supported:
+
+```
+let pairs = [(1, 10); (2, 20); (3, 30)]
+
+-- Tuple destructuring
+for (k, v) in pairs do
+  print $"{k}: {v}"
+end
+
+-- Record destructuring
+for {name; age} in people do
+  print name
+end
+```
+
+Pattern destructuring also works with fold loops:
+
+```
+for (k, v) in [(1, 10); (2, 20); (3, 30)] with sum = 0 do
+  sum + k + v
+end
+-- evaluates to 66
+```
+
+The pattern is desugared to a match expression inside the loop body, so any
+pattern that works in `match` works here.
+
 ### Fold loop
 
 `for x in coll with acc = init do ... end` accumulates a value across
@@ -1590,6 +1809,15 @@ for x in [1; 2; 3] with s = "" do
   s ^ string_of_int x
 end
 -- evaluates to "123"
+```
+
+The accumulator can be a tuple for tracking multiple values:
+
+```
+let result = for x in [1; 2; 3; 4; 5] with (sum, count) = (0, 0) do
+  (sum + x, count + 1)
+end
+-- result is (15, 5)
 ```
 
 ### Break
@@ -1664,6 +1892,7 @@ instance Iter tree int =
         let a = f a v in
         go a right
     in go acc t
+end
 
 for x in my_tree with sum = 0 do sum + x end
 ```
@@ -2000,7 +2229,11 @@ shown in the second example above.
 | `(string, int) map`   | Map type                     |
 | `int option`          | Parameterized type           |
 | `(int, string) either`| Multi-parameter type         |
-| `{x: int; y: string}` | Record type                 |
+| `{x: int; y: string}` | Record type (closed)        |
+| `{x: int; ..}`        | Record type (open / row-polymorphic) |
+| `` [`A \| `B of int] ``  | Polymorphic variant type (exact)  |
+| `` [> `A \| `B] ``    | Polymorphic variant type (lower bound) |
+| `` [< `A \| `B] ``    | Polymorphic variant type (upper bound) |
 | `Module.typename`     | Qualified type name          |
 | `int Module.t`        | Parameterized qualified type |
 

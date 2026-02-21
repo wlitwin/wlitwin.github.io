@@ -57,6 +57,7 @@ module Shapes =
 
   pub class Drawable 'a =
     draw : 'a -> string
+  end
 end
 ```
 
@@ -88,6 +89,7 @@ module M =
   instance Show wrapper =
     let show w = match w with
       | W n -> $"W({n})"
+  end
 end
 
 show (M.W 42)    -- "W(42)"
@@ -293,8 +295,10 @@ Type classes and instances can be defined inside modules. Mark a class `pub` to 
 module PP =
   pub class Pretty 'a =
     pretty : 'a -> string
+  end
   instance Pretty int =
     let pretty x = "<" ^ string_of_int x ^ ">"
+  end
 
   pub let show_pretty (x : 'a) : string where Pretty 'a =
     pretty x
@@ -310,8 +314,10 @@ When you open a module that contains type classes, the class and its instances a
 module MyMod =
   pub class Stringify 'a =
     to_str : 'a -> string
+  end
   instance Stringify int =
     let to_str x = string_of_int x
+  end
 end
 
 open MyMod
@@ -324,15 +330,19 @@ Different modules can define classes with the same name without conflict:
 module A =
   pub class Processor 'a =
     process_a : 'a -> int
+  end
   instance Processor int =
     let process_a x = x + 1
+  end
 end
 
 module B =
   pub class Processor 'a =
     process_b : 'a -> int
+  end
   instance Processor int =
     let process_b x = x * 10
+  end
 end
 
 A.process_a 5 + B.process_b 3    -- 36
@@ -344,12 +354,15 @@ You can also add instances to a module-scoped class from outside the module usin
 module PP =
   pub class Pretty 'a =
     pretty : 'a -> string
+  end
   instance Pretty int =
     let pretty x = "[" ^ string_of_int x ^ "]"
+  end
 end
 
 instance PP.Pretty string =
   let pretty s = "(" ^ s ^ ")"
+end
 
 PP.pretty "hello"    -- "(hello)"
 ```

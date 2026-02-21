@@ -10,7 +10,7 @@ This means effects can model:
 - **Exceptions** -- perform an effect and never continue (discard the continuation)
 - **State** -- handle `get` and `put` by continuing with values
 - **Generators** -- yield values one at a time, with the handler collecting them
-- **Non-determinism** -- copy a continuation and explore multiple branches
+- **Non-determinism** -- copy a continuation with `copy_continuation` and explore multiple branches
 - **Logging, tracing, dependency injection** -- intercept operations and decide how to handle them
 
 All of these patterns compose naturally, without the boilerplate of monad transformers or callback threading.
@@ -22,6 +22,7 @@ An effect declaration introduces a named group of operations. Each operation has
 ```
 effect Yield =
   yield : int -> unit
+end
 ```
 
 This declares an effect called `Yield` with one operation, `yield`, which takes an `int` and returns `unit`. The return type describes what the caller of `perform yield` sees when the handler continues the computation.
@@ -32,6 +33,7 @@ Effects can have multiple operations:
 effect State =
   get : unit -> int
   put : int -> unit
+end
 ```
 
 Here `get` takes unit and returns an `int` (the current state), while `put` takes an `int` and returns `unit`.
@@ -41,6 +43,7 @@ Operations can also use polymorphic type variables:
 ```
 effect Exn =
   raise : string -> 'a
+end
 ```
 
 A return type of `'a` means the operation never returns normally -- useful for modeling exceptions. The handler can return any type because the continuation is never resumed.
@@ -53,6 +56,7 @@ Effects can take type parameters, making their operations generic over a type. F
 effect State 'a =
   get : unit -> 'a
   put : 'a -> unit
+end
 ```
 
 Here `State` takes a type parameter `'a`. The operations `get` and `put` use `'a` to describe the type of the stored value. This means `State int` is a state effect holding an `int`, `State string` holds a `string`, and so on -- all from a single declaration.
@@ -99,6 +103,7 @@ If no handler is installed for the operation, a runtime error occurs:
 ```
 effect Boom =
   boom : unit -> int
+end
 
 perform boom ()
 -- Runtime error: unhandled effect operation: boom
@@ -125,6 +130,7 @@ with
 ```
 effect Ask =
   ask : unit -> string
+end
 
 handle
   perform ask ()
@@ -151,6 +157,7 @@ The `return` arm transforms the final value of the body. This is useful for wrap
 ```
 effect Eff =
   op : unit -> int
+end
 
 handle
   perform op ()
@@ -168,6 +175,7 @@ You do not have to call `resume`. If the handler simply returns a value without 
 ```
 effect Abort =
   abort : int -> unit
+end
 
 handle
   perform abort 42;
@@ -200,6 +208,7 @@ Key differences from `handle/with`:
 ```
 effect Exn =
   raise : string -> 'a
+end
 
 try
   perform raise "oops"
@@ -216,6 +225,7 @@ When the body completes without performing any handled operations, its value pas
 ```
 effect Exn =
   raise : string -> 'a
+end
 
 try "hello" with
 | raise msg -> "caught"
@@ -230,8 +240,10 @@ You can handle operations from different effects in a single `try/with`:
 ```
 effect IO =
   file_not_found : string -> 'a
+end
 effect Validation =
   invalid_input : string -> 'a
+end
 
 try
   perform invalid_input "bad data"
@@ -249,6 +261,7 @@ When a handler calls `resume k value`, it resumes the suspended computation, mak
 ```
 effect Val =
   get_val : int -> int
+end
 
 handle
   let a = perform get_val 1 in
@@ -275,8 +288,10 @@ Handlers can be nested. Each `perform` is caught by the nearest enclosing handle
 ```
 effect Inner =
   inner_op : unit -> int
+end
 effect Outer =
   outer_op : unit -> int
+end
 
 handle
   handle
@@ -300,6 +315,7 @@ By default, continuations in MiniML are **one-shot**: they can only be called on
 ```
 effect Eff =
   op : unit -> int
+end
 
 handle
   perform op ()
@@ -311,20 +327,21 @@ with
 -- Runtime error: continuation already resumed
 ```
 
-### Multi-Shot Continuations with `copy`
+### Multi-Shot Continuations with `copy_continuation`
 
-To use a continuation more than once, use the built-in `copy` function to create a fresh copy before each use. A copied continuation is a completely independent snapshot that can be resumed separately:
+To use a continuation more than once, use the built-in `copy_continuation` function to create a fresh copy before each use. A copied continuation is a completely independent snapshot that can be resumed separately:
 
 ```
 effect Pick =
   pick : unit -> int
+end
 
 handle
   perform pick ()
 with
 | return x -> [x]
 | pick () k ->
-  let k2 = copy k in
+  let k2 = copy_continuation k in
   let a = resume k 1 in
   let b = resume k2 2 in
   List.concat a b
@@ -346,6 +363,7 @@ type 'a tree = Leaf | Node of 'a tree * 'a * 'a tree
 
 effect Yield =
   yield : int -> unit
+end
 
 let rec emit t =
   match t with
@@ -380,6 +398,7 @@ Model readable/writable state using effects and a mutable variable. Here we use 
 effect State 'a =
   get : unit -> 'a
   put : 'a -> unit
+end
 
 let mut state = 0
 
@@ -413,7 +432,7 @@ Result: `43`. The handler acts as a dependency injection point -- the body does 
 
 ### Non-Determinism with Multi-Shot Continuations
 
-Use `copy` to explore all branches of a non-deterministic computation:
+Use `copy_continuation` to explore all branches of a non-deterministic computation:
 
 ```
 let rec append xs ys =
@@ -423,6 +442,7 @@ let rec append xs ys =
 
 effect Choice =
   choose : unit -> bool
+end
 
 handle
   let x = perform choose () in
@@ -431,7 +451,7 @@ handle
 with
 | return x -> [x]
 | choose () k ->
-  let k2 = copy k in
+  let k2 = copy_continuation k in
   let a = resume k true in
   let b = resume k2 false in
   append a b
@@ -446,6 +466,7 @@ Early exit with a value, exactly like traditional exceptions:
 ```
 effect Exn =
   raise : string -> 'a
+end
 
 let safe_divide a b =
   try
@@ -467,6 +488,7 @@ A logging effect that can be handled in different ways depending on context:
 ```
 effect Log =
   log : string -> unit
+end
 
 let computation () =
   perform log "starting";
@@ -507,6 +529,7 @@ MiniML implements **deep handlers**. This means that when a handler continues a 
 ```
 effect Counter =
   tick : unit -> int
+end
 
 let mut count = 0 in
 handle
@@ -536,7 +559,9 @@ type 'a seq = ('a -> unit) -> unit
 Operations like `Seq.take` and `Seq.take_while` use an internal `SeqStop` effect for early termination:
 
 ```
-effect SeqStop = __seq_stop : unit -> unit
+effect SeqStop =
+  __seq_stop : unit -> unit
+end
 
 -- Seq.take is implemented roughly as:
 let take n s = fn yield ->
@@ -598,9 +623,9 @@ When the handler calls `resume k value`:
 2. The handler is reinstalled (deep handling).
 3. Execution switches back to the suspended fiber.
 
-### Copy
+### copy_continuation
 
-`copy k` creates a deep copy of the fiber -- duplicating the stack and all call frames. This gives you an independent execution path that can be resumed separately.
+`copy_continuation k` creates a deep copy of the fiber -- duplicating the stack and all call frames. This gives you an independent execution path that can be resumed separately.
 
 ## Effect Typing
 
@@ -611,7 +636,9 @@ MiniML tracks effects at compile time. Every function type internally carries an
 If you perform an effect at the top level without an enclosing handler, the typechecker rejects the program at compile time. You do not need to run the code to discover the mistake:
 
 ```
-effect Boom = boom : unit -> int
+effect Boom =
+  boom : unit -> int
+end
 
 perform boom ()
 -- Compile error: expression has unhandled effects
@@ -624,7 +651,9 @@ Previously this was only caught at runtime. With effect typing, the compiler tel
 When you pass an effectful callback to a higher-order function, the effect is tracked through the call. The typechecker understands that the enclosing context must handle it:
 
 ```
-effect Log = log : string -> unit
+effect Log =
+  log : string -> unit
+end
 
 -- The Log effect flows through List.map
 let results =
@@ -642,7 +671,9 @@ If you removed the `handle`/`with` wrapper, the typechecker would reject the cod
 A `handle`/`with` or `try`/`with` block removes the handled effect from the type. Once all effects are handled, the result is pure:
 
 ```
-effect Log = log : string -> unit
+effect Log =
+  log : string -> unit
+end
 
 -- This function carries the Log effect
 let f () = perform log "hello"; 42
@@ -737,6 +768,7 @@ Type class methods can use effect variables to be polymorphic over effects. This
 ```
 class Apply 'f =
   do_thing : 'a -> 'a / 'e
+end
 ```
 
 Here `'e` is an effect variable on the method `do_thing`. An instance can implement `do_thing` as a pure function (where `'e` is empty) or as an effectful function (where `'e` includes specific effects). The caller's context determines which effects must be handled.
@@ -746,7 +778,9 @@ Here `'e` is an effect variable on the method `do_thing`. An instance can implem
 Effect tracking works seamlessly with `where` constraints. A constrained function can also perform effects, and both the constraint and the effect are tracked:
 
 ```
-effect Log = log : string -> unit
+effect Log =
+  log : string -> unit
+end
 
 let log_show (x: 'a) : unit where Show 'a =
   perform log (show x)
@@ -788,7 +822,10 @@ In Haskell, different effects require different monads (`State`, `Reader`, `IO`)
 effect State 'a =
   get : unit -> 'a
   put : 'a -> unit
-effect Log = log : string -> unit
+end
+effect Log =
+  log : string -> unit
+end
 
 handle
   handle

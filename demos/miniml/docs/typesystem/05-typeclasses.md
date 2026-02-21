@@ -29,6 +29,7 @@ A class declaration in MiniML looks like this:
 ```
 class Show 'a =
   show : 'a -> string
+end
 ```
 
 This says: "any type `'a` that is an instance of `Show` must provide a function
@@ -36,12 +37,17 @@ This says: "any type `'a` that is an instance of `Show` must provide a function
 
 ```ocaml
 (* From lib/ast.ml *)
-| DClass of string * string list * (string * ty_annot) list
-  (* class_name, tyvar_names, [(method_name, method_type)] *)
+| DClass of string * string list * (string list * string list) list * (string * ty_annot) list
+  (* class_name, tyvar_names, fundeps as [(from_tyvars, to_tyvars)], [(method_name, method_type)] *)
 ```
 
-So `class Show 'a = show : 'a -> string` becomes
-`DClass ("Show", ["a"], [("show", TyArrow(TyVar "a", TyName "string"))])`.
+So `class Show 'a = show : 'a -> string end` becomes
+`DClass ("Show", ["a"], [], [("show", TyArrow(TyVar "a", TyName "string"))])`.
+
+The third field is a list of functional dependencies. For classes without
+functional dependencies (like `Show`), this is the empty list. For a class like
+`class Index 'c 'k 'v where 'c -> 'k 'v`, it would be `[(["c"], ["k"; "v"])]`
+-- meaning the container type determines the key and value types.
 
 ### How `process_class_def` stores a class
 
@@ -63,6 +69,7 @@ Here is the core of the function (from `lib/typechecker.ml`):
 
 ```ocaml
 let process_class_def ctx (class_name : string) (tyvar_names : string list)
+    (fundep_annots : (string list * string list) list)
     (methods : (string * Ast.ty_annot) list) : ctx * tdecl =
   if List.exists (fun c -> String.equal c.Types.class_name class_name)
        ctx.type_env.Types.classes then
@@ -101,25 +108,48 @@ not a class parameter, it gets its own `TGen` index starting after the class
 parameters. The `method_quant` tracks the total number of quantified variables
 for that method's scheme.
 
-The function then builds the class definition record and registers it:
+The function then converts string-based fundeps to index-based, builds the
+class definition record, and registers it:
 
 ```ocaml
+  (* Convert string-based fundeps to index-based *)
+  let class_fundeps = List.map (fun (from_names, to_names) ->
+    let resolve_idx name =
+      match List.find_index (fun n -> String.equal n name) tyvar_names with
+      | Some (i, _) -> i
+      | None -> error (Printf.sprintf "fundep refers to unknown type variable '%s" name)
+    in
+    Types.{ fd_from = List.map resolve_idx from_names;
+            fd_to = List.map resolve_idx to_names }
+  ) fundep_annots in
   let class_def = Types.{
     class_name;
     class_params = tyvar_names;
-    class_methods = List.map (fun (m, t, _) -> (m, t)) method_tys;
+    class_methods = List.map (fun (m, t, _, _) -> (m, t)) method_tys;
+    class_fundeps;
   } in
 ```
 
 The `class_def` type (from `lib/types.ml`):
 
 ```ocaml
+type fundep = {
+  fd_from: int list;   (* indices of determining params *)
+  fd_to: int list;     (* indices of determined params *)
+}
+
 type class_def = {
   class_name: string;
   class_params: string list;
   class_methods: (string * ty) list;  (* types use TGen 0..N-1 for class params *)
+  class_fundeps: fundep list;
 }
 ```
+
+The `class_fundeps` field stores functional dependencies as index-based
+references into `class_params`. For `class Index 'c 'k 'v where 'c -> 'k 'v`,
+the fundep is `{ fd_from = [0]; fd_to = [1; 2] }` because `'c` is parameter 0,
+`'k` is parameter 1, and `'v` is parameter 2.
 
 Methods use `TGen` indices for class parameters, so `Show`'s `show` method is
 stored as `TArrow(TGen 0, TString)` -- meaning "takes whatever the first class
@@ -155,6 +185,7 @@ An instance declaration provides method implementations for a specific type:
 ```
 instance Show int =
   let show x = string_of_int x
+end
 ```
 
 The parser produces:
@@ -865,6 +896,7 @@ instance Show ('a list) where Show 'a =
   let show xs = "[" ^ fold (fn acc x ->
       if acc = "" do show x else acc ^ "; " ^ show x
     ) "" xs ^ "]"
+end
 ```
 
 This instance works for any `'a list` -- but only if `'a` itself has a `Show`
@@ -1144,6 +1176,7 @@ instance Show color =
     | Red -> "Red"
     | Green -> "Green"
     | Blue -> "Blue"
+end
 ```
 
 ### Constraints in derived instances
@@ -1166,6 +1199,7 @@ For `type 'a box = Box of 'a deriving Show`, this produces the constraint
 instance Show ('a box) where Show 'a =
   let show __x = match __x with
     | Box __v0 -> "Box(" ^ show __v0 ^ ")"
+end
 ```
 
 The generated instance is then processed by `process_instance_def` like any
@@ -1181,9 +1215,11 @@ transformation. Consider this program:
 ```
 class Show 'a =
   show : 'a -> string
+end
 
 instance Show int =
   let show x = string_of_int x
+end
 
 let f (x: 'a) = show x where Show 'a
 
@@ -1363,15 +1399,16 @@ in the AST. The dictionary passing has been compiled away completely.
 MiniML ships with several built-in classes registered via `lib/interp.ml`
 before user code runs:
 
-| Class | Type params | Methods |
-|-------|-------------|---------|
-| `Num` | `'a` | `(+) (-) (*) (/) : 'a -> 'a -> 'a`, `neg : 'a -> 'a` |
-| `Eq` | `'a` | `(=) (<>) : 'a -> 'a -> bool` |
-| `Ord` | `'a` | `(<) (>) (<=) (>=) : 'a -> 'a -> bool` |
-| `Bitwise` | `'a` | `land lor lxor lsl lsr : 'a -> 'a -> 'a`, `lnot : 'a -> 'a` |
-| `Show` | `'a` | `show : 'a -> string` |
-| `Iter` | `'c 'e` | `fold : ('a -> 'e -> 'a) -> 'a -> 'c -> 'a` |
-| `Map` | `'m 'k 'v` | `of_list get set has remove size keys values to_list` |
+| Class | Type params | Fundeps | Methods |
+|-------|-------------|---------|---------|
+| `Num` | `'a` | | `(+) (-) (*) (/) : 'a -> 'a -> 'a`, `neg : 'a -> 'a` |
+| `Eq` | `'a` | | `(=) (<>) : 'a -> 'a -> bool` |
+| `Ord` | `'a` | | `(<) (>) (<=) (>=) : 'a -> 'a -> bool` |
+| `Bitwise` | `'a` | | `land lor lxor lsl lsr : 'a -> 'a -> 'a`, `lnot : 'a -> 'a` |
+| `Show` | `'a` | | `show : 'a -> string` |
+| `Iter` | `'c 'e` | | `fold : ('a -> 'e -> 'a) -> 'a -> 'c -> 'a` |
+| `Index` | `'c 'k 'v` | `'c -> 'k 'v` | `at : 'k -> 'c -> 'v` |
+| `Map` | `'m 'k 'v` | | `of_list get set has remove size keys values to_list` |
 
 Instances for primitive types (`int`, `float`, `string`, `bool`, `byte`,
 `rune`) are registered as native externals. Compound-type instances (like
@@ -1385,11 +1422,120 @@ let state = eval_setup state
        | [] -> \"[]\" \
        | _ -> \"[\" ^ fold (fn acc x -> \
            if acc = \"\" do show x else acc ^ \"; \" ^ show x \
-         ) \"\" xs ^ \"]\""
+         ) \"\" xs ^ \"]\" \
+     end"
 ```
 
 These compound instances go through the full typechecker pipeline, including
 constraint transformation to produce factory dictionaries.
+
+
+## Functional Dependencies
+
+Functional dependencies (fundeps) tell the typechecker that certain class
+parameters are determined by others. This guides type inference so the compiler
+can resolve ambiguous type variables automatically.
+
+### Syntax and representation
+
+A class with a functional dependency is declared with a `where` clause between
+the type parameters and the `=`:
+
+```
+class Index 'c 'k 'v where 'c -> 'k 'v =
+  at : 'k -> 'c -> 'v
+end
+```
+
+This says: given the container type `'c`, the key type `'k` and value type `'v`
+are uniquely determined. The parser stores fundeps as string-based pairs
+`(["c"], ["k"; "v"])`, which `process_class_def` converts to index-based
+`{ fd_from = [0]; fd_to = [1; 2] }`.
+
+### How fundeps guide type inference
+
+Fundeps are applied at three points during compilation:
+
+**1. During type inference (`improve_fundeps_in_expr`).** Before
+let-generalization, the typechecker fires fundep improvement on expressions.
+When a class method is called (like `at`) and the determining parameters are
+known (e.g., the container is `int array`), `improve_with_fundeps` searches
+instances to find the determined types and unifies them with the corresponding
+type variables. This prevents over-generalization -- without fundeps, the key
+and value types would remain as free type variables and be generalized into the
+scheme.
+
+```ocaml
+let improve_with_fundeps instances class_def partial =
+  List.fold_left (fun partial fd ->
+    (* Check if all determining positions are known *)
+    let from_known = List.for_all (fun i ->
+      i < List.length partial && List.nth partial i <> None
+    ) fd.fd_from in
+    if not from_known then partial
+    else begin
+      (* Find instances matching on the determining positions *)
+      let matching = List.filter (fun inst -> ...) instances in
+      match matching with
+      | [inst] ->
+        (* Exactly one match: fill in the determined positions *)
+        List.mapi (fun i opt ->
+          if List.mem i fd.fd_to then Some (List.nth inst.inst_tys i)
+          else opt
+        ) partial
+      | _ -> partial
+    end
+  ) partial class_def.class_fundeps
+```
+
+**2. During constraint transformation (`resolve_dict_arg`).** When resolving
+dictionary arguments for a constrained call, fundeps are applied to fill in
+unresolved type positions. If a constraint has `CAWild` arguments (positions
+not mentioned in the method type but determined by a fundep), improvement
+resolves them to concrete types so instance lookup can succeed.
+
+**3. Instance consistency checking (`check_fundep_consistency`).** When a new
+instance is registered, the typechecker verifies it does not violate existing
+fundep constraints. If two instances agree on all determining positions, they
+must also agree on all determined positions:
+
+```ocaml
+let check_fundep_consistency class_def new_inst existing_instances =
+  List.iter (fun fd ->
+    List.iter (fun existing ->
+      (* If determining types match, determined types must also match *)
+      ...
+    ) existing_instances
+  ) class_def.class_fundeps
+```
+
+### The Index class: a fundep example
+
+The `Index` class demonstrates how fundeps work in practice:
+
+```
+class Index 'c 'k 'v where 'c -> 'k 'v =
+  at : 'k -> 'c -> 'v
+end
+
+instance Index ('a array) int 'a = ...
+instance Index string int rune = ...
+instance Index (('k, 'v) map) 'k 'v = ...
+```
+
+The fundep `'c -> 'k 'v` means: given the container type, the key and value
+types are uniquely determined. When the typechecker sees `arr.[0]` (which
+desugars to `at 0 arr`) and knows `arr : int array`, it:
+
+1. Finds the `Index` class and its fundep `{ fd_from = [0]; fd_to = [1; 2] }`.
+2. The container type (`int array`) matches parameter 0.
+3. Searches instances: `Index ('a array) int 'a` matches with `'a = int`.
+4. Fills in parameter 1 (`int`) and parameter 2 (`int`).
+5. The result type is `int` -- no annotation needed.
+
+Without the fundep, the typechecker would not know that the result type of
+`arr.[0]` is `int` until much later (or not at all), potentially causing
+ambiguity errors or requiring explicit type annotations.
 
 
 ## Summary
@@ -1397,13 +1543,15 @@ constraint transformation to produce factory dictionaries.
 The type class implementation follows a clean two-pass architecture:
 
 **Pass 1 (Type inference):**
-- `process_class_def` registers class definitions and adds methods to the
-  variable context as polymorphic schemes.
+- `process_class_def` registers class definitions (including functional
+  dependencies) and adds methods to the variable context as polymorphic schemes.
 - `process_instance_def` typechecks method bodies, builds dictionary records,
-  and registers instances in the type environment.
+  registers instances in the type environment, and checks fundep consistency.
 - `synth_constrained_fn` handles `where` clauses by pre-allocating shared type
   variables, recording their IDs in `constraint_tvars`, and producing schemes
   with `class_constraint` records.
+- `improve_fundeps_in_expr` fires fundep improvement before let-generalization
+  to resolve determined type variables.
 - Method calls during this pass are treated as ordinary polymorphic function
   calls -- the type variable gets unified with the argument type but no
   dictionary is resolved yet.

@@ -89,7 +89,7 @@ string_of_bool true      (* "true" *)
 ### Continuation Copy
 
 ```
-copy : 'a -> 'a
+copy_continuation : 'a -> 'a
 ```
 Copies a continuation value (used with algebraic effects). Creates a fresh
 copy so that a one-shot continuation can be resumed multiple times.
@@ -112,6 +112,7 @@ class Num 'a =
   (*)  : 'a -> 'a -> 'a
   (/)  : 'a -> 'a -> 'a
   neg  : 'a -> 'a
+end
 ```
 
 **Instances:** `int`, `float`
@@ -130,6 +131,7 @@ Equality comparison.
 class Eq 'a =
   (=)  : 'a -> 'a -> bool
   (<>) : 'a -> 'a -> bool
+end
 ```
 
 **Instances:** `int`, `float`, `string`, `bool`, `byte`, `rune`
@@ -151,6 +153,7 @@ class Ord 'a =
   (>)  : 'a -> 'a -> bool
   (<=) : 'a -> 'a -> bool
   (>=) : 'a -> 'a -> bool
+end
 ```
 
 **Instances:** `int`, `float`, `string`, `byte`, `rune`
@@ -162,6 +165,7 @@ Convert a value to a human-readable string.
 ```
 class Show 'a =
   show : 'a -> string
+end
 ```
 
 **Instances:** `int`, `float`, `bool`, `string`, `unit`, `byte`, `rune`,
@@ -188,6 +192,7 @@ class Bitwise 'a =
   lsl  : 'a -> 'a -> 'a
   lsr  : 'a -> 'a -> 'a
   lnot : 'a -> 'a
+end
 ```
 
 **Instances:** `int`
@@ -207,6 +212,7 @@ loops and the `fold` function.
 ```
 class Iter 'a 'b =
   fold : ('c -> 'b -> 'c) -> 'c -> 'a -> 'c
+end
 ```
 
 Here `'a` is the collection type and `'b` is the element type.
@@ -238,6 +244,7 @@ class Map 'm 'k 'v =
   keys    : 'm -> 'k list
   values  : 'm -> 'v list
   to_list : 'm -> ('k * 'v) list
+end
 ```
 
 **Instances:** `('k, 'v) map` (the built-in persistent map type)
@@ -255,6 +262,39 @@ to_list m                    (* [("a", 1); ("b", 2)] *)
 of_list [("x", 1); ("y", 2)]  (* #{"x": 1; "y": 2} *)
 ```
 
+### Index
+
+Uniform indexing for collections. The `at` function provides a single interface
+for accessing elements by key or index. The `.[expr]` dot-bracket syntax
+desugars to `at`.
+
+```
+class Index 'c 'k 'v where 'c -> 'k 'v =
+  at : 'k -> 'c -> 'v
+end
+```
+
+**Functional dependency:** `'c -> 'k 'v` — the container type determines both
+the key type and value type.
+
+**Instances:**
+- `'a array` — indexed by `int`, returns `'a`
+- `string` — indexed by `int`, returns `byte`
+- `('k, 'v) map` — indexed by `'k`, returns `'v`
+
+```miniml
+#[10; 20; 30].[1]                   (* 20 *)
+"hello".[0]                          (* byte #68 *)
+#{"name": "alice"}. ["name"]         (* "alice" *)
+at 1 #[10; 20; 30]                  (* 20 *)
+at "x" #{"x": 42}                   (* 42 *)
+```
+
+Note: for arrays and strings, out-of-bounds access raises a runtime error.
+For maps, `.[key]` returns the value directly (not wrapped in `option`), and
+raises a runtime error if the key is not found. Use `get key m` for the safe
+`option`-returning version.
+
 ### Hash
 
 Hash function for use with `Hashtbl`.
@@ -262,6 +302,7 @@ Hash function for use with `Hashtbl`.
 ```
 class Hash 'a =
   hash : 'a -> int
+end
 ```
 
 **Instances:** `int`, `string`, `bool`, `byte`, `rune`
@@ -1579,8 +1620,8 @@ Byte.to_upper #61         (* #41 *)
 ## Rune Module
 
 Operations on the `rune` type (Unicode code points). Rune literals are
-written with a backtick (e.g. `` `a `` for U+0061). Escape sequences are
-supported: `` `\n ``, `` `\t ``, `` `\0 ``.
+written with single quotes (e.g. `'a'` for U+0061). Escape sequences are
+supported: `'\n'`, `'\t'`, `'\0'`.
 
 ```
 Rune.to_int : rune -> int
@@ -1623,11 +1664,11 @@ Rune.is_lower : rune -> bool
 Returns `true` if the rune is an ASCII lowercase letter.
 
 ```miniml
-Rune.to_int `a             (* 97 *)
-Rune.to_string `a          (* "a" *)
-Rune.is_alpha `a           (* true *)
-Rune.is_digit `5           (* true *)
-Rune.to_int `\n            (* 10 *)
+Rune.to_int 'a'            (* 97 *)
+Rune.to_string 'a'         (* "a" *)
+Rune.is_alpha 'a'          (* true *)
+Rune.is_digit '5'          (* true *)
+Rune.to_int '\n'           (* 10 *)
 ```
 
 ---

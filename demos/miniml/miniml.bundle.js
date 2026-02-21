@@ -110,7 +110,7 @@ function ppValue(v) {
     case "bool": return v.v ? "true" : "false";
     case "string": return v.v;
     case "byte": return "#" + v.v.toString(16).padStart(2, '0');
-    case "rune": return "`" + runeToUtf8(v.v);
+    case "rune": return "'" + runeToUtf8(v.v) + "'";
     case "unit": return "()";
     case "tuple": return "(" + v.v.map(ppValue).join(", ") + ")";
     case "list": return "[" + v.v.map(ppValue).join("; ") + "]";
@@ -140,7 +140,7 @@ function ppValue(v) {
 }
 
 // --- Fiber ---
-const STACK_SIZE = 65536;
+const STACK_SIZE = 4096;
 
 function makeFiber() {
   return { stack: new Array(STACK_SIZE), sp: 0, frames: [] };
@@ -539,6 +539,40 @@ function run(vm) {
           if (!found) error(`record has no field: ${name}`);
           break;
         }
+        case "RECORD_UPDATE": {
+          const fieldNames = op[1];
+          const n = fieldNames.length;
+          const newVals = new Array(n);
+          for (let i = n - 1; i >= 0; i--) newVals[i] = pop();
+          const baseRec = asRecord(pop());
+          const copy = baseRec.map(([n, v]) => [n, v]);
+          for (let i = 0; i < n; i++) {
+            const name = fieldNames[i];
+            const idx = copy.findIndex(([n]) => n === name);
+            if (idx < 0) error(`record has no field: ${name}`);
+            copy[idx] = [name, newVals[i]];
+          }
+          push(vrecord(copy));
+          break;
+        }
+        case "RECORD_UPDATE_DYN": {
+          const n = op[1];
+          const pairs = new Array(n);
+          for (let i = n - 1; i >= 0; i--) {
+            const v = pop();
+            const idx = asInt(pop());
+            pairs[i] = [idx, v];
+          }
+          const baseRec = asRecord(pop());
+          const copy = baseRec.map(([n, v]) => [n, v]);
+          for (const [idx, v] of pairs) {
+            if (idx < 0 || idx >= copy.length)
+              error(`RECORD_UPDATE_DYN: index ${idx} out of bounds (record has ${copy.length} fields)`);
+            copy[idx] = [copy[idx][0], v];
+          }
+          push(vrecord(copy));
+          break;
+        }
         case "MAKE_VARIANT": {
           const [, tagN, name, hasPayload] = op;
           if (hasPayload) {
@@ -593,7 +627,7 @@ function run(vm) {
           break;
         }
         case "MATCH_FAIL":
-          error("non-exhaustive match");
+          error(`non-exhaustive match at ${op[1]}`);
           break;
         case "PERFORM": {
           const opNameStr = op[1];
@@ -1025,7 +1059,7 @@ reg("__fmt_pad_right", 2, (args) => {
 });
 
 // Copy (continuation)
-reg("copy", 1, (args) => {
+reg("copy_continuation", 1, (args) => {
   const cont = asContinuation(args[0]);
   return {
     tag: "continuation",
@@ -1034,6 +1068,36 @@ reg("copy", 1, (args) => {
     opHandlers: cont.opHandlers,
     used: false,
   };
+});
+
+// Show value (polymorphic)
+reg("__show_value", 1, (args) => vstring(ppValue(args[0])));
+
+// --- Index class instances ---
+
+reg("index_at_array", 2, (args) => {
+  const idx = asInt(args[0]);
+  const arr = asArray(args[1]);
+  if (idx < 0 || idx >= arr.length)
+    error(`array index out of bounds: ${idx} (length ${arr.length})`);
+  return arr[idx];
+});
+
+reg("index_at_string", 2, (args) => {
+  const idx = asInt(args[0]);
+  const s = asString(args[1]);
+  if (idx < 0 || idx >= s.length)
+    error(`string index out of bounds: ${idx} (length ${s.length})`);
+  return vbyte(s.charCodeAt(idx));
+});
+
+reg("index_at_map", 2, (args) => {
+  const key = args[0];
+  const pairs = asMap(args[1]);
+  for (const [k, v] of pairs) {
+    if (valuesEqual(k, key)) return v;
+  }
+  error(`key not found: ${ppValue(key)}`);
 });
 
 // --- Num class instances ---
@@ -1392,6 +1456,12 @@ reg("String.concat", 2, (args) => {
   return vstring(strs.join(sep));
 });
 
+reg("String.compare", 2, (args) => {
+  const a = asString(args[0]);
+  const b = asString(args[1]);
+  return vint(a < b ? -1 : a > b ? 1 : 0);
+});
+
 // --- Array module (std.ml register_array) ---
 
 reg("Array.make", 2, (args) => {
@@ -1586,14 +1656,278 @@ function loadBundle(jsonString) {
   return executeProto(vmInst, mainProto);
 }
 
+// --- Binary MMLB deserializer ---
 
+const OPCODE_NAMES = [
+  "CONST", "POP", "DUP", "GET_LOCAL", "SET_LOCAL", "GET_UPVALUE", "SET_UPVALUE",
+  "MAKE_REF", "DEREF", "SET_REF", "GET_GLOBAL", "SET_GLOBAL", "DEF_GLOBAL",
+  "ADD", "SUB", "MUL", "DIV", "MOD", "NEG",
+  "FADD", "FSUB", "FMUL", "FDIV", "FNEG",
+  "EQ", "NEQ", "LT", "GT", "LE", "GE", "NOT",
+  "BAND", "BOR", "BXOR", "BNOT", "BSHL", "BSHR",
+  "JUMP", "JUMP_IF_FALSE", "JUMP_IF_TRUE",
+  "CLOSURE", "CLOSURE_REC",
+  "CALL", "TAIL_CALL", "RETURN", "FUNC_RETURN", "ENTER_FUNC", "EXIT_FUNC",
+  "MAKE_TUPLE", "TUPLE_GET",
+  "MAKE_RECORD", "FIELD", "SET_FIELD", "MAKE_VARIANT",
+  "CONS", "NIL", "TAG_EQ", "IS_NIL", "IS_CONS", "HEAD", "TAIL",
+  "VARIANT_PAYLOAD", "MATCH_FAIL",
+  "PERFORM", "HANDLE", "RESUME",
+  "ENTER_LOOP", "EXIT_LOOP", "LOOP_BREAK", "LOOP_CONTINUE", "FOLD_CONTINUE",
+  "MAKE_MAP", "MAKE_ARRAY", "INDEX", "HALT",
+  "RECORD_UPDATE", "RECORD_UPDATE_DYN",
+];
+
+// Tags for opcodes that take a single u32 operand
+const U32_OPCODES = new Set([
+  0,  // CONST
+  3,  // GET_LOCAL
+  4,  // SET_LOCAL
+  5,  // GET_UPVALUE
+  6,  // SET_UPVALUE
+  10, // GET_GLOBAL
+  11, // SET_GLOBAL
+  12, // DEF_GLOBAL
+  37, // JUMP
+  38, // JUMP_IF_FALSE
+  39, // JUMP_IF_TRUE
+  42, // CALL
+  43, // TAIL_CALL
+  48, // MAKE_TUPLE
+  49, // TUPLE_GET
+  56, // TAG_EQ
+  64, // HANDLE
+  66, // ENTER_LOOP
+  69, // LOOP_CONTINUE
+  70, // FOLD_CONTINUE
+  71, // MAKE_MAP
+  72, // MAKE_ARRAY
+  76, // RECORD_UPDATE_DYN
+]);
+
+function loadBundleBinary(arrayBuffer) {
+  const dv = new DataView(arrayBuffer);
+  let pos = 0;
+
+  function readU8() { const v = dv.getUint8(pos); pos += 1; return v; }
+  function readU32() { const v = dv.getUint32(pos, true); pos += 4; return v; }
+  function readI64() { const v = dv.getBigInt64(pos, true); pos += 8; return Number(v); }
+  function readF64() { const v = dv.getFloat64(pos, true); pos += 8; return v; }
+
+  // Header
+  const magic = String.fromCharCode(readU8(), readU8(), readU8(), readU8());
+  if (magic !== "MMLB") throw new Error(`invalid binary bundle magic: ${magic}`);
+  const version = readU32();
+  if (version !== 1) throw new Error(`unsupported binary bundle version: ${version}`);
+
+  // String table
+  const strCount = readU32();
+  const strs = new Array(strCount);
+  const decoder = new TextDecoder("utf-8");
+  for (let i = 0; i < strCount; i++) {
+    const len = readU32();
+    strs[i] = decoder.decode(new Uint8Array(arrayBuffer, pos, len));
+    pos += len;
+  }
+
+  // Global names
+  const numNames = readU32();
+  const globalNames = new Array(numNames);
+  for (let i = 0; i < numNames; i++) {
+    globalNames[i] = strs[readU32()];
+  }
+
+  // Create VM
+  const vmInst = createVM(globalNames);
+
+  // Native globals
+  const numNatives = readU32();
+  for (let i = 0; i < numNatives; i++) {
+    const idx = readU32();
+    const kind = readU8();
+    if (kind === 0) {
+      // external
+      const name = strs[readU32()];
+      const arity = readU32();
+      const b = builtins[name];
+      if (b) {
+        vmInst.globals.set(idx, makeExternal(name, b.arity, b.fn));
+      } else {
+        vmInst.globals.set(idx, makeExternal(name, arity, () => {
+          error(`unimplemented builtin: ${name}`);
+        }));
+      }
+    } else if (kind === 1) {
+      // dict
+      const numFields = readU32();
+      const fields = [];
+      for (let j = 0; j < numFields; j++) {
+        const fieldName = strs[readU32()];
+        const extName = strs[readU32()];
+        const extArity = readU32();
+        const b = builtins[extName];
+        if (b) {
+          fields.push([fieldName, makeExternal(extName, b.arity, b.fn)]);
+        } else {
+          fields.push([fieldName, makeExternal(extName, extArity, () => {
+            error(`unimplemented builtin: ${extName}`);
+          })]);
+        }
+      }
+      vmInst.globals.set(idx, vrecord(fields));
+    }
+  }
+
+  function readCaptures() {
+    const count = readU32();
+    const caps = new Array(count);
+    for (let i = 0; i < count; i++) {
+      const kind = readU8();
+      const idx = readU32();
+      caps[i] = kind === 0 ? ["local", idx] : ["upvalue", idx];
+    }
+    return caps;
+  }
+
+  function readOpcode() {
+    const tag = readU8();
+    const name = OPCODE_NAMES[tag];
+
+    // Simple u32 operand opcodes
+    if (U32_OPCODES.has(tag)) {
+      return [name, readU32()];
+    }
+
+    switch (tag) {
+      // No-operand opcodes
+      case 1: case 2: case 7: case 8: case 9:
+      case 13: case 14: case 15: case 16: case 17: case 18:
+      case 19: case 20: case 21: case 22: case 23:
+      case 24: case 25: case 26: case 27: case 28: case 29: case 30:
+      case 31: case 32: case 33: case 34: case 35: case 36:
+      case 44: case 45: case 46: case 47:
+      case 54: case 55: case 57: case 58: case 59: case 60:
+      case 61: case 65: case 67: case 68: case 73: case 74:
+        return [name];
+
+      case 40: { // CLOSURE
+        const protoIdx = readU32();
+        const caps = readCaptures();
+        return ["CLOSURE", protoIdx, caps];
+      }
+      case 41: { // CLOSURE_REC
+        const protoIdx = readU32();
+        const caps = readCaptures();
+        const self = readU32();
+        return ["CLOSURE_REC", protoIdx, caps, self];
+      }
+      case 50: { // MAKE_RECORD
+        const count = readU32();
+        const fieldNames = new Array(count);
+        for (let i = 0; i < count; i++) fieldNames[i] = strs[readU32()];
+        return ["MAKE_RECORD", fieldNames];
+      }
+      case 51: // FIELD
+        return ["FIELD", strs[readU32()]];
+      case 52: // SET_FIELD
+        return ["SET_FIELD", strs[readU32()]];
+      case 53: { // MAKE_VARIANT
+        const tagN = readU32();
+        const vname = strs[readU32()];
+        const hasPayload = readU8() !== 0;
+        return ["MAKE_VARIANT", tagN, vname, hasPayload];
+      }
+      case 62: // MATCH_FAIL
+        return ["MATCH_FAIL", strs[readU32()]];
+      case 63: // PERFORM
+        return ["PERFORM", strs[readU32()]];
+      case 75: { // RECORD_UPDATE
+        const count = readU32();
+        const fieldNames = new Array(count);
+        for (let i = 0; i < count; i++) fieldNames[i] = strs[readU32()];
+        return ["RECORD_UPDATE", fieldNames];
+      }
+      default:
+        throw new Error(`unknown opcode tag: ${tag}`);
+    }
+  }
+
+  function readValue() {
+    const tag = readU8();
+    switch (tag) {
+      case 0: return vint(readI64());
+      case 1: return vfloat(readF64());
+      case 2: return vbool(readU8() !== 0);
+      case 3: return vstring(strs[readU32()]);
+      case 4: return vbyte(readU8());
+      case 5: return vrune(readU32());
+      case 6: return VUNIT;
+      case 7: return vproto(readPrototype());
+      case 8: {
+        const count = readU32();
+        const vs = new Array(count);
+        for (let i = 0; i < count; i++) vs[i] = readValue();
+        return vtuple(vs);
+      }
+      case 9: {
+        const count = readU32();
+        const vs = new Array(count);
+        for (let i = 0; i < count; i++) vs[i] = readValue();
+        return vlist(vs);
+      }
+      case 10: {
+        const tagN = readU32();
+        const vname = strs[readU32()];
+        const hasPayload = readU8() !== 0;
+        const payload = hasPayload ? readValue() : null;
+        return vvariant(tagN, vname, payload);
+      }
+      default:
+        throw new Error(`unknown value tag: ${tag}`);
+    }
+  }
+
+  function readPrototype() {
+    const name = strs[readU32()];
+    const arity = readU32();
+    const numLocals = readU32();
+    const codeLen = readU32();
+    const code = new Array(codeLen);
+    for (let i = 0; i < codeLen; i++) code[i] = readOpcode();
+    const constLen = readU32();
+    const constants = new Array(constLen);
+    for (let i = 0; i < constLen; i++) constants[i] = readValue();
+    const linesLen = readU32();
+    const lineTable = new Array(linesLen);
+    for (let i = 0; i < linesLen; i++) lineTable[i] = readU32();
+    return { name, arity, num_locals: numLocals, code, constants, line_table: lineTable };
+  }
+
+  // Setup protos
+  const numSetup = readU32();
+  for (let i = 0; i < numSetup; i++) {
+    const proto = readPrototype();
+    executeProto(vmInst, proto);
+  }
+
+  // Main proto
+  const mainProto = readPrototype();
+  return executeProto(vmInst, mainProto);
+}
+
+
+
+// ---- Stdlib sources (embedded for self-hosted compiler) ----
+const STDLIB_SOURCES = {"stdlib/byte.mml":"module Byte =\n  pub let to_int (b : byte) : int = __byte_to_int b\n  pub let of_int (n : int) : byte = __byte_of_int n\n  pub let to_string (b : byte) : string = __byte_to_string b\n  pub let is_alpha (b : byte) : bool =\n    let n = Byte.to_int b in\n    (n >= 65 && n <= 90) || (n >= 97 && n <= 122)\n  pub let is_digit (b : byte) : bool =\n    let n = Byte.to_int b in\n    n >= 48 && n <= 57\n  pub let is_space (b : byte) : bool =\n    let n = Byte.to_int b in\n    n = 32 || n = 9 || n = 10 || n = 13\n  pub let is_upper (b : byte) : bool =\n    let n = Byte.to_int b in\n    n >= 65 && n <= 90\n  pub let is_lower (b : byte) : bool =\n    let n = Byte.to_int b in\n    n >= 97 && n <= 122\n  pub let to_upper (b : byte) : byte =\n    let n = Byte.to_int b in\n    if n >= 97 && n <= 122 do Byte.of_int (n - 32) else b\n  pub let to_lower (b : byte) : byte =\n    let n = Byte.to_int b in\n    if n >= 65 && n <= 90 do Byte.of_int (n + 32) else b\nend\n","stdlib/rune.mml":"module Rune =\n  pub let to_int (r : rune) : int = __rune_to_int r\n  pub let of_int (n : int) : rune = __rune_of_int n\n  pub let to_string (r : rune) : string = __rune_to_string r\n  pub let is_alpha (r : rune) : bool =\n    let n = Rune.to_int r in\n    (n >= 65 && n <= 90) || (n >= 97 && n <= 122)\n  pub let is_digit (r : rune) : bool =\n    let n = Rune.to_int r in\n    n >= 48 && n <= 57\n  pub let is_space (r : rune) : bool =\n    let n = Rune.to_int r in\n    n = 32 || n = 9 || n = 10 || n = 13\n  pub let is_upper (r : rune) : bool =\n    let n = Rune.to_int r in\n    n >= 65 && n <= 90\n  pub let is_lower (r : rune) : bool =\n    let n = Rune.to_int r in\n    n >= 97 && n <= 122\nend\n","stdlib/math.mml":"module Math =\n  pub let abs (x : int) : int = if x < 0 do 0 - x else x\n  pub let min (a : int) (b : int) : int = if a < b do a else b\n  pub let max (a : int) (b : int) : int = if a > b do a else b\n  pub let pow (a : float) (b : float) : float = __math_pow a b\n  pub let sqrt (x : float) : float = __math_sqrt x\n  pub let floor (x : float) : int = __math_floor x\n  pub let ceil (x : float) : int = __math_ceil x\n  pub let round (x : float) : int = __math_round x\nend\n","stdlib/list.mml":"module List =\n  pub let fold (f: 'b -> 'a -> 'b) (acc: 'b) (xs: 'a list) : 'b =\n    let rec go a l =\n      match l with\n      | [] -> a\n      | x :: rest -> go (f a x) rest\n    in go acc xs\n\n  pub let length xs = List.fold (fn acc _ -> acc + 1) 0 xs\n\n  pub let rev xs = List.fold (fn acc x -> x :: acc) [] xs\n\n  pub let hd xs =\n    -- @partial\n    match xs with\n    | x :: _ -> x\n\n  pub let tl xs =\n    -- @partial\n    match xs with\n    | _ :: rest -> rest\n\n  pub let nth xs n =\n    let rec go l i =\n      -- @partial\n      match l with\n      | x :: rest -> if i = 0 do x else go rest (i - 1)\n    in go xs n\n\n  pub let concat a b = List.fold (fn acc x -> x :: acc) b (List.rev a)\n\n  pub let is_empty xs = match xs with\n    | [] -> true\n    | _ -> false\n\n  pub let flatten xss = List.fold (fn acc xs -> List.concat acc xs) [] xss\n\n  pub let map (f: 'a -> 'b) (xs: 'a list) : 'b list =\n    let rec go acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest -> go (f x :: acc) rest\n    in go [] xs\n\n  pub let filter (f: 'a -> bool) (xs: 'a list) : 'a list =\n    let rec go acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest ->\n        if f x do go (x :: acc) rest\n        else go acc rest\n    in go [] xs\n\n  pub let find (f: 'a -> bool) (xs: 'a list) : 'a option =\n    let rec go l =\n      match l with\n      | [] -> None\n      | x :: rest -> if f x do Some x else go rest\n    in go xs\n\n  pub let exists (f: 'a -> bool) (xs: 'a list) : bool =\n    let rec go l =\n      match l with\n      | [] -> false\n      | x :: rest -> if f x do true else go rest\n    in go xs\n\n  pub let forall (f: 'a -> bool) (xs: 'a list) : bool =\n    let rec go l =\n      match l with\n      | [] -> true\n      | x :: rest -> if f x do go rest else false\n    in go xs\n\n  pub let zip (xs: 'a list) (ys: 'b list) : ('a * 'b) list =\n    let rec go acc a b =\n      match a with\n      | [] -> List.rev acc\n      | x :: ra ->\n        -- @partial\n        match b with\n        | y :: rb -> go ((x, y) :: acc) ra rb\n    in go [] xs ys\n\n  pub let mapi (f: int -> 'a -> 'b) (xs: 'a list) : 'b list =\n    let rec go i acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest -> go (i + 1) (f i x :: acc) rest\n    in go 0 [] xs\n\n  pub let sort (cmp: 'a -> 'a -> int) (xs: 'a list) : 'a list =\n    let rec insert x sorted =\n      match sorted with\n      | [] -> [x]\n      | y :: rest ->\n        if cmp x y < 1 do x :: sorted\n        else y :: insert x rest\n    in\n    List.fold (fn acc x -> insert x acc) [] xs\n\n  pub let fold_right (f: 'a -> 'b -> 'b) (xs: 'a list) (acc: 'b) : 'b =\n    let rec go l =\n      match l with\n      | [] -> acc\n      | x :: rest -> f x (go rest)\n    in go xs\n\n  pub let find_map (f: 'a -> 'b option) (xs: 'a list) : 'b option =\n    let rec go l =\n      match l with\n      | [] -> None\n      | x :: rest ->\n        match f x with\n        | Some _ as result -> result\n        | None -> go rest\n    in go xs\n\n  pub let assoc_opt key xs =\n    let rec go l =\n      match l with\n      | [] -> None\n      | (k, v) :: rest ->\n        if k = key do Some v else go rest\n    in go xs\n\n  pub let init n f =\n    let rec go i acc =\n      if i < 0 do acc\n      else go (i - 1) (f i :: acc)\n    in go (n - 1) []\n\n  pub let concat_map f xs =\n    List.flatten (List.map f xs)\n\n  pub let iter2 f xs ys =\n    let rec go a b =\n      match a with\n      | [] -> ()\n      | x :: ra ->\n        -- @partial\n        match b with\n        | y :: rb -> f x y; go ra rb\n    in go xs ys\n\n  pub let map2 (f: 'a -> 'b -> 'c) (xs: 'a list) (ys: 'b list) : 'c list =\n    let rec go acc a b =\n      match a with\n      | [] -> List.rev acc\n      | x :: ra ->\n        -- @partial\n        match b with\n        | y :: rb -> go (f x y :: acc) ra rb\n    in go [] xs ys\n\n  pub let fold2 (f: 'c -> 'a -> 'b -> 'c) (acc: 'c) (xs: 'a list) (ys: 'b list) : 'c =\n    let rec go a l1 l2 =\n      match l1 with\n      | [] -> a\n      | x :: r1 ->\n        -- @partial\n        match l2 with\n        | y :: r2 -> go (f a x y) r1 r2\n    in go acc xs ys\n\n  pub let forall2 (f: 'a -> 'b -> bool) (xs: 'a list) (ys: 'b list) : bool =\n    let rec go a b =\n      match a with\n      | [] -> true\n      | x :: ra ->\n        -- @partial\n        match b with\n        | y :: rb -> if f x y do go ra rb else false\n    in go xs ys\n\n  pub let iteri (f: int -> 'a -> unit) (xs: 'a list) : unit =\n    let rec go i l =\n      match l with\n      | [] -> ()\n      | x :: rest -> f i x; go (i + 1) rest\n    in go 0 xs\n\n  pub let mem_assoc key xs =\n    let rec go l =\n      match l with\n      | [] -> false\n      | (k, _) :: rest ->\n        if k = key do true else go rest\n    in go xs\n\n  pub let assoc key xs =\n    match List.assoc_opt key xs with\n    | Some v -> v\n    | None -> failwith \"List.assoc: not found\"\n\n  pub let iter (f: 'a -> unit) (xs: 'a list) : unit =\n    let rec go xs =\n      match xs with\n      | [] -> ()\n      | x :: rest -> f x; go rest\n    in go xs\n\n  pub let mem x xs =\n    let rec go xs =\n      match xs with\n      | [] -> false\n      | y :: rest -> if x = y do true else go rest\n    in go xs\n\n  pub let rev_append xs ys =\n    let rec go xs acc =\n      match xs with\n      | [] -> acc\n      | x :: rest -> go rest (x :: acc)\n    in go xs ys\n\n  pub let nth_opt xs n =\n    let rec go xs i =\n      match xs with\n      | [] -> None\n      | x :: rest -> if i = 0 do Some x else go rest (i - 1)\n    in go xs n\n\n  pub let find_index f xs =\n    let rec go xs i =\n      match xs with\n      | [] -> None\n      | x :: rest -> if f x do Some i else go rest (i + 1)\n    in go xs 0\n\n  pub let filteri f xs =\n    let rec go xs i acc =\n      match xs with\n      | [] -> List.rev acc\n      | x :: rest ->\n        if f i x do go rest (i + 1) (x :: acc)\n        else go rest (i + 1) acc\n    in go xs 0 []\n\n  pub let filter_map (f: 'a -> 'b option) (xs: 'a list) : 'b list =\n    let rec go xs acc =\n      match xs with\n      | [] -> List.rev acc\n      | x :: rest ->\n        match f x with\n        | Some y -> go rest (y :: acc)\n        | None -> go rest acc\n    in go xs []\n\n  pub let sort_uniq cmp xs =\n    let sorted = List.sort cmp xs in\n    let rec dedup xs =\n      match xs with\n      | [] -> []\n      | x :: [] -> x :: []\n      | x :: y :: rest ->\n        if cmp x y = 0 do dedup (y :: rest)\n        else x :: dedup (y :: rest)\n    in dedup sorted\nend\n","stdlib/array_extra.mml":"module Array =\n  pub let init n f =\n    if n <= 0 do #[]\n    else\n      let arr = Array.make n (f 0) in\n      let rec go i =\n        if i >= n do arr\n        else (Array.set arr i (f i); go (i + 1))\n      in go 1\n\n  pub let map f arr =\n    let n = Array.length arr in\n    if n = 0 do #[]\n    else\n      let result = Array.make n (f (Array.get arr 0)) in\n      let rec go i =\n        if i >= n do result\n        else (Array.set result i (f (Array.get arr i)); go (i + 1))\n      in go 1\n\n  pub let iter f arr =\n    let n = Array.length arr in\n    let rec go i =\n      if i >= n do ()\n      else (f (Array.get arr i); go (i + 1))\n    in go 0\n\n  pub let iteri f arr =\n    let n = Array.length arr in\n    let rec go i =\n      if i >= n do ()\n      else (f i (Array.get arr i); go (i + 1))\n    in go 0\n\n  pub let forall f arr =\n    let n = Array.length arr in\n    let rec go i =\n      if i >= n do true\n      else if f (Array.get arr i) do go (i + 1)\n      else false\n    in go 0\n\n  pub let fold f acc arr =\n    let n = Array.length arr in\n    let rec go i a =\n      if i >= n do a\n      else go (i + 1) (f a (Array.get arr i))\n    in go 0 acc\nend\n","stdlib/result.mml":"module Result =\n  pub type ('a, 'b) t = Ok of 'a | Err of 'b\n  pub let map (f: 'a -> 'c) (r: ('a, 'b) t) : ('c, 'b) t =\n    match r with\n    | Ok v -> Ok (f v)\n    | Err e -> Err e\n  pub let bind (f: 'a -> ('c, 'b) t) (r: ('a, 'b) t) : ('c, 'b) t =\n    match r with\n    | Ok v -> f v\n    | Err e -> Err e\n  pub let unwrap (r: ('a, 'b) t) : 'a =\n    -- @partial\n    match r with\n    | Ok v -> v\nend\n","stdlib/option.mml":"module Option =\n  pub let map (f: 'a -> 'b) (opt: 'a option) : 'b option =\n    match opt with\n    | Some x -> Some (f x)\n    | None -> None\n  pub let bind (f: 'a -> 'b option) (opt: 'a option) : 'b option =\n    match opt with\n    | Some x -> f x\n    | None -> None\n  pub let unwrap (opt: 'a option) : 'a =\n    -- @partial\n    match opt with\n    | Some x -> x\n  pub let unwrap_or (default: 'a) (opt: 'a option) : 'a =\n    match opt with\n    | Some x -> x\n    | None -> default\n  pub let is_some (opt: 'a option) : bool =\n    match opt with\n    | Some _ -> true\n    | None -> false\n  pub let is_none (opt: 'a option) : bool =\n    match opt with\n    | Some _ -> false\n    | None -> true\n  pub let to_list (opt: 'a option) : 'a list =\n    match opt with\n    | Some x -> [x]\n    | None -> []\n  pub let iter (f: 'a -> unit) (opt: 'a option) : unit =\n    match opt with\n    | Some x -> f x\n    | None -> ()\n  pub let flat_map (f: 'a -> 'b option) (opt: 'a option) : 'b option =\n    match opt with\n    | Some x -> f x\n    | None -> None\nend\n","stdlib/buffer.mml":"module Buffer =\n  pub type t = { mut data: byte array; mut len: int }\n\n  pub let create (n: int) : t =\n    { data = Array.make (if n < 16 do 16 else n) #00; len = 0 }\n\n  pub let length (buf: t) : int = buf.len\n\n  pub let clear (buf: t) : unit =\n    buf.len := 0\n\n  pub let grow (buf: t) (needed: int) : unit =\n    let cap = Array.length buf.data in\n    if buf.len + needed > cap do\n      let new_cap = Math.max (cap * 2) (buf.len + needed) in\n      let new_data = Array.make new_cap #00 in\n      let rec copy i =\n        if i < buf.len do\n          Array.set new_data i (Array.get buf.data i);\n          copy (i + 1)\n        else ()\n      in\n      copy 0;\n      buf.data := new_data\n    else ()\n\n  pub let add_byte (buf: t) (b: byte) : unit =\n    Buffer.grow buf 1;\n    Array.set buf.data buf.len b;\n    buf.len := buf.len + 1\n\n  pub let add_string (buf: t) (s: string) : unit =\n    let bytes = String.to_byte_array s in\n    let n = Array.length bytes in\n    Buffer.grow buf n;\n    let rec copy i =\n      if i < n do\n        Array.set buf.data (buf.len + i) (Array.get bytes i);\n        copy (i + 1)\n      else ()\n    in\n    copy 0;\n    buf.len := buf.len + n\n\n  pub let contents (buf: t) : string =\n    String.of_byte_array (Array.sub buf.data 0 buf.len)\n\n  pub let add_buffer (dst: t) (src: t) : unit =\n    let n = src.len in\n    Buffer.grow dst n;\n    let rec copy i =\n      if i < n do\n        Array.set dst.data (dst.len + i) (Array.get src.data i);\n        copy (i + 1)\n      else ()\n    in\n    copy 0;\n    dst.len := dst.len + n\nend\n","stdlib/iter.mml":"instance Iter ('a list) 'a =\n  let fold f acc xs =\n    let rec go a l = match l with\n      | [] -> a\n      | x :: rest -> go (f a x) rest\n    in go acc xs\nend\n\ninstance Iter ('a array) 'a =\n  let fold = fn f -> fn acc -> fn arr ->\n    let rec go = fn a -> fn i ->\n      if i = array_length arr do a\n      else go (f a (array_get arr i)) (i + 1)\n    in go acc 0\nend\n","stdlib/hash.mml":"class Hash 'a =\n  hash : 'a -> int\nend\n\ninstance Hash int =\n  let hash n = n\nend\ninstance Hash string =\n  let hash s =\n    let bytes = String.to_byte_array s in\n    fold (fn h b -> h * 31 + Byte.to_int b) 5381 bytes\nend\ninstance Hash bool =\n  let hash b = if b do 1 else 0\nend\ninstance Hash byte =\n  let hash b = Byte.to_int b\nend\ninstance Hash rune =\n  let hash r = Rune.to_int r\nend\n","stdlib/hashtbl.mml":"module Hashtbl =\n  pub type ('k, 'v) t = { mut buckets: ('k * 'v) list array; mut size: int }\n  pub let create (n: int) =\n    let cap = if n < 16 do 16 else n in\n    { buckets = Array.make cap []; size = 0 }\n\n  pub let clear tbl =\n    let cap = Array.length tbl.buckets in\n    tbl.buckets := Array.make cap [];\n    tbl.size := 0\n\n  pub let length tbl = tbl.size\n\n  pub let bucket_index tbl (key: 'k) where Hash 'k =\n    let h = hash key in\n    let h = if h < 0 do 0 - h else h in\n    h mod (Array.length tbl.buckets)\n\n  pub let to_list tbl =\n    let cap = Array.length tbl.buckets in\n    let rec collect i acc =\n      if i >= cap do acc\n      else\n        let bucket = Array.get tbl.buckets i in\n        collect (i + 1) (List.concat bucket acc)\n    in\n    collect 0 []\n\n  let rehash tbl hash_fn =\n    let entries = Hashtbl.to_list tbl in\n    let new_cap = Array.length tbl.buckets * 2 in\n    tbl.buckets := Array.make new_cap [];\n    tbl.size := 0;\n    List.fold (fn _ (k, v) ->\n      let h = hash_fn k in\n      let h = if h < 0 do 0 - h else h in\n      let idx = h mod new_cap in\n      let bucket = Array.get tbl.buckets idx in\n      Array.set tbl.buckets idx ((k, v) :: bucket);\n      tbl.size := tbl.size + 1\n    ) () entries\n\n  pub let set tbl (key: 'k) value where Hash 'k, Eq 'k =\n    let idx = Hashtbl.bucket_index tbl key in\n    let bucket = Array.get tbl.buckets idx in\n    let rec replace = fn\n      | [] -> [(key, value)]\n      | (k, v) :: rest ->\n        if k = key do (key, value) :: rest\n        else (k, v) :: replace rest\n    in\n    let new_bucket = replace bucket in\n    let grew = List.length new_bucket > List.length bucket in\n    Array.set tbl.buckets idx new_bucket;\n    if grew do do\n      tbl.size := tbl.size + 1;\n      if tbl.size > Array.length tbl.buckets * 2 do\n        Hashtbl.rehash tbl hash\n      else ()\n    end else ()\n\n  pub let get tbl (key: 'k) where Hash 'k, Eq 'k =\n    let idx = Hashtbl.bucket_index tbl key in\n    let bucket = Array.get tbl.buckets idx in\n    let rec find = fn\n      | [] -> None\n      | (k, v) :: rest ->\n        if k = key do Some v\n        else find rest\n    in\n    find bucket\n\n  pub let has tbl (key: 'k) where Hash 'k, Eq 'k =\n    match Hashtbl.get tbl key with\n    | Some _ -> true\n    | None -> false\n\n  pub let remove tbl (key: 'k) where Hash 'k, Eq 'k =\n    let idx = Hashtbl.bucket_index tbl key in\n    let bucket = Array.get tbl.buckets idx in\n    let new_bucket = List.filter (fn (k, _) -> k <> key) bucket in\n    do\n      if List.length new_bucket < List.length bucket do\n        tbl.size := tbl.size - 1\n      else ()\n    end;\n    Array.set tbl.buckets idx new_bucket\n\n  pub let find tbl key =\n    match Hashtbl.get tbl key with\n    | Some v -> v\n    | None -> failwith \"Hashtbl.find: key not found\"\n\n  pub let fold f tbl acc =\n    let entries = Hashtbl.to_list tbl in\n    List.fold (fn a (k, v) -> f k v a) acc entries\n\n  pub let iter f tbl =\n    let entries = Hashtbl.to_list tbl in\n    List.iter (fn (k, v) -> f k v) entries\n\n  pub let keys tbl =\n    List.map (fn (k, _) -> k) (Hashtbl.to_list tbl)\n\n  pub let values tbl =\n    List.map (fn (_, v) -> v) (Hashtbl.to_list tbl)\nend\n","stdlib/ref.mml":"module Ref =\n  pub type 'a t = { mut contents: 'a }\n  pub let create v = { contents = v }\n  pub let get r = r.contents\n  pub let set r v = r.contents := v\nend\n","stdlib/dynarray.mml":"module Dynarray =\n  pub type 'a t = { mut arr: 'a array; mut count: int }\n\n  pub let create n default =\n    { arr = Array.make (if n < 16 do 16 else n) default; count = 0 }\n\n  pub let length d = d.count\n\n  pub let get d i =\n    if i < 0 || i >= d.count do failwith \"Dynarray.get: index out of bounds\"\n    else Array.get d.arr i\n\n  pub let set d i v =\n    if i < 0 || i >= d.count do failwith \"Dynarray.set: index out of bounds\"\n    else Array.set d.arr i v\n\n  pub let grow d needed default =\n    let cap = Array.length d.arr in\n    if d.count + needed > cap do\n      let new_cap = Math.max (cap * 2) (d.count + needed) in\n      let new_arr = Array.make new_cap default in\n      let rec copy i =\n        if i < d.count do\n          Array.set new_arr i (Array.get d.arr i);\n          copy (i + 1)\n        else ()\n      in\n      copy 0;\n      d.arr := new_arr\n    else ()\n\n  pub let empty () =\n    { arr = #[]; count = 0 }\n\n  pub let push d v =\n    Dynarray.grow d 1 v;\n    Array.set d.arr d.count v;\n    d.count := d.count + 1\n\n  pub let pop d =\n    if d.count = 0 do failwith \"Dynarray.pop: empty\"\n    else\n      d.count := d.count - 1;\n      Array.get d.arr d.count\n\n  pub let clear d =\n    d.count := 0\n\n  pub let to_list d =\n    let rec collect i acc =\n      if i < 0 do acc\n      else collect (i - 1) (Dynarray.get d i :: acc)\n    in\n    collect (d.count - 1) []\n\n  pub let to_array d =\n    Array.sub d.arr 0 d.count\nend\n","stdlib/set.mml":"type 'a set = ('a, unit) map\n;;\nmodule Set =\n  pub let empty () : 'a set = #{}\n\n  pub let singleton (x : 'a) : 'a set = set x () #{}\n\n  pub let of_list xs : 'a set =\n    List.fold (fn acc x -> set x () acc) #{} xs\n\n  pub let add elem (s : 'a set) : 'a set = set elem () s\n\n  pub let remove elem (s : 'a set) : 'a set = remove elem s\n\n  pub let mem elem (s : 'a set) = has elem s\n\n  pub let size (s : 'a set) = size s\n\n  pub let to_list (s : 'a set) = keys s\n\n  pub let union (s1 : 'a set) (s2 : 'a set) : 'a set =\n    List.fold (fn acc x -> set x () acc) s2 (keys s1)\n\n  pub let inter (s1 : 'a set) (s2 : 'a set) : 'a set =\n    List.fold (fn acc x ->\n      if has x s2 do set x () acc else acc\n    ) (Set.empty ()) (keys s1)\n\n  pub let diff (s1 : 'a set) (s2 : 'a set) : 'a set =\n    List.fold (fn acc x ->\n      if not (has x s2) do set x () acc else acc\n    ) (Set.empty ()) (keys s1)\n\n  pub let is_empty (s : 'a set) = size s = 0\n\n  pub let is_subset (s1 : 'a set) (s2 : 'a set) =\n    List.forall (fn x -> has x s2) (keys s1)\nend\n;;\ninstance Iter (('a, unit) map) 'a =\n  let fold f acc s =\n    let rec go a l = match l with\n      | [] -> a\n      | x :: rest -> go (f a x) rest\n    in go acc (Set.to_list s)\nend\n","stdlib/enum.mml":"module Enum =\n  pub let reduce f xs =\n    -- @partial\n    match xs with\n    | x :: rest -> List.fold f x rest\n\n  pub let sum xs = List.fold (fn a b -> a + b) 0 xs\n\n  pub let count f xs =\n    List.fold (fn acc x -> if f x do acc + 1 else acc) 0 xs\n\n  pub let take n xs =\n    let rec go i acc l =\n      if i >= n do List.rev acc\n      else match l with\n        | [] -> List.rev acc\n        | x :: rest -> go (i + 1) (x :: acc) rest\n    in go 0 [] xs\n\n  pub let drop n xs =\n    let rec go i l =\n      if i >= n do l\n      else match l with\n        | [] -> []\n        | _ :: rest -> go (i + 1) rest\n    in go 0 xs\n\n  pub let take_while f xs =\n    let rec go acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest ->\n        if f x do go (x :: acc) rest\n        else List.rev acc\n    in go [] xs\n\n  pub let drop_while f xs =\n    let rec go l =\n      match l with\n      | [] -> []\n      | x :: rest ->\n        if f x do go rest\n        else l\n    in go xs\n\n  pub let flat_map f xs = List.flatten (List.map f xs)\n\n  pub let each f xs = List.fold (fn _ x -> f x) () xs\n\n  pub let reject f xs = List.filter (fn x -> not (f x)) xs\n\n  pub let enumerate xs = List.mapi (fn i x -> (i, x)) xs\n\n  pub let join sep xs =\n    match xs with\n    | [] -> \"\"\n    | first :: rest ->\n      List.fold (fn acc x -> acc ^ sep ^ x) first rest\n\n  pub let chunk n xs =\n    let rec go acc l =\n      match l with\n      | [] -> List.rev acc\n      | _ -> go (Enum.take n l :: acc) (Enum.drop n l)\n    in go [] xs\n\n  pub let dedup xs =\n    let rec go prev acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest ->\n        if x = prev do go prev acc rest\n        else go x (x :: acc) rest\n    in match xs with\n      | [] -> []\n      | x :: rest -> go x [x] rest\n\n  pub let uniq xs =\n    List.rev (List.fold (fn acc x ->\n      if List.exists (fn y -> y = x) acc do acc\n      else x :: acc\n    ) [] xs)\n\n  pub let scan f init xs =\n    List.rev (List.fold (fn acc x ->\n      match acc with\n      | [] -> [f init x]\n      | prev :: _ -> f prev x :: acc\n    ) [init] xs)\n\n  pub let intersperse sep xs =\n    match xs with\n    | [] -> []\n    | first :: rest ->\n      List.fold (fn acc x -> List.concat acc [sep; x]) [first] rest\n\n  pub let zip_with f xs ys =\n    List.map (fn p -> match p with (a, b) -> f a b) (List.zip xs ys)\n\n  pub let min_by f xs =\n    -- @partial\n    match xs with\n    | x :: rest ->\n      List.fold (fn best y -> if f y < f best do y else best) x rest\n\n  pub let max_by f xs =\n    -- @partial\n    match xs with\n    | x :: rest ->\n      List.fold (fn best y -> if f y > f best do y else best) x rest\n\n  pub let group_by f xs =\n    List.fold (fn m x ->\n      let k = f x in\n      match get k m with\n      | None -> set k [x] m\n      | Some vs -> set k (List.concat vs [x]) m\n    ) #{} xs\nend\n","stdlib/seq.mml":"type 'a seq = ('a -> unit) -> unit\n;;\neffect SeqStop =\n  __seq_stop : unit -> unit\nend\nmodule Seq =\n  pub let range start stop : int seq = fn yield ->\n    let rec go i =\n      if i >= stop do ()\n      else (yield i; go (i + 1))\n    in go start\n\n  pub let of_list xs : 'a seq = fn yield ->\n    let rec go l =\n      match l with\n      | [] -> ()\n      | x :: rest -> yield x; go rest\n    in go xs\n\n  pub let repeat x : 'a seq = fn yield ->\n    let rec go u = yield x; go u\n    in go 0\n\n  pub let iterate seed step : 'a seq = fn yield ->\n    let rec go x = yield x; go (step x)\n    in go seed\n\n  pub let map f s : 'a seq = fn yield ->\n    s (fn x -> yield (f x))\n\n  pub let filter f s : 'a seq = fn yield ->\n    s (fn x -> if f x do yield x else ())\n\n  pub let take n (s : 'a seq) : 'a seq = fn yield ->\n    let mut i = 0 in\n    try\n      s (fn x ->\n        if i >= n do perform __seq_stop ()\n        else (yield x; i := i + 1))\n    with\n    | __seq_stop () -> ()\n\n  pub let take_while f (s : 'a seq) : 'a seq = fn yield ->\n    try\n      s (fn x ->\n        if f x do yield x\n        else perform __seq_stop ())\n    with\n    | __seq_stop () -> ()\n\n  pub let drop n (s : 'a seq) : 'a seq = fn yield ->\n    let mut i = 0 in\n    s (fn x ->\n      if i >= n do yield x\n      else i := i + 1)\n\n  pub let drop_while f (s : 'a seq) : 'a seq = fn yield ->\n    let mut dropping = true in\n    s (fn x ->\n      if dropping do\n        (if f x do () else (dropping := false; yield x))\n      else yield x)\n\n  pub let flat_map (f : 'a -> 'b seq) (s : 'a seq) : 'b seq = fn yield ->\n    s (fn x -> (f x) yield)\n\n  pub let enumerate (s : 'a seq) : 'b seq = fn yield ->\n    let mut i = 0 in\n    s (fn x ->\n      yield (i, x);\n      i := i + 1)\n\n  pub let chunk n (s : 'a seq) : 'b seq = fn yield ->\n    let mut buf = [] in\n    let mut count = 0 in\n    s (fn x ->\n      buf := List.concat buf [x];\n      count := count + 1;\n      if count >= n do\n        (yield buf; buf := []; count := 0)\n      else ());\n    if count > 0 do yield buf else ()\n\n  pub let to_list (s : 'a seq) =\n    let mut acc = [] in\n    s (fn x -> acc := x :: acc);\n    List.rev acc\n\n  pub let fold f init (s : 'a seq) =\n    let mut acc = init in\n    s (fn x -> acc := f acc x);\n    acc\n\n  pub let each (f : 'a -> unit) (s : 'a seq) = s f\n\n  pub let count (s : 'a seq) =\n    let mut n = 0 in\n    s (fn _ -> n := n + 1);\n    n\n\n  pub let sum (s : int seq) =\n    let mut total = 0 in\n    s (fn x -> total := total + x);\n    total\n\n  pub let find f (s : 'a seq) =\n    let mut result = None in\n    let _ = try\n      s (fn x ->\n        if f x do (result := Some x; perform __seq_stop ())\n        else ())\n    with\n    | __seq_stop () -> ()\n    in result\n\n  pub let any f (s : 'a seq) =\n    let mut result = false in\n    let _ = try\n      s (fn x ->\n        if f x do (result := true; perform __seq_stop ())\n        else ())\n    with\n    | __seq_stop () -> ()\n    in result\n\n  pub let all f (s : 'a seq) =\n    let mut result = true in\n    let _ = try\n      s (fn x ->\n        if f x do ()\n        else (result := false; perform __seq_stop ()))\n    with\n    | __seq_stop () -> ()\n    in result\nend\n","stdlib/fmt.mml":"module Fmt =\n  pub let pad_left (n: int) (c: string) (s: string) : string =\n    let len = String.length s in\n    if len >= n do s\n    else\n      let rec pad acc remaining =\n        if remaining <= 0 do acc ^ s\n        else pad (acc ^ c) (remaining - 1)\n      in\n      pad \"\" (n - len)\n\n  pub let pad_right (n: int) (c: string) (s: string) : string =\n    let len = String.length s in\n    if len >= n do s\n    else\n      let rec pad acc remaining =\n        if remaining <= 0 do s ^ acc\n        else pad (acc ^ c) (remaining - 1)\n      in\n      pad \"\" (n - len)\n\n  pub let int_to_hex (n: int) : string =\n    let digits = \"0123456789abcdef\" in\n    if n = 0 do \"0\"\n    else\n      let rec go num acc =\n        if num = 0 do acc\n        else\n          let d = num mod 16 in\n          let d = if d < 0 do d + 16 else d in\n          let ch = String.sub digits d 1 in\n          go (num / 16) (ch ^ acc)\n      in\n      let abs_n = if n < 0 do 0 - n else n in\n      let hex = go abs_n \"\" in\n      if n < 0 do \"-\" ^ hex else hex\n\n  pub let int_to_bin (n: int) : string =\n    if n = 0 do \"0\"\n    else\n      let rec go num acc =\n        if num = 0 do acc\n        else\n          let bit = if num mod 2 = 0 do \"0\" else \"1\" in\n          go (num / 2) (bit ^ acc)\n      in\n      let abs_n = if n < 0 do 0 - n else n in\n      let bin = go abs_n \"\" in\n      if n < 0 do \"-\" ^ bin else bin\n\n  pub let int_to_oct (n: int) : string =\n    if n = 0 do \"0\"\n    else\n      let rec go num acc =\n        if num = 0 do acc\n        else\n          let d = num mod 8 in\n          let d = if d < 0 do d + 8 else d in\n          go (num / 8) (show d ^ acc)\n      in\n      let abs_n = if n < 0 do 0 - n else n in\n      let oct = go abs_n \"\" in\n      if n < 0 do \"-\" ^ oct else oct\n\n  pub let zero_pad (width: int) (s: string) : string =\n    Fmt.pad_left width \"0\" s\nend\n","stdlib/show.mml":"instance Show ('a list) where Show 'a =\n  let show xs = match xs with\n    | [] -> \"[]\"\n    | _ -> \"[\" ^ fold (fn acc x ->\n        if acc = \"\" do show x else acc ^ \"; \" ^ show x\n      ) \"\" xs ^ \"]\"\nend\n\ninstance Show ('a array) where Show 'a =\n  let show arr =\n    if array_length arr = 0 do \"#[]\"\n    else \"#[\" ^ fold (fn acc x ->\n      if acc = \"\" do show x else acc ^ \"; \" ^ show x\n    ) \"\" arr ^ \"]\"\nend\n\ninstance Show ('a option) where Show 'a =\n  let show opt = match opt with\n    | None -> \"None\"\n    | Some x -> \"Some \" ^ show x\nend\n\ninstance Show ('a * 'b) where Show 'a, Show 'b =\n  let show p =\n    let (a, b) = p in\n    \"(\" ^ show a ^ \", \" ^ show b ^ \")\"\nend\n\ninstance Show ('a * 'b * 'c) where Show 'a, Show 'b, Show 'c =\n  let show p =\n    let (a, b, c) = p in\n    \"(\" ^ show a ^ \", \" ^ show b ^ \", \" ^ show c ^ \")\"\nend\n","stdlib/iter_map.mml":"instance Iter (('k, 'v) map) ('k * 'v) =\n  let fold f acc m =\n    let rec go a l = match l with\n      | [] -> a\n      | x :: rest -> go (f a x) rest\n    in go acc (to_list m)\nend\n","stdlib/compat.mml":"let compare a b =\n  if a < b do -1\n  else if a > b do 1\n  else 0\n\nlet int_of_string s =\n  match String.to_int s with\n  | Some n -> n\n  | None -> failwith $\"int_of_string: invalid argument \\\"{s}\\\"\"\n\nlet float_of_string s =\n  match String.to_float s with\n  | Some f -> f\n  | None -> failwith $\"float_of_string: invalid argument \\\"{s}\\\"\"\n\nlet max (a : int) (b : int) : int = if a > b do a else b\n\nlet min (a : int) (b : int) : int = if a < b do a else b\n\nlet fst (a, _) = a\n\nlet snd (_, b) = b\n\nlet list_find f xs =\n  match List.find f xs with\n  | Some x -> x\n  | None -> failwith \"list_find: not found\"\n"};
 
 // ---- Public API ----
 global.MiniML = {
   loadBundle: loadBundle,
+  loadBundleBinary: loadBundleBinary,
   ppValue: ppValue,
   RuntimeError: RuntimeError,
   VUNIT: VUNIT,
+  STDLIB_SOURCES: STDLIB_SOURCES,
 };
 
 })(typeof window !== "undefined" ? window : globalThis);

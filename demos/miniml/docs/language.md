@@ -2,7 +2,7 @@
 
 MiniML is a statically-typed functional programming language that blends ML's powerful type inference with Haskell-style type classes and algebraic effects. Programs are fully type-checked at compile time with almost no annotations required — the compiler infers types through Hindley-Milner unification — while type classes provide ad-hoc polymorphism for operators and common interfaces.
 
-What makes MiniML distinctive is how it combines features that rarely coexist in a single language: structural record subtyping (like TypeScript), type classes with dictionary passing (like Haskell), algebraic effects with first-class continuations (like Eff/Koka), and controlled mutability (like OCaml) — all unified under a clean, expression-oriented syntax.
+What makes MiniML distinctive is how it combines features that rarely coexist in a single language: structural records with row polymorphism (like TypeScript), polymorphic variants (like OCaml), type classes with dictionary passing and functional dependencies (like Haskell), algebraic effects with first-class continuations (like Eff/Koka), and controlled mutability (like OCaml) — all unified under a clean, expression-oriented syntax.
 
 ## A Taste of the Language
 
@@ -29,7 +29,9 @@ let tree =
 print $"tree: {show tree}"
 
 -- Flatten to sorted list using algebraic effects
-effect Yield = yield : int -> unit
+effect Yield =
+  yield : int -> unit
+end
 
 let rec emit t =
   match t with
@@ -69,15 +71,16 @@ let rec (type 'a) eval (e : 'a expr) : 'a =
 ## Key Features
 
 - **Type inference** — Types are inferred; annotations are optional and only needed for disambiguation
-- **Type classes** — `Num`, `Eq`, `Ord`, `Show`, `Iter`, and more, with `where` constraints and `deriving`
+- **Type classes** — `Num`, `Eq`, `Ord`, `Show`, `Iter`, `Index`, and more, with `where` constraints, `deriving`, and functional dependencies
 - **GADTs** — Generalized Algebraic Data Types for encoding richer invariants in constructors, with polymorphic recursion via `(type 'a)` for type-safe evaluators, formatters, and more
 - **Algebraic effects** — First-class effect handlers with one-shot and multi-shot continuations; effects are tracked in the type system with optional explicit annotations (`/ IO`, `/ pure`) and unhandled effects are caught at compile time
-- **Pattern matching** — Exhaustiveness-checked, with guards, or-patterns, as-patterns, and destructuring
-- **Structural records** — Width subtyping: a function expecting `{x: int}` accepts `{x: int; y: string}`
+- **Pattern matching** — Exhaustiveness-checked, with guards, or-patterns, as-patterns, pin patterns (`^x`), and destructuring
+- **Structural records** — Row polymorphism with width subtyping: a function expecting `{x: int; ..}` accepts any record with an `x` field
+- **Polymorphic variants** — Structural variant types (`` `Foo ``, `` `Bar 42 ``) that work without type declarations, with exact, lower-bound, and upper-bound type annotations
 - **Modules** — Namespacing with `pub`/private visibility, opaque types, selective `open`
-- **Rich collections** — Lists, arrays, maps, and sets with literal syntax and iteration support
+- **Rich collections** — Lists, arrays, maps, and sets with literal syntax, iteration support, map update syntax (`#{m with k: v}`), and uniform indexing (`.[expr]`)
 - **Controlled mutability** — `let mut` for mutable locals, `mut` fields in records, `:=` for assignment
-- **Looping** — Unified `for` syntax: conditional loops (`for cond do ... end`), iterator-based `for`/`in` loops, fold loops (`for x in xs with acc = init do ... end`), infinite loops (`for do ... end`), and while-let (`for let pat = expr do ... end`)
+- **Looping** — Unified `for` syntax: conditional loops, `for`/`in` with pattern destructuring (`for (k, v) in pairs do ... end`), fold loops, infinite loops, and while-let
 - **Control flow** — `break`, `continue`, and `return` as loop control primitives
 - **Mutual recursion** — `let rec ... and ...` for functions, `type ... and ...` for types
 - **Lazy sequences** — Infinite sequences powered by algebraic effects under the hood

@@ -62,7 +62,7 @@ MiniML has the following primitive types:
 | `bool`   | Boolean                    | `true`, `false`              |
 | `string` | UTF-8 string               | `"hello"`, `$"x = {x}"`     |
 | `byte`   | Single byte (0-255)        | `#41`, byte literals         |
-| `rune`   | Unicode code point         | `` `a ``, `` `\n ``         |
+| `rune`   | Unicode code point         | `'a'`, `'\n'`               |
 | `unit`   | The unit type              | `()`                         |
 
 Compound types are built from these:
@@ -500,6 +500,93 @@ In MiniML, records are structural -- compatibility is determined purely by the f
 
 MiniML's structural records are similar in spirit to TypeScript's structural typing, but in a fully type-inferred setting. You get the flexibility of structural types without needing to declare interfaces.
 
+### Row Polymorphism and Open Records
+
+MiniML supports explicit row polymorphism through open record type annotations. The `..` suffix in a record type annotation indicates that the record may contain additional fields beyond those listed:
+
+```
+let get_x (r : {x: int; ..}) : int = r.x
+
+get_x {x = 1; y = 2}               -- works
+get_x {x = 10; y = 20; z = 30}     -- works
+```
+
+Without `..`, a record type annotation is closed and matches only records with exactly those fields. With `..`, the function accepts any record that has at least the specified fields with compatible types.
+
+This is especially useful when writing functions that operate on a subset of fields from larger records:
+
+```
+let name_and_age (r : {name: string; age: int; ..}) : string =
+  $"{r.name} is {r.age}"
+
+name_and_age {name = "Alice"; age = 30; role = "admin"}
+-- "Alice is 30"
+```
+
+Row polymorphism is implemented through evidence passing in the typechecker. When a function with an open record type is compiled, the compiler tracks which fields are accessed and threads proof that the record has those fields through the generated code. This allows open record constraints to work with polymorphic functions and type class dispatch without losing type safety.
+
+In practice, when you write a function that just accesses record fields without a type annotation, MiniML already infers a structurally-typed record -- the `..` annotation simply makes this explicit.
+
+## Polymorphic Variants
+
+Polymorphic variants are structural variant types that do not require a `type` declaration. While named variants (`type color = Red | Green | Blue`) are nominal -- tied to a specific type definition -- polymorphic variants are structural, identified by their tag name alone.
+
+### Syntax
+
+Polymorphic variant values are written with a backtick prefix:
+
+```
+`Foo                    -- nullary tag
+`Bar 42                 -- tag with an int payload
+`Name "hello"           -- tag with a string payload
+```
+
+### Type Annotations
+
+Polymorphic variant types are written in square brackets with backtick-prefixed tags:
+
+```
+[`Foo | `Bar]                     -- exact: only `Foo or `Bar
+[`Foo of int | `Bar of string]    -- with payload types
+[> `Foo | `Bar]                   -- lower bound (at least these tags)
+[< `Foo | `Bar]                   -- upper bound (at most these tags)
+```
+
+The three kinds of bounds mirror OCaml's polymorphic variant types:
+
+- **Exact** `[`A | `B]` -- the value is one of exactly the listed tags
+- **Lower bound** `[> `A | `B]` -- the value is one of the listed tags, and the type may be widened to include more
+- **Upper bound** `[< `A | `B]` -- the value is one of at most the listed tags (useful as function input types)
+
+### Pattern Matching
+
+Polymorphic variants can be pattern matched like regular constructors:
+
+```
+match `B 42 with
+| `A -> 0
+| `B n -> n + 1         -- 43
+```
+
+### Coercion
+
+Use `:>` to widen a polymorphic variant to a type with more tags:
+
+```
+let x = `A in
+(x :> [> `A | `B])      -- widen to include `B
+```
+
+### When to Use Polymorphic Variants
+
+Polymorphic variants are useful when:
+
+- You want lightweight, ad-hoc alternatives without declaring a named type
+- You need types to compose across module boundaries without a shared definition
+- You are working with open-ended sets of cases (like error types)
+
+For well-defined, closed data types, named variants are still preferred -- they provide exhaustiveness checking, clearer error messages, and `deriving` support.
+
 ## Type Classes
 
 MiniML borrows type classes from Haskell as its mechanism for ad-hoc polymorphism. Type classes let you define a set of operations and then provide implementations for different types. The compiler automatically selects the right implementation based on the types involved.
@@ -512,9 +599,11 @@ A class declaration specifies a set of method signatures parameterized by one or
 class Eq 'a =
   (=) : 'a -> 'a -> bool
   (<>) : 'a -> 'a -> bool
+end
 
 class Show 'a =
   show : 'a -> string
+end
 
 class Num 'a =
   (+) : 'a -> 'a -> 'a
@@ -522,6 +611,7 @@ class Num 'a =
   (*) : 'a -> 'a -> 'a
   (/) : 'a -> 'a -> 'a
   neg : 'a -> 'a
+end
 ```
 
 Class methods can also include effect variables. This allows instances to be either pure or effectful depending on the type:
@@ -529,6 +619,7 @@ Class methods can also include effect variables. This allows instances to be eit
 ```
 class Apply 'f =
   do_thing : 'a -> 'a / 'e
+end
 ```
 
 Here `'e` is an effect variable -- a concrete instance can fill it in with specific effects or with `pure`, so the same class can accommodate both pure and effectful implementations.
@@ -541,9 +632,11 @@ An instance provides implementations of a class's methods for a specific type:
 instance Eq int =
   let (=) a b = a = b
   let (<>) a b = a <> b
+end
 
 instance Show int =
   let show x = string_of_int x
+end
 ```
 
 Once an instance exists, the class methods work on that type:
@@ -568,6 +661,7 @@ instance Num vec2 =
   let (*) a b = { x = a.x * b.x; y = a.y * b.y }
   let (/) a b = { x = a.x / b.x; y = a.y / b.y }
   let neg a = { x = 0 - a.x; y = 0 - a.y }
+end
 
 let v1 = { x = 1; y = 2 }
 let v2 = { x = 3; y = 4 }
@@ -583,9 +677,11 @@ Classes can take multiple type parameters, enabling relationships between types:
 ```
 class Convert 'a 'b =
   convert : 'a -> 'b
+end
 
 instance Convert int string =
   let convert (x: int) = string_of_int x
+end
 
 convert 42    -- "42"
 ```
@@ -595,6 +691,7 @@ A more involved example -- the `Iter` class relates a collection type to its ele
 ```
 class Iter 'a 'b =
   fold : ('c -> 'b -> 'c) -> 'c -> 'a -> 'c
+end
 
 instance Iter ('a list) 'a =
   let fold f acc xs =
@@ -602,9 +699,48 @@ instance Iter ('a list) 'a =
       | [] -> a
       | x :: rest -> go (f a x) rest
     in go acc xs
+end
 ```
 
 Note the extra type variable `'c` in `fold` -- class methods can introduce their own type variables beyond the class parameters.
+
+### Functional Dependencies
+
+Multi-parameter type classes can be ambiguous -- when calling a method, the compiler may not know which type parameter to use for instance selection. Functional dependencies solve this by declaring that some type parameters uniquely determine others.
+
+A functional dependency is written with `where` after the type parameters in a class definition:
+
+```
+class Iter 'c 'e where 'c -> 'e =
+  fold : ('a -> 'e -> 'a) -> 'a -> 'c -> 'a
+end
+```
+
+The `'c -> 'e` dependency says: given the collection type `'c`, the element type `'e` is uniquely determined. So for `int list`, the element type must be `int` -- there is no ambiguity.
+
+Without functional dependencies, calling `fold (+) 0 [1; 2; 3]` would be ambiguous because the compiler would not know whether `'e` is `int`, `string`, or some other type. With `'c -> 'e`, once `'c` is resolved to `int list`, the compiler knows `'e = int` and can select the right instance.
+
+The built-in `Map` class uses a similar pattern:
+
+```
+class Map 'm 'k 'v where 'm -> 'k 'v =
+  get : 'k -> 'm -> 'v option
+  set : 'k -> 'v -> 'm -> 'm
+  ...
+end
+```
+
+Here the map type `'m` determines both the key type `'k` and value type `'v`. This allows `get "a" m` to work without ambiguity when `m : (string, int) map`.
+
+The `Index` class also uses a functional dependency:
+
+```
+class Index 'c 'k 'v where 'c -> 'k 'v =
+  at : 'k -> 'c -> 'v
+end
+```
+
+This powers the `.[expr]` indexing syntax. For `arr.[i]`, the compiler knows the array type determines the key type (int) and element type, so the right `at` implementation is selected automatically.
 
 ### `where` Constraints
 
@@ -637,6 +773,7 @@ type 'a box = Box of 'a
 instance Show ('a box) where Show 'a =
   let show b = match b with
     | Box x -> "Box(" ^ show x ^ ")"
+end
 
 show (Box 42)         -- "Box(42)"
 show (Box (Box 7))    -- "Box(Box(7))"
@@ -683,16 +820,17 @@ Note that `deriving` cannot be used with GADT types. Attempting to do so produce
 
 MiniML comes with several built-in type classes:
 
-| Class      | Methods                                   | Instances                                   |
-|------------|-------------------------------------------|---------------------------------------------|
-| `Num`      | `(+)`, `(-)`, `(*)`, `(/)`, `neg`        | `int`, `float`                              |
-| `Eq`       | `(=)`, `(<>)`                             | `int`, `float`, `string`, `bool`, `byte`, `rune` |
-| `Ord`      | `(<)`, `(>)`, `(<=)`, `(>=)`             | `int`, `float`, `string`, `byte`, `rune`    |
-| `Show`     | `show`                                    | `int`, `float`, `string`, `bool`, `unit`, `byte`, `rune`, `list`, `array`, `option`, tuples |
-| `Bitwise`  | `land`, `lor`, `lxor`, `lsl`, `lsr`, `lnot` | `int`                                    |
-| `Iter`     | `fold`                                    | `list`, `array`, `map`, `set`               |
-| `Map`      | `of_list`, `get`, `set`, `has`, `remove`, `size`, `keys`, `values`, `to_list` | `('k, 'v) map` |
-| `Hash`     | `hash`                                    | `int`, `string`, `bool`, `byte`, `rune`     |
+| Class      | Methods                                   | Fundeps | Instances                                   |
+|------------|-------------------------------------------|---------|---------------------------------------------|
+| `Num`      | `(+)`, `(-)`, `(*)`, `(/)`, `neg`        | --      | `int`, `float`                              |
+| `Eq`       | `(=)`, `(<>)`                             | --      | `int`, `float`, `string`, `bool`, `byte`, `rune` |
+| `Ord`      | `(<)`, `(>)`, `(<=)`, `(>=)`             | --      | `int`, `float`, `string`, `byte`, `rune`    |
+| `Show`     | `show`                                    | --      | `int`, `float`, `string`, `bool`, `unit`, `byte`, `rune`, `list`, `array`, `option`, tuples |
+| `Bitwise`  | `land`, `lor`, `lxor`, `lsl`, `lsr`, `lnot` | --   | `int`                                       |
+| `Iter`     | `fold`                                    | `'c -> 'e` | `list`, `array`, `map`, `set`            |
+| `Map`      | `of_list`, `get`, `set`, `has`, `remove`, `size`, `keys`, `values`, `to_list` | `'m -> 'k 'v` | `('k, 'v) map` |
+| `Index`    | `at`                                      | `'c -> 'k 'v` | `'a array`, `string`, `('k, 'v) map` |
+| `Hash`     | `hash`                                    | --      | `int`, `string`, `bool`, `byte`, `rune`     |
 
 The `Iter` class is particularly powerful because `for` loops desugar to `fold` calls. This means any type with an `Iter` instance automatically supports `for` loops:
 
@@ -707,6 +845,7 @@ instance Iter tree int =
         let (v, left, right) = payload in
         go (f (go a left) v) right
     in go acc t
+end
 
 let my_tree = Node (2, Node (1, Leaf, Leaf), Node (3, Leaf, Leaf))
 
@@ -723,6 +862,7 @@ When you write:
 ```
 instance Show int =
   let show x = string_of_int x
+end
 ```
 
 The compiler generates something like:
@@ -773,6 +913,7 @@ show "hello"      -- compiler picks Show string
 effect State =
   get : unit -> int
   put : int -> unit
+end
 
 handle
   let x = perform get () in
