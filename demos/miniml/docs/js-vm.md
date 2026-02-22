@@ -37,7 +37,7 @@ dune exec bin/main.exe -- --emit-json program.ml > js/sample_bundle.json
 open js/index.html
 ```
 
-The playground page lets you paste a JSON bundle and run it in the browser.
+The playground includes the self-hosted compiler, syntax highlighting, sample programs, and a built-in docs viewer. See [Web Playground](#web-playground) below.
 
 ## JSON Bundle Format
 
@@ -143,7 +143,7 @@ When loading a bundle, the JS VM:
 | `js/index.html` | Browser playground page |
 | `js/test.js` | Test harness (107 tests) |
 | `js/browser.js` | Build script for browser bundle |
-| `js/miniml.bundle.js` | Generated browser bundle (~40 KB) |
+| `js/miniml.bundle.js` | Generated browser bundle (~97 KB) |
 
 ## Capturing Print Output
 
@@ -161,19 +161,26 @@ globalThis._vmOutput = null;
 
 After loading `miniml.bundle.js`, the `MiniML` global provides:
 
-```javascript
-MiniML.loadBundle(jsonString)  // Execute a JSON bundle, returns result value
-MiniML.ppValue(value)          // Format a value as a string
-MiniML.RuntimeError            // Error class for runtime errors
-MiniML.VUNIT                   // The unit value
-```
+| Function / Property | Description |
+|---------------------|-------------|
+| `loadBundle(jsonString)` | Execute a JSON bundle, returns result value |
+| `loadBundleBinary(arrayBuffer)` | Execute a binary `.mmlb` bundle |
+| `callClosure(vmInst, closure, arg)` | Call a closure with one argument on an existing VM instance |
+| `ppValue(value)` | Format a value as a string |
+| `RuntimeError` | Error class for runtime errors |
+| `VUNIT` | The unit value |
+| `STDLIB_SOURCES` | Embedded stdlib source files (for the self-hosted compiler) |
+| `resetProfile()` | Clear opcode execution counters |
+| `dumpProfile()` | Print opcode execution statistics |
+
+The `callClosure` function creates a fresh fiber on the given VM and executes the closure. This is used by the canvas animation loop to call frame functions after the main program has finished.
 
 ## Limitations
 
 - **IO/Sys**: File operations (`IO.read_file`, `IO.write_file`) are Node.js only. In the browser, they throw errors.
 - **Runtime.eval**: Not supported in the JS VM (requires the OCaml compiler).
 - **Integer semantics**: JS uses IEEE 754 doubles (safe integers up to 2^53) vs OCaml's 63-bit integers. This is fine for most programs.
-- **Compilation**: The OCaml compiler is still needed to produce JSON bundles. The JS VM only handles execution.
+- **Compilation**: JSON bundles can be produced by either the OCaml compiler (`--emit-json`) or the self-hosted compiler running in the JS VM (used by the web playground).
 
 ## Running Tests
 
@@ -204,3 +211,116 @@ When a new native function is added to the OCaml side:
    ```
 
 4. Regenerate the browser bundle: `node js/browser.js`
+
+## Canvas API
+
+The JS VM provides canvas drawing and input functions for building interactive graphical applications. These are browser-only — they are registered in Node.js but will error if called without a canvas context.
+
+To use them, declare the functions as externs in your MiniML program:
+
+```
+extern Canvas.init : int -> int -> unit
+extern Canvas.clear : string -> unit
+extern Canvas.fill_rect : float -> float -> float -> float -> string -> unit
+extern Canvas.stroke_rect : float -> float -> float -> float -> string -> unit
+extern Canvas.fill_circle : float -> float -> float -> string -> unit
+extern Canvas.draw_text : string -> float -> float -> string -> unit
+extern Canvas.set_font : string -> unit
+extern Canvas.mouse_x : unit -> float
+extern Canvas.mouse_y : unit -> float
+extern Canvas.mouse_down : unit -> bool
+extern Canvas.mouse_clicked : unit -> bool
+extern Canvas.start_app : (unit -> 'a) -> ('a -> 'a) -> unit
+```
+
+### Drawing Functions
+
+| Function | Description |
+|----------|-------------|
+| `Canvas.init w h` | Initialize canvas with given width and height (pixels) |
+| `Canvas.clear color` | Fill entire canvas with a color (e.g., `"#1a202c"`) |
+| `Canvas.fill_rect x y w h color` | Draw a filled rectangle |
+| `Canvas.stroke_rect x y w h color` | Draw a rectangle outline (1px stroke) |
+| `Canvas.fill_circle x y radius color` | Draw a filled circle |
+| `Canvas.draw_text text x y color` | Draw text at position (uses `textBaseline = "top"`) |
+| `Canvas.set_font font` | Set the font (e.g., `"bold 16px sans-serif"`) |
+
+### Input Functions
+
+| Function | Description |
+|----------|-------------|
+| `Canvas.mouse_x ()` | Current mouse X position (float) |
+| `Canvas.mouse_y ()` | Current mouse Y position (float) |
+| `Canvas.mouse_down ()` | True while mouse button is held |
+| `Canvas.mouse_clicked ()` | True for exactly one frame per click |
+
+### App Lifecycle
+
+`Canvas.start_app init_fn frame_fn` registers an interactive application using a two-phase architecture:
+
+1. **Setup phase**: The MiniML program calls `Canvas.start_app` which stores the two closures and returns. The VM finishes normally.
+2. **Animation phase**: After execution completes, the playground detects the stored closures and starts a `requestAnimationFrame` loop:
+   - Calls `init_fn ()` once to get the initial state
+   - Calls `frame_fn state` each frame, threading the returned state to the next frame
+
+This pattern enables interactive applications without making the synchronous VM async:
+
+```
+let init () =
+  Canvas.init 400 300;
+  { count = 0 }
+
+let frame state =
+  Canvas.clear "#1a202c";
+  Canvas.draw_text $"Count: {state.count}" 20.0 20.0 "#FFCC66";
+  { count = state.count + 1 }
+
+let () = Canvas.start_app init frame
+```
+
+### Additional Math Functions
+
+These complement the `Math` stdlib module with trigonometric functions:
+
+```
+extern __math_sin : float -> float
+extern __math_cos : float -> float
+```
+
+The stdlib already provides `Math.sqrt`, `Math.pow`, `Math.floor`, `Math.ceil`, `Math.round`, `Math.abs`, `Math.min`, and `Math.max`.
+
+## Web Playground
+
+The web playground (`js/index.html`) runs the self-hosted MiniML compiler entirely in the browser. No server is required.
+
+### How It Works
+
+The playground uses a two-stage execution model:
+
+```
+User code ──→ Self-hosted compiler ──→ JSON bundle ──→ JS VM ──→ Output
+              (runs in JS VM)          (in memory)
+```
+
+1. **Compile**: The self-hosted compiler (`compiler.json`) is loaded as a JSON bundle and executed by the JS VM. It reads the user's source code via `globalThis._vmReadFile` and writes the compiled JSON to `globalThis._vmOutput`.
+2. **Run**: The compiled JSON is passed to `MiniML.loadBundle()` which deserializes and executes it.
+3. **Canvas** (optional): If the program called `Canvas.start_app`, the playground detects the registered closures and starts an animation loop using `MiniML.callClosure`.
+
+### Features
+
+- **Syntax highlighting** with Ayu Mirage color scheme
+- **17 sample programs** including interactive canvas demos
+- **Optimization toggle** — passes `--no-optimize` to the self-hosted compiler when unchecked
+- **Timing display** — shows compilation and execution time separately
+- **Docs tab** — built-in documentation viewer (renders markdown from `docs/`)
+- **Keyboard shortcuts** — Ctrl/Cmd+Enter to run, Tab for indentation
+
+### Rebuilding
+
+After modifying `js/vm.js`, `js/builtins.js`, or `js/loader.js`:
+
+```bash
+node js/browser.js
+```
+
+This regenerates `js/miniml.bundle.js` by combining all JS sources, stubbing Node.js-only builtins, and embedding stdlib sources for the self-hosted compiler.
