@@ -74,6 +74,25 @@
     border-radius: 4px; background: var(--bg-lift); color: var(--fg); cursor: pointer;
   }
   .spacer { flex: 1; }
+  .toggle-label {
+    display: flex; align-items: center; gap: 6px; font-size: 0.8em;
+    color: var(--fg-ui); cursor: pointer; user-select: none;
+  }
+  .toggle-label input {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border: 1.5px solid var(--fg-dim);
+    border-radius: 3px; background: var(--bg-sunk); cursor: pointer;
+    display: grid; place-content: center; margin: 0;
+  }
+  .toggle-label input:checked {
+    background: var(--accent); border-color: var(--accent);
+  }
+  .toggle-label input:checked::after {
+    content: ''; width: 8px; height: 5px;
+    border-left: 2px solid var(--bg); border-bottom: 2px solid var(--bg);
+    transform: rotate(-45deg) translate(0.5px, -0.5px);
+  }
+  .toggle-label input:hover { border-color: var(--fg-ui); }
   .status { font-size: 0.8em; color: var(--fg-ui); }
   .error { color: var(--error); }
   .compile-error { color: var(--orange); }
@@ -243,9 +262,21 @@ let () = print $"fib(20) = {fib 20}"
         <option value="evaluator">Expression Evaluator</option>
         <option value="gadts">GADTs</option>
         <option value="fundeps">Functional Dependencies</option>
+        <option value="canvas">Canvas GUI</option>
+        <option value="framework">Framework GUI</option>
+        <option value="layout">Layout Engine</option>
       </select>
       <div class="spacer"></div>
+      <label class="toggle-label"><input type="checkbox" id="optimizeToggle"> Optimize</label>
       <span id="statusText" class="status"></span>
+    </div>
+
+    <div id="canvasContainer" class="panel" style="display:none">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <label style="margin-bottom:0">Canvas</label>
+        <button id="stopBtn" style="display:none; padding:4px 12px; font-size:12px; background:var(--red); color:var(--bg);">Stop</button>
+      </div>
+      <canvas id="appCanvas" style="display:block; background:#000; border-radius:4px; margin-top:8px; max-width:100%;"></canvas>
     </div>
 
     <div class="panel">
@@ -274,6 +305,61 @@ const clearBtn = document.getElementById("clearBtn");
 const samples = document.getElementById("samples");
 const statusText = document.getElementById("statusText");
 const sourceHighlight = document.getElementById("sourceHighlight");
+const appCanvas = document.getElementById("appCanvas");
+const canvasContainer = document.getElementById("canvasContainer");
+const stopBtn = document.getElementById("stopBtn");
+
+// --- Canvas App Support ---
+
+let animFrameId = null;
+let mouseWasDown = false;
+globalThis._canvasMouseX = 0;
+globalThis._canvasMouseY = 0;
+globalThis._canvasMouseDown = false;
+globalThis._canvasMouseClicked = false;
+globalThis._canvasCtx = null;
+globalThis._canvasApp = null;
+
+globalThis._canvasInit = function(w, h) {
+  const dpr = window.devicePixelRatio || 1;
+  appCanvas.width = w * dpr;
+  appCanvas.height = h * dpr;
+  canvasContainer.style.display = "block";
+
+  const ctx = appCanvas.getContext("2d");
+  globalThis._canvasCtx = ctx;
+  ctx.scale(dpr, dpr);
+
+  appCanvas.style.width = `${w}px`;
+  appCanvas.style.height = `${h}px`;
+};
+
+appCanvas.addEventListener("mousemove", (e) => {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = appCanvas.getBoundingClientRect();
+  const scaleX = appCanvas.width / (rect.width * dpr);
+  const scaleY = appCanvas.height / (rect.height * dpr);
+  globalThis._canvasMouseX = (e.clientX - rect.left) * scaleX;
+  globalThis._canvasMouseY = (e.clientY - rect.top) * scaleY;
+});
+appCanvas.addEventListener("mousedown", () => { globalThis._canvasMouseDown = true; });
+appCanvas.addEventListener("mouseup", () => { globalThis._canvasMouseDown = false; });
+appCanvas.addEventListener("mouseleave", () => { globalThis._canvasMouseDown = false; });
+
+function stopCanvasApp() {
+  if (animFrameId !== null) {
+    cancelAnimationFrame(animFrameId);
+    animFrameId = null;
+  }
+  stopBtn.style.display = "none";
+  globalThis._canvasApp = null;
+  globalThis._canvasCtx = null;
+}
+
+stopBtn.addEventListener("click", () => {
+  stopCanvasApp();
+  appendOutput("Canvas app stopped.", "info");
+});
 
 // --- Syntax Highlighting ---
 
@@ -486,6 +572,13 @@ async function loadCompiler() {
 loadCompiler();
 
 async function runProgram() {
+  // Clean up any running canvas app
+  stopCanvasApp();
+  canvasContainer.style.display = "none";
+  globalThis._canvasApp = null;
+  globalThis._canvasMouseClicked = false;
+  mouseWasDown = false;
+
   output.textContent = "";
   runBtn.disabled = true;
 
@@ -509,7 +602,10 @@ async function runProgram() {
   await new Promise(r => setTimeout(r, 10));
   const compileOutput = [];
 
-  globalThis._vmArgs = ["compiler", "--emit-json", "input.mml"];
+  const optimize = document.getElementById("optimizeToggle").checked;
+  globalThis._vmArgs = optimize
+    ? ["compiler", "--emit-json", "input.mml"]
+    : ["compiler", "--emit-json", "--no-optimize", "input.mml"];
   globalThis._vmReadFile = (filename) => {
     if (filename === "input.mml") return code;
     if (MiniML.STDLIB_SOURCES[filename]) return MiniML.STDLIB_SOURCES[filename];
@@ -572,6 +668,48 @@ async function runProgram() {
       appendOutput("Error: " + e.message, "error");
     }
     appendOutput(`\n--- compiled in ${compileTime}ms, failed in ${runTime}ms ---`, "timing");
+  }
+
+  // Stage 3: Start canvas animation loop if app was registered
+  if (globalThis._canvasApp) {
+    const { initFn, frameFn } = globalThis._canvasApp;
+    const vmInst = globalThis._vmInstance;
+    stopBtn.style.display = "inline-block";
+
+    // Keep _vmOutput active so print inside frame functions shows in output
+    // globalThis._vmOutput stays set
+
+    let state;
+    try {
+      state = MiniML.callClosure(vmInst, initFn, MiniML.VUNIT);
+    } catch (e) {
+      appendOutput("Canvas init error: " + e.message, "error");
+      stopCanvasApp();
+      globalThis._vmOutput = null;
+      runBtn.disabled = false;
+      return;
+    }
+
+    function canvasFrame() {
+      // Update click state: true for exactly one frame on mouse-down transition
+      const isDown = globalThis._canvasMouseDown;
+      globalThis._canvasMouseClicked = isDown && !mouseWasDown;
+      mouseWasDown = isDown;
+
+      try {
+        state = MiniML.callClosure(vmInst, frameFn, state);
+      } catch (e) {
+        appendOutput("Canvas frame error: " + e.message, "error");
+        stopCanvasApp();
+        globalThis._vmOutput = null;
+        runBtn.disabled = false;
+        return;
+      }
+      animFrameId = requestAnimationFrame(canvasFrame);
+    }
+    animFrameId = requestAnimationFrame(canvasFrame);
+    runBtn.disabled = false;
+    return;
   }
 
   globalThis._vmOutput = null;
@@ -1262,6 +1400,617 @@ let joined = for name in to_list names with acc = "" do
 end
 let () = print $"joined: {joined}"
 `,
+  canvas: `-- Interactive Canvas Demo
+-- Elm architecture (init/frame), immediate-mode widgets,
+-- records, string interpolation, closures, extern declarations
+
+-- Canvas API declarations (browser-provided externs)
+extern Canvas.init : int -> int -> unit
+extern Canvas.clear : string -> unit
+extern Canvas.fill_rect : float -> float -> float -> float -> string -> unit
+extern Canvas.stroke_rect : float -> float -> float -> float -> string -> unit
+extern Canvas.fill_circle : float -> float -> float -> string -> unit
+extern Canvas.draw_text : string -> float -> float -> string -> unit
+extern Canvas.set_font : string -> unit
+extern Canvas.mouse_x : unit -> float
+extern Canvas.mouse_y : unit -> float
+extern Canvas.mouse_down : unit -> bool
+extern Canvas.mouse_clicked : unit -> bool
+extern Canvas.start_app : (unit -> 'a) -> ('a -> 'a) -> unit
+extern __math_sin : float -> float
+extern __math_cos : float -> float
+
+let pi = 3.14159265
+
+-- Immediate-mode button: draws itself, returns true if clicked
+let button x y w h label =
+  let mx = Canvas.mouse_x () in
+  let my = Canvas.mouse_y () in
+  let hover = mx >= x && mx < x + w && my >= y && my < y + h in
+  Canvas.fill_rect x y w h (if hover do "#3D4555" else "#2A3040");
+  if hover do Canvas.stroke_rect x y w h "#FFCC66" end;
+  Canvas.set_font "15px monospace";
+  Canvas.draw_text label (x + 10.0) (y + 8.0)
+    (if hover do "#FFCC66" else "#CCCAC2");
+  hover && Canvas.mouse_clicked ()
+
+-- Application state
+type state = {
+  count: int;
+  frame: int;
+  message: string
+}
+
+-- Initialize canvas and return starting state
+let init () =
+  Canvas.init 500 400;
+  { count = 0; frame = 0; message = "Click the buttons!" }
+
+-- Frame function: draws UI, handles input, returns new state
+let frame s =
+  Canvas.clear "#1a202c";
+
+  -- Title
+  Canvas.set_font "bold 24px sans-serif";
+  Canvas.draw_text "MiniML Canvas Demo" 20.0 16.0 "#FFCC66";
+
+  -- Counter display
+  Canvas.set_font "20px monospace";
+  Canvas.draw_text $"Count: {s.count}" 20.0 60.0 "#E2E8F0";
+
+  -- Buttons (immediate mode: draw + detect click in one call)
+  let inc = button 20.0 92.0 100.0 32.0 "  + Add" in
+  let dec = button 130.0 92.0 100.0 32.0 "  - Sub" in
+  let rst = button 240.0 92.0 100.0 32.0 "  Reset" in
+
+  -- Progress bar
+  let bar_w = 340.0 in
+  let fill = float_of_int (s.count mod 21) / 20.0 in
+  let fill = if fill < 0.0 do 0.0 - fill else fill in
+  Canvas.fill_rect 20.0 140.0 bar_w 16.0 "#2D3748";
+  Canvas.fill_rect 20.0 140.0 (bar_w * fill) 16.0
+    (if s.count >= 0 do "#48BB78" else "#FC8181");
+  Canvas.stroke_rect 20.0 140.0 bar_w 16.0 "#4A5568";
+
+  -- Animated orbiting circles
+  let t = float_of_int s.frame / 60.0 in
+  let cx = 250.0 in
+  let cy = 250.0 in
+  -- Draw orbit path
+  Canvas.stroke_rect (cx - 80.0) (cy - 80.0) 160.0 160.0 "#2D3748";
+  -- Three orbiting dots
+  Canvas.fill_circle
+    (cx + 70.0 * __math_cos (t * 2.0))
+    (cy + 70.0 * __math_sin (t * 2.0))
+    8.0 "#63B3ED";
+  Canvas.fill_circle
+    (cx + 70.0 * __math_cos (t * 2.0 + 2.094))
+    (cy + 70.0 * __math_sin (t * 2.0 + 2.094))
+    8.0 "#FC8181";
+  Canvas.fill_circle
+    (cx + 70.0 * __math_cos (t * 2.0 + 4.189))
+    (cy + 70.0 * __math_sin (t * 2.0 + 4.189))
+    8.0 "#68D391";
+
+  -- Mouse cursor follower
+  let mx = Canvas.mouse_x () in
+  let my = Canvas.mouse_y () in
+  Canvas.fill_circle mx my 6.0 "#FFCC66";
+  Canvas.set_font "11px monospace";
+  Canvas.draw_text $"({int_of_float mx}, {int_of_float my})"
+    (mx + 10.0) (my - 14.0) "#A0AEC0";
+
+  -- Status message
+  Canvas.set_font "13px sans-serif";
+  Canvas.draw_text s.message 20.0 375.0 "#718096";
+
+  -- Compute updated state
+  let new_count =
+    if inc do s.count + 1
+    else if dec do s.count - 1
+    else if rst do 0
+    else s.count
+  in
+  let new_msg =
+    if inc do $"Incremented to {new_count}"
+    else if dec do $"Decremented to {new_count}"
+    else if rst do "Reset to zero"
+    else s.message
+  in
+  { count = new_count; frame = s.frame + 1; message = new_msg }
+
+-- Wire it up: register init + frame, start the app loop
+let () = Canvas.start_app init frame
+`,
+  framework: `-- Framework GUI Demo
+-- Elm architecture with algebraic effects for message dispatch
+-- Shows: effects, handle/with, records, pattern matching, closures
+
+-- Canvas API
+extern Canvas.init : int -> int -> unit
+extern Canvas.clear : string -> unit
+extern Canvas.fill_rect : float -> float -> float -> float -> string -> unit
+extern Canvas.stroke_rect : float -> float -> float -> float -> string -> unit
+extern Canvas.fill_circle : float -> float -> float -> string -> unit
+extern Canvas.draw_text : string -> float -> float -> string -> unit
+extern Canvas.set_font : string -> unit
+extern Canvas.mouse_x : unit -> float
+extern Canvas.mouse_y : unit -> float
+extern Canvas.mouse_down : unit -> bool
+extern Canvas.mouse_clicked : unit -> bool
+extern Canvas.start_app : (unit -> 'a) -> ('a -> 'a) -> unit
+extern __math_sin : float -> float
+extern __math_cos : float -> float
+
+-- ============================================================
+-- Message types for the application
+-- ============================================================
+
+type msg =
+  | Increment
+  | Decrement
+  | Reset
+  | SetTheme of string
+  | Tick
+
+-- ============================================================
+-- Dispatch effect: widgets send messages without knowing the
+-- update function. The framework handles them.
+-- ============================================================
+
+effect Dispatch =
+  dispatch : msg -> unit
+end
+
+-- ============================================================
+-- Widget library: immediate-mode widgets that dispatch messages
+-- ============================================================
+
+let ui_button x y w h label message =
+  let mx = Canvas.mouse_x () in
+  let my = Canvas.mouse_y () in
+  let hover = mx >= x && mx < x + w && my >= y && my < y + h in
+  Canvas.fill_rect x y w h (if hover do "#3D4555" else "#2A3040");
+  if hover do Canvas.stroke_rect x y w h "#FFCC66" end;
+  Canvas.set_font "15px monospace";
+  Canvas.draw_text label (x + 10.0) (y + 8.0)
+    (if hover do "#FFCC66" else "#CCCAC2");
+  if hover && Canvas.mouse_clicked () do
+    perform dispatch message
+  end
+
+let ui_label x y text color =
+  Canvas.draw_text text x y color
+
+let ui_swatch x y w h color selected msg =
+  Canvas.fill_rect x y w h color;
+  Canvas.stroke_rect x y w h (if selected do "#FFCC66" else "#4A5568");
+  let mx = Canvas.mouse_x () in
+  let my = Canvas.mouse_y () in
+  let clicked = mx >= x && mx < x + w && my >= y && my < y + h
+    && Canvas.mouse_clicked () in
+  if clicked do perform dispatch msg end
+
+-- ============================================================
+-- Framework: run loop that handles the Dispatch effect
+-- ============================================================
+
+let framework_frame update view model =
+  let mut msgs : msg list = [] in
+  let _ = handle
+    view model;
+    perform dispatch Tick
+  with
+  | return x -> x
+  | dispatch msg k ->
+    msgs := msg :: msgs;
+    resume k ()
+  in
+  List.fold (fn m msg -> update msg m) model (List.rev msgs)
+
+-- ============================================================
+-- Application: Model, Update, View
+-- ============================================================
+
+type theme = { bg: string; fg: string; accent: string; name: string }
+
+let themes = [
+  { bg = "#1a202c"; fg = "#E2E8F0"; accent = "#FFCC66"; name = "Dark" };
+  { bg = "#F7F7F7"; fg = "#1a202c"; accent = "#D97706"; name = "Light" };
+  { bg = "#1E1E2E"; fg = "#CDD6F4"; accent = "#F38BA8"; name = "Catppuccin" };
+  { bg = "#282A36"; fg = "#F8F8F2"; accent = "#FF79C6"; name = "Dracula" }
+]
+
+let find_theme name =
+  match List.find (fn t -> t.name = name) themes with
+  | Some t -> t
+  | None -> List.hd themes
+
+type model = {
+  count: int;
+  frame_num: int;
+  theme_name: string;
+  log: string list
+}
+
+-- Init
+let init () =
+  Canvas.init 500 420;
+  { count = 0; frame_num = 0; theme_name = "Dark";
+    log = ["Welcome! Try the buttons."] }
+
+-- Update: pure function, pattern match on messages
+let update msg model =
+  match msg with
+  | Increment ->
+    { model with
+      count = model.count + 1;
+      log = List.concat [$"+ Incremented to {model.count + 1}"] model.log }
+  | Decrement ->
+    { model with
+      count = model.count - 1;
+      log = List.concat [$"- Decremented to {model.count - 1}"] model.log }
+  | Reset ->
+    { model with
+      count = 0;
+      log = List.concat ["* Reset to zero"] model.log }
+  | SetTheme name ->
+    { model with
+      theme_name = name;
+      log = List.concat [$"~ Theme: {name}"] model.log }
+  | Tick ->
+    { model with frame_num = model.frame_num + 1 }
+
+-- View: draws the UI using widgets that dispatch messages
+let view model =
+  let theme = find_theme model.theme_name in
+
+  -- Background
+  Canvas.clear theme.bg;
+
+  -- Title
+  Canvas.set_font "bold 22px sans-serif";
+  ui_label 20.0 16.0 "MiniML Framework Demo" theme.accent;
+  Canvas.set_font "12px sans-serif";
+  ui_label 20.0 44.0
+    "Elm architecture + Dispatch effect + immediate-mode widgets"
+    "#707A8C";
+
+  -- Counter section
+  Canvas.set_font "18px monospace";
+  ui_label 20.0 76.0 $"Count: {model.count}" theme.fg;
+
+  -- Buttons dispatch messages (no direct state mutation!)
+  ui_button 20.0 100.0 90.0 30.0 " + Add" Increment;
+  ui_button 118.0 100.0 90.0 30.0 " - Sub" Decrement;
+  ui_button 216.0 100.0 90.0 30.0 " Reset" Reset;
+
+  -- Progress bar
+  let bar_w = 300.0 in
+  let fill = float_of_int (model.count mod 21) / 20.0 in
+  let fill = if fill < 0.0 do 0.0 - fill else fill in
+  Canvas.fill_rect 20.0 146.0 bar_w 12.0 "#2D3748";
+  Canvas.fill_rect 20.0 146.0 (bar_w * fill) 12.0 theme.accent;
+  Canvas.stroke_rect 20.0 146.0 bar_w 12.0 "#4A5568";
+
+  -- Theme section
+  Canvas.set_font "14px sans-serif";
+  ui_label 20.0 180.0 "Theme:" theme.fg;
+
+  -- Theme swatches dispatch SetTheme messages
+  ui_swatch 80.0 172.0 24.0 24.0 "#1a202c"
+    (model.theme_name = "Dark") (SetTheme "Dark");
+  ui_swatch 112.0 172.0 24.0 24.0 "#F7F7F7"
+    (model.theme_name = "Light") (SetTheme "Light");
+  ui_swatch 144.0 172.0 24.0 24.0 "#1E1E2E"
+    (model.theme_name = "Catppuccin") (SetTheme "Catppuccin");
+  ui_swatch 176.0 172.0 24.0 24.0 "#282A36"
+    (model.theme_name = "Dracula") (SetTheme "Dracula");
+
+  Canvas.set_font "12px monospace";
+  ui_label 212.0 182.0 model.theme_name "#707A8C";
+
+  -- Animated spinner
+  let t = float_of_int model.frame_num / 60.0 in
+  let sx = 420.0 in
+  let sy = 100.0 in
+  Canvas.fill_circle
+    (sx + 30.0 * __math_cos (t * 3.0))
+    (sy + 30.0 * __math_sin (t * 3.0))
+    6.0 theme.accent;
+  Canvas.fill_circle
+    (sx + 30.0 * __math_cos (t * 3.0 + 3.14159))
+    (sy + 30.0 * __math_sin (t * 3.0 + 3.14159))
+    6.0 "#63B3ED";
+
+  -- Event log
+  Canvas.set_font "bold 14px sans-serif";
+  ui_label 20.0 216.0 "Event Log" theme.fg;
+  Canvas.fill_rect 20.0 234.0 460.0 160.0 "#181C26";
+  Canvas.stroke_rect 20.0 234.0 460.0 160.0 "#2D3748";
+
+  Canvas.set_font "12px monospace";
+  let rec take n xs = match xs with
+    | [] -> []
+    | x :: rest -> if n <= 0 do [] else x :: take (n - 1) rest
+  in
+  let visible_log = take 9 model.log in
+  let _ = List.fold (fn i entry ->
+    let y = 248.0 + float_of_int i * 16.0 in
+    let color = if i = 0 do theme.accent else "#707A8C" in
+    ui_label 30.0 y entry color;
+    i + 1
+  ) 0 visible_log in
+
+  -- Mouse position
+  let mx = Canvas.mouse_x () in
+  let my = Canvas.mouse_y () in
+  Canvas.fill_circle mx my 4.0 theme.accent;
+  Canvas.set_font "10px monospace";
+  ui_label (mx + 8.0) (my - 10.0)
+    $"({int_of_float mx},{int_of_float my})" "#5C6773"
+
+-- ============================================================
+-- Wire it all together
+-- ============================================================
+
+let frame model = framework_frame update view model
+
+let () = Canvas.start_app init frame
+`,
+  layout: `-- Layout Engine Demo
+-- Flexbox-inspired layout computed from a declarative tree
+-- Shows: recursive ADTs, tree traversal, pattern matching, layout algorithms
+
+extern Canvas.init : int -> int -> unit
+extern Canvas.clear : string -> unit
+extern Canvas.fill_rect : float -> float -> float -> float -> string -> unit
+extern Canvas.stroke_rect : float -> float -> float -> float -> string -> unit
+extern Canvas.fill_circle : float -> float -> float -> string -> unit
+extern Canvas.draw_text : string -> float -> float -> string -> unit
+extern Canvas.set_font : string -> unit
+extern Canvas.mouse_x : unit -> float
+extern Canvas.mouse_y : unit -> float
+extern Canvas.mouse_down : unit -> bool
+extern Canvas.mouse_clicked : unit -> bool
+extern Canvas.start_app : (unit -> 'a) -> ('a -> 'a) -> unit
+extern __math_sin : float -> float
+extern __math_cos : float -> float
+
+-- ============================================================
+-- Layout tree ADT
+-- ============================================================
+
+type node =
+  | HStack of float * float * string * node list
+  | VStack of float * float * string * node list
+  | Box of string * string * string
+  | Spacer
+
+-- Helpers to build layout trees concisely
+let hstack pad gap bg children = HStack (pad, gap, bg, children)
+let vstack pad gap bg children = VStack (pad, gap, bg, children)
+let box label bg fg = Box (label, bg, fg)
+
+-- ============================================================
+-- Recursive layout + render pass
+-- Traverses the tree top-down, dividing available space among
+-- children equally (flexbox-like), accounting for padding & gap
+-- ============================================================
+
+let fmax a b = if a > b do a else b
+
+let rec render x y w h node =
+  match node with
+  | Box (label, bg, fg) ->
+    Canvas.fill_rect x y w h bg;
+    Canvas.stroke_rect x y w h "#1A1F29";
+    Canvas.set_font "12px monospace";
+    Canvas.draw_text label (x + 6.0) (y + h / 2.0 - 7.0) fg
+
+  | Spacer -> ()
+
+  | HStack (pad, gap, bg, children) ->
+    Canvas.fill_rect x y w h bg;
+    let ix = x + pad in
+    let iy = y + pad in
+    let iw = fmax 0.0 (w - pad * 2.0) in
+    let ih = fmax 0.0 (h - pad * 2.0) in
+    let n = float_of_int (List.length children) in
+    if n > 0.0 do
+      let gap_total = gap * (n - 1.0) in
+      let child_w = (iw - gap_total) / n in
+      let _ = List.fold (fn cx child ->
+        render cx iy child_w ih child;
+        cx + child_w + gap
+      ) ix children in
+      ()
+    end
+
+  | VStack (pad, gap, bg, children) ->
+    Canvas.fill_rect x y w h bg;
+    let ix = x + pad in
+    let iy = y + pad in
+    let iw = fmax 0.0 (w - pad * 2.0) in
+    let ih = fmax 0.0 (h - pad * 2.0) in
+    let n = float_of_int (List.length children) in
+    if n > 0.0 do
+      let gap_total = gap * (n - 1.0) in
+      let child_h = (ih - gap_total) / n in
+      let _ = List.fold (fn cy child ->
+        render ix cy iw child_h child;
+        cy + child_h + gap
+      ) iy children in
+      ()
+    end
+
+-- ============================================================
+-- Example layouts
+-- ============================================================
+
+let layout_dashboard () =
+  vstack 6.0 6.0 "#1A1F29" [
+    box "Header" "#FFCC66" "#1A1F29";
+    hstack 0.0 6.0 "#1A1F29" [
+      box "Sidebar" "#2D3748" "#A0AEC0";
+      vstack 0.0 6.0 "#1A1F29" [
+        box "Toolbar" "#3D4555" "#CCCAC2";
+        box "Content" "#242936" "#718096";
+        box "Content" "#242936" "#718096"
+      ]
+    ]
+  ]
+
+let layout_cards () =
+  vstack 6.0 6.0 "#1A1F29" [
+    box "Card Grid" "#FFCC66" "#1A1F29";
+    hstack 0.0 8.0 "#1A1F29" [
+      vstack 6.0 4.0 "#2D3748" [
+        box "Image" "#4A5568" "#A0AEC0";
+        box "Title" "#2D3748" "#E2E8F0";
+        box "Desc" "#2D3748" "#718096"
+      ];
+      vstack 6.0 4.0 "#2D3748" [
+        box "Image" "#4A5568" "#A0AEC0";
+        box "Title" "#2D3748" "#E2E8F0";
+        box "Desc" "#2D3748" "#718096"
+      ];
+      vstack 6.0 4.0 "#2D3748" [
+        box "Image" "#4A5568" "#A0AEC0";
+        box "Title" "#2D3748" "#E2E8F0";
+        box "Desc" "#2D3748" "#718096"
+      ]
+    ]
+  ]
+
+let layout_holy_grail () =
+  vstack 6.0 6.0 "#1A1F29" [
+    box "Header" "#FFCC66" "#1A1F29";
+    hstack 0.0 6.0 "#1A1F29" [
+      box "Nav" "#3D4555" "#CCCAC2";
+      vstack 0.0 4.0 "#1A1F29" [
+        box "Main Content" "#242936" "#E2E8F0";
+        box "Main Content" "#242936" "#718096"
+      ];
+      box "Aside" "#3D4555" "#CCCAC2"
+    ];
+    box "Footer" "#2D3748" "#A0AEC0"
+  ]
+
+let layout_nested () =
+  hstack 6.0 6.0 "#1A1F29" [
+    vstack 4.0 4.0 "#2D3748" [
+      box "A1" "#FC8181" "#1A1F29";
+      hstack 4.0 4.0 "#3D4555" [
+        box "A2" "#68D391" "#1A1F29";
+        box "A3" "#63B3ED" "#1A1F29"
+      ];
+      box "A4" "#D6BCFA" "#1A1F29"
+    ];
+    vstack 4.0 4.0 "#2D3748" [
+      hstack 4.0 4.0 "#3D4555" [
+        vstack 4.0 4.0 "#4A5568" [
+          box "B1" "#FFCC66" "#1A1F29";
+          box "B2" "#F6AD55" "#1A1F29"
+        ];
+        box "B3" "#FC8181" "#1A1F29"
+      ];
+      box "B4" "#68D391" "#1A1F29";
+      hstack 4.0 4.0 "#3D4555" [
+        box "B5" "#63B3ED" "#1A1F29";
+        box "B6" "#D6BCFA" "#1A1F29";
+        box "B7" "#F6AD55" "#1A1F29"
+      ]
+    ]
+  ]
+
+-- ============================================================
+-- Immediate-mode button
+-- ============================================================
+
+let button x y w h label =
+  let mx = Canvas.mouse_x () in
+  let my = Canvas.mouse_y () in
+  let hover = mx >= x && mx < x + w && my >= y && my < y + h in
+  Canvas.fill_rect x y w h (if hover do "#3D4555" else "#2A3040");
+  if hover do Canvas.stroke_rect x y w h "#FFCC66" end;
+  Canvas.set_font "14px monospace";
+  Canvas.draw_text label (x + 10.0) (y + 6.0)
+    (if hover do "#FFCC66" else "#CCCAC2");
+  hover && Canvas.mouse_clicked ()
+
+-- ============================================================
+-- Application state and loop
+-- ============================================================
+
+type state = { page: int; frame_num: int }
+
+let num_pages = 4
+
+let page_title p = match p with
+  | 0 -> "Dashboard"
+  | 1 -> "Card Grid"
+  | 2 -> "Holy Grail"
+  | _ -> "Nested"
+
+let page_subtitle p = match p with
+  | 0 -> "VStack(Header, HStack(Sidebar, VStack(Toolbar, Content, Content)))"
+  | 1 -> "VStack(Title, HStack(Card, Card, Card)) -- each card is a VStack"
+  | 2 -> "VStack(Header, HStack(Nav, Content, Aside), Footer)"
+  | _ -> "Deep recursive rows-in-cols-in-rows composition"
+
+let page_layout p = match p with
+  | 0 -> layout_dashboard ()
+  | 1 -> layout_cards ()
+  | 2 -> layout_holy_grail ()
+  | _ -> layout_nested ()
+
+let init () =
+  Canvas.init 500 440;
+  { page = 0; frame_num = 0 }
+
+let frame s =
+  Canvas.clear "#1F2430";
+
+  -- Title
+  Canvas.set_font "bold 20px sans-serif";
+  Canvas.draw_text "MiniML Layout Engine" 20.0 14.0 "#FFCC66";
+
+  -- Navigation
+  let prev = button 20.0 40.0 70.0 26.0 " Prev" in
+  let next = button 98.0 40.0 70.0 26.0 " Next" in
+
+  Canvas.set_font "bold 14px sans-serif";
+  Canvas.draw_text (page_title s.page) 184.0 46.0 "#E2E8F0";
+
+  Canvas.set_font "11px monospace";
+  Canvas.draw_text (page_subtitle s.page) 20.0 76.0 "#5C6773";
+
+  -- Render the layout tree into the available area
+  let tree = page_layout s.page in
+  render 20.0 96.0 460.0 320.0 tree;
+
+  -- Animated dot
+  let t = float_of_int s.frame_num / 60.0 in
+  Canvas.fill_circle
+    (460.0 + 20.0 * __math_cos (t * 2.0))
+    (46.0 + 8.0 * __math_sin (t * 2.0))
+    4.0 "#FFCC66";
+
+  -- Page indicator
+  Canvas.set_font "12px monospace";
+  Canvas.draw_text $"{s.page + 1}/{num_pages}" 20.0 424.0 "#5C6773";
+
+  -- Update state
+  let new_page =
+    if next do (s.page + 1) mod num_pages
+    else if prev do (s.page + num_pages - 1) mod num_pages
+    else s.page
+  in
+  { page = new_page; frame_num = s.frame_num + 1 }
+
+let () = Canvas.start_app init frame
+`,
 };
 
 samples.addEventListener("change", () => {
@@ -1356,7 +2105,7 @@ async function loadDoc(file) {
   content.innerHTML = '<div class="docs-loading"><span class="spinner"></span> Loading...</div>';
 
   try {
-    const resp = await fetch("docs/" + file);
+    const resp = await fetch("../docs/" + file);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const md = await resp.text();
     const html = marked.parse(md);

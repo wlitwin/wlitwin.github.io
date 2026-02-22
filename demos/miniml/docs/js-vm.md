@@ -18,10 +18,10 @@ OCaml Compiler                    JS VM
 
 ```bash
 # Compile a program to a JSON bundle
-dune exec bin/main.exe -- --emit-json program.ml > bundle.json
+dune exec bin/main.exe -- --emit-json program.mml > bundle.json
 
 # Run it
-node js/index.js bundle.json
+node -e "require('./js/loader').loadBundle(require('fs').readFileSync('bundle.json','utf-8'))"
 ```
 
 ### Browser
@@ -140,11 +140,10 @@ When loading a bundle, the JS VM:
 | `js/vm.js` | VM core: value types, dispatch loop, fibers, effects |
 | `js/builtins.js` | JS implementations of ~120 native functions |
 | `js/loader.js` | JSON deserialization and bundle execution |
-| `js/index.js` | Node.js CLI entry point |
+| `js/index.html` | Browser playground page |
 | `js/test.js` | Test harness (107 tests) |
 | `js/browser.js` | Build script for browser bundle |
 | `js/miniml.bundle.js` | Generated browser bundle (~40 KB) |
-| `js/index.html` | Browser playground page |
 
 ## Capturing Print Output
 

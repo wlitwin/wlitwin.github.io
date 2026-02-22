@@ -185,13 +185,35 @@ function internalCall(fiber, cls, arg) {
   fiber.frames.push({ closure: cls, ip: 0, locals: newLocals, baseSp: fiber.sp });
 }
 
+// --- Opcode profiling (toggle with vm.profile = true) ---
+const OP_COUNTS = new Uint32Array(81);
+
+function resetProfile() { OP_COUNTS.fill(0); }
+
+function dumpProfile(opcodeNames) {
+  const entries = [];
+  for (let i = 0; i < OP_COUNTS.length; i++) {
+    if (OP_COUNTS[i] > 0) entries.push([i, OP_COUNTS[i]]);
+  }
+  entries.sort((a, b) => b[1] - a[1]);
+  const total = entries.reduce((s, e) => s + e[1], 0);
+  console.log(`\n--- opcode profile (${total.toLocaleString()} total) ---`);
+  for (const [op, count] of entries.slice(0, 20)) {
+    const name = (opcodeNames && opcodeNames[op]) || String(op);
+    const pct = (count / total * 100).toFixed(1);
+    console.log(`  ${name.padEnd(22)} ${count.toLocaleString().padStart(12)}  (${pct}%)`);
+  }
+}
+
 // --- VM dispatch loop ---
 function run(vm) {
   let fiber = vm.currentFiber;
+  // const profiling = vm.profile;
 
   while (true) {
     const f = fiber.frames[fiber.frames.length - 1];
     const op = f.closure.proto.code[f.ip++];
+    // if (profiling) OP_COUNTS[op[0]]++;
 
     switch (op[0]) {
       case 0: // CONST
@@ -509,9 +531,9 @@ function run(vm) {
       }
       case 49: { // TUPLE_GET
         const idx = op[1];
-        const tup = asTuple(fiber.stack[--fiber.sp]);
+        const tup = asTuple(fiber.stack[fiber.sp - 1]);
         if (idx >= tup.length) error("tuple index out of bounds");
-        fiber.stack[fiber.sp++] = tup[idx];
+        fiber.stack[fiber.sp - 1] = tup[idx];
         break;
       }
       case 50: { // MAKE_RECORD
@@ -525,10 +547,10 @@ function run(vm) {
       }
       case 51: { // FIELD
         const name = op[1];
-        const rec = asRecord(fiber.stack[--fiber.sp]);
+        const rec = asRecord(fiber.stack[fiber.sp - 1]);
         const entry = rec.find(([n]) => n === name);
         if (!entry) error(`record has no field: ${name}`);
-        fiber.stack[fiber.sp++] = entry[1];
+        fiber.stack[fiber.sp - 1] = entry[1];
         break;
       }
       case 52: { // SET_FIELD
@@ -597,36 +619,31 @@ function run(vm) {
         break;
       case 56: { // TAG_EQ
         const tagN = op[1];
-        const v = asVariant(fiber.stack[--fiber.sp]);
-        fiber.stack[fiber.sp++] = vbool(v.tagN === tagN);
+        fiber.stack[fiber.sp - 1] = vbool(asVariant(fiber.stack[fiber.sp - 1]).tagN === tagN);
         break;
       }
-      case 57: { // IS_NIL
-        const l = asList(fiber.stack[--fiber.sp]);
-        fiber.stack[fiber.sp++] = vbool(l.length === 0);
+      case 57: // IS_NIL
+        fiber.stack[fiber.sp - 1] = vbool(asList(fiber.stack[fiber.sp - 1]).length === 0);
         break;
-      }
-      case 58: { // IS_CONS
-        const l = asList(fiber.stack[--fiber.sp]);
-        fiber.stack[fiber.sp++] = vbool(l.length > 0);
+      case 58: // IS_CONS
+        fiber.stack[fiber.sp - 1] = vbool(asList(fiber.stack[fiber.sp - 1]).length > 0);
         break;
-      }
       case 59: { // HEAD
-        const l = asList(fiber.stack[--fiber.sp]);
+        const l = asList(fiber.stack[fiber.sp - 1]);
         if (l.length === 0) error("head of empty list");
-        fiber.stack[fiber.sp++] = l[0];
+        fiber.stack[fiber.sp - 1] = l[0];
         break;
       }
       case 60: { // TAIL
-        const l = asList(fiber.stack[--fiber.sp]);
+        const l = asList(fiber.stack[fiber.sp - 1]);
         if (l.length === 0) error("tail of empty list");
-        fiber.stack[fiber.sp++] = vlist(l.slice(1));
+        fiber.stack[fiber.sp - 1] = vlist(l.slice(1));
         break;
       }
       case 61: { // VARIANT_PAYLOAD
-        const v = asVariant(fiber.stack[--fiber.sp]);
+        const v = asVariant(fiber.stack[fiber.sp - 1]);
         if (v.payload === null) error("variant has no payload");
-        fiber.stack[fiber.sp++] = v.payload;
+        fiber.stack[fiber.sp - 1] = v.payload;
         break;
       }
       case 62: // MATCH_FAIL
@@ -929,6 +946,19 @@ function createVM(globalNames) {
   };
 }
 
+// --- Call a closure with one argument on an existing VM ---
+function callClosure(vmInst, closure, arg) {
+  const fiber = makeFiber();
+  const locals = new Array(closure.proto.num_locals).fill(VUNIT);
+  locals[0] = arg;
+  fiber.frames.push({ closure, ip: 0, locals, baseSp: 0 });
+  vmInst.currentFiber = fiber;
+  vmInst.handlerStack = [];
+  vmInst.controlStack = [];
+  vmInst.returnStack = [];
+  return run(vmInst);
+}
+
 
 
 // ---- builtins.js ----
@@ -1072,6 +1102,15 @@ reg("__math_ceil", 1, (args) =>
 
 reg("__math_round", 1, (args) =>
   vint(Math.round(asFloat(args[0]))));
+
+reg("__math_sin", 1, (args) =>
+  vfloat(Math.sin(asFloat(args[0]))));
+
+reg("__math_cos", 1, (args) =>
+  vfloat(Math.cos(asFloat(args[0]))));
+
+reg("__math_abs_float", 1, (args) =>
+  vfloat(Math.abs(asFloat(args[0]))));
 
 // --- Format specifier builtins (interp.ml __fmt_*) ---
 
@@ -1560,6 +1599,98 @@ reg("Array.sub", 3, (args) => {
   return varray(arr.slice(start, start + len));
 });
 
+// --- Canvas builtins (browser only, safe to register in Node) ---
+
+reg("Canvas.init", 2, (args) => {
+  const w = asInt(args[0]);
+  const h = asInt(args[1]);
+  if (typeof globalThis._canvasInit === "function") {
+    globalThis._canvasInit(w, h);
+  }
+  return VUNIT;
+});
+
+reg("Canvas.clear", 1, (args) => {
+  const color = asString(args[0]);
+  const ctx = globalThis._canvasCtx;
+  if (ctx) {
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  }
+  return VUNIT;
+});
+
+reg("Canvas.fill_rect", 5, (args) => {
+  const ctx = globalThis._canvasCtx;
+  if (ctx) {
+    ctx.fillStyle = asString(args[4]);
+    ctx.fillRect(asFloat(args[0]), asFloat(args[1]),
+                 asFloat(args[2]), asFloat(args[3]));
+  }
+  return VUNIT;
+});
+
+reg("Canvas.stroke_rect", 5, (args) => {
+  const ctx = globalThis._canvasCtx;
+  if (ctx) {
+    ctx.strokeStyle = asString(args[4]);
+    ctx.lineWidth = 1;
+    ctx.strokeRect(asFloat(args[0]), asFloat(args[1]),
+                   asFloat(args[2]), asFloat(args[3]));
+  }
+  return VUNIT;
+});
+
+reg("Canvas.fill_circle", 4, (args) => {
+  const ctx = globalThis._canvasCtx;
+  if (ctx) {
+    ctx.fillStyle = asString(args[3]);
+    ctx.beginPath();
+    ctx.arc(asFloat(args[0]), asFloat(args[1]),
+            asFloat(args[2]), 0, 2 * Math.PI);
+    ctx.fill();
+  }
+  return VUNIT;
+});
+
+reg("Canvas.draw_text", 4, (args) => {
+  const ctx = globalThis._canvasCtx;
+  if (ctx) {
+    ctx.fillStyle = asString(args[3]);
+    ctx.textBaseline = "top";
+    ctx.fillText(asString(args[0]), asFloat(args[1]), asFloat(args[2]));
+  }
+  return VUNIT;
+});
+
+reg("Canvas.set_font", 1, (args) => {
+  const ctx = globalThis._canvasCtx;
+  if (ctx) {
+    ctx.font = asString(args[0]);
+  }
+  return VUNIT;
+});
+
+reg("Canvas.mouse_x", 1, (_args) =>
+  vfloat(globalThis._canvasMouseX || 0));
+
+reg("Canvas.mouse_y", 1, (_args) =>
+  vfloat(globalThis._canvasMouseY || 0));
+
+reg("Canvas.mouse_down", 1, (_args) =>
+  vbool(!!globalThis._canvasMouseDown));
+
+reg("Canvas.mouse_clicked", 1, (_args) =>
+  vbool(!!globalThis._canvasMouseClicked));
+
+reg("Canvas.start_app", 2, (args) => {
+  globalThis._canvasApp = {
+    initFn: asClosure(args[0]),
+    frameFn: asClosure(args[1]),
+  };
+  return VUNIT;
+});
+
 // --- IO module (browser stubs, configurable via globalThis) ---
 
 reg("IO.read_file", 1, (args) => {
@@ -1662,16 +1793,12 @@ const OPCODE_NAMES = [
   "ENTER_LOOP", "EXIT_LOOP", "LOOP_BREAK", "LOOP_CONTINUE", "FOLD_CONTINUE",
   "MAKE_MAP", "MAKE_ARRAY", "INDEX", "HALT",
   "RECORD_UPDATE", "RECORD_UPDATE_DYN",
+  "GET_LOCAL_CALL", "GET_LOCAL_TUPLE_GET", "GET_LOCAL_FIELD", "JUMP_TABLE",
 ];
 
 // Map string opcode names to numeric tags for the VM switch
 const OPCODE_TO_NUM = {};
 OPCODE_NAMES.forEach((name, idx) => OPCODE_TO_NUM[name] = idx);
-// Combined opcodes (JSON-only, not in binary format)
-OPCODE_TO_NUM["GET_LOCAL_CALL"] = 77;
-OPCODE_TO_NUM["GET_LOCAL_TUPLE_GET"] = 78;
-OPCODE_TO_NUM["GET_LOCAL_FIELD"] = 79;
-OPCODE_TO_NUM["JUMP_TABLE"] = 80;
 
 function convertCode(code) {
   for (let i = 0; i < code.length; i++) {
@@ -1734,11 +1861,22 @@ function loadBundle(jsonString) {
   // Register native builtins
   registerBuiltins(vmInst, bundle);
 
+  // Register any user-declared externs that match builtins but aren't in native_globals
+  for (let i = 0; i < globalNames.length; i++) {
+    if (!vmInst.globals.has(i) && builtins[globalNames[i]]) {
+      const b = builtins[globalNames[i]];
+      vmInst.globals.set(i, makeExternal(globalNames[i], b.arity, b.fn));
+    }
+  }
+
   // Run setup prototypes (rebuild source-compiled stdlib)
   for (const setupJson of bundle.setup) {
     const proto = deserializePrototype(setupJson);
     executeProto(vmInst, proto);
   }
+
+  // Store vmInst so canvas apps can call closures after loadBundle returns
+  globalThis._vmInstance = vmInst;
 
   // Run main prototype
   const mainProto = deserializePrototype(bundle.main);
@@ -1847,6 +1985,14 @@ function loadBundleBinary(arrayBuffer) {
     }
   }
 
+  // Register any user-declared externs that match builtins but aren't in native_globals
+  for (let i = 0; i < globalNames.length; i++) {
+    if (!vmInst.globals.has(i) && builtins[globalNames[i]]) {
+      const b = builtins[globalNames[i]];
+      vmInst.globals.set(i, makeExternal(globalNames[i], b.arity, b.fn));
+    }
+  }
+
   function readCaptures() {
     const count = readU32();
     const caps = new Array(count);
@@ -1915,6 +2061,29 @@ function loadBundleBinary(arrayBuffer) {
         for (let i = 0; i < count; i++) fieldNames[i] = strs[readU32()];
         return [75, fieldNames];
       }
+      case 77: { // GET_LOCAL_CALL
+        const slot = readU32();
+        const arity = readU32();
+        return [77, slot, arity];
+      }
+      case 78: { // GET_LOCAL_TUPLE_GET
+        const slot = readU32();
+        const idx = readU32();
+        return [78, slot, idx];
+      }
+      case 79: { // GET_LOCAL_FIELD
+        const slot = readU32();
+        const name = strs[readU32()];
+        return [79, slot, name];
+      }
+      case 80: { // JUMP_TABLE
+        const minTag = readU32();
+        const tableSize = readU32();
+        const targets = new Array(tableSize);
+        for (let i = 0; i < tableSize; i++) targets[i] = readU32();
+        const defaultTarget = readU32();
+        return [80, minTag, targets, defaultTarget];
+      }
       default:
         throw new Error(`unknown opcode tag: ${tag}`);
     }
@@ -1978,6 +2147,9 @@ function loadBundleBinary(arrayBuffer) {
     executeProto(vmInst, proto);
   }
 
+  // Store vmInst so canvas apps can call closures after loadBundle returns
+  globalThis._vmInstance = vmInst;
+
   // Main proto
   const mainProto = readPrototype();
   return executeProto(vmInst, mainProto);
@@ -1992,10 +2164,13 @@ const STDLIB_SOURCES = {"stdlib/byte.mml":"module Byte =\n  pub let to_int (b : 
 global.MiniML = {
   loadBundle: loadBundle,
   loadBundleBinary: loadBundleBinary,
+  callClosure: callClosure,
   ppValue: ppValue,
   RuntimeError: RuntimeError,
   VUNIT: VUNIT,
   STDLIB_SOURCES: STDLIB_SOURCES,
+  resetProfile: resetProfile,
+  dumpProfile: function() { dumpProfile(OPCODE_NAMES); },
 };
 
 })(typeof window !== "undefined" ? window : globalThis);
