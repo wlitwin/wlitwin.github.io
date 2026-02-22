@@ -3,6 +3,7 @@
 "use strict";
 
 // ---- vm.js ----
+//# allFunctionsCallOnLoad
 // VM core — direct port of lib/vm.ml
 
 class RuntimeError extends Error {
@@ -157,753 +158,726 @@ function copyFiber(f) {
   return { stack: newStack, sp: f.sp, frames: newFrames };
 }
 
+// --- Top-level helper functions ---
+function findHandler(vm, opName) {
+  for (const he of vm.handlerStack) {
+    for (const [name] of he.ops) {
+      if (name === opName) return he;
+    }
+  }
+  return null;
+}
+
+function findHandlerForFiber(vm, f) {
+  for (const he of vm.handlerStack) {
+    if (he.bodyFiber === f) return he;
+  }
+  return null;
+}
+
+function removeHandler(vm, he) {
+  vm.handlerStack = vm.handlerStack.filter(h => h !== he);
+}
+
+function internalCall(fiber, cls, arg) {
+  const newLocals = new Array(cls.proto.num_locals).fill(VUNIT);
+  newLocals[0] = arg;
+  fiber.frames.push({ closure: cls, ip: 0, locals: newLocals, baseSp: fiber.sp });
+}
+
 // --- VM dispatch loop ---
 function run(vm) {
   let fiber = vm.currentFiber;
 
-  function push(v) {
-    if (fiber.sp >= STACK_SIZE) error("stack overflow");
-    fiber.stack[fiber.sp++] = v;
-  }
-  function pop() {
-    if (fiber.sp <= 0) error("stack underflow");
-    return fiber.stack[--fiber.sp];
-  }
-  function peek() {
-    if (fiber.sp <= 0) error("stack underflow");
-    return fiber.stack[fiber.sp - 1];
-  }
-  function frame() { return fiber.frames[fiber.frames.length - 1]; }
-  function proto() { return frame().closure.proto; }
+  while (true) {
+    const f = fiber.frames[fiber.frames.length - 1];
+    const op = f.closure.proto.code[f.ip++];
 
-  function findHandler(opName) {
-    for (const he of vm.handlerStack) {
-      for (const [name] of he.ops) {
-        if (name === opName) return he;
+    switch (op[0]) {
+      case 0: // CONST
+        fiber.stack[fiber.sp++] = f.closure.proto.constants[op[1]];
+        break;
+      case 1: // POP
+        fiber.sp--;
+        break;
+      case 2: // DUP
+        fiber.stack[fiber.sp] = fiber.stack[fiber.sp - 1];
+        fiber.sp++;
+        break;
+      case 3: // GET_LOCAL
+        fiber.stack[fiber.sp++] = f.locals[op[1]];
+        break;
+      case 4: // SET_LOCAL
+        f.locals[op[1]] = fiber.stack[--fiber.sp];
+        break;
+      case 5: // GET_UPVALUE
+        fiber.stack[fiber.sp++] = f.closure.upvalues[op[1]];
+        break;
+      case 6: // SET_UPVALUE
+        f.closure.upvalues[op[1]] = fiber.stack[--fiber.sp];
+        break;
+      case 7: // MAKE_REF
+        fiber.stack[fiber.sp - 1] = vref(fiber.stack[fiber.sp - 1]);
+        break;
+      case 8: { // DEREF
+        const r = fiber.stack[fiber.sp - 1];
+        if (r.tag !== "ref") error("DEREF on non-ref value");
+        fiber.stack[fiber.sp - 1] = r.v[0];
+        break;
       }
-    }
-    return null;
-  }
-
-  function findHandlerForFiber(f) {
-    for (const he of vm.handlerStack) {
-      if (he.bodyFiber === f) return he;
-    }
-    return null;
-  }
-
-  function removeHandler(he) {
-    vm.handlerStack = vm.handlerStack.filter(h => h !== he);
-  }
-
-  function internalCall(cls, arg) {
-    const newLocals = new Array(cls.proto.num_locals).fill(VUNIT);
-    newLocals[0] = arg;
-    fiber.frames.push({ closure: cls, ip: 0, locals: newLocals, baseSp: fiber.sp });
-  }
-
-  try {
-    while (true) {
-      const f = frame();
-      const op = f.closure.proto.code[f.ip++];
-      const opName = op[0];
-
-      switch (opName) {
-        case "CONST":
-          push(proto().constants[op[1]]);
-          break;
-        case "POP":
-          pop();
-          break;
-        case "DUP":
-          push(peek());
-          break;
-        case "GET_LOCAL":
-          push(f.locals[op[1]]);
-          break;
-        case "SET_LOCAL":
-          f.locals[op[1]] = pop();
-          break;
-        case "GET_UPVALUE":
-          push(f.closure.upvalues[op[1]]);
-          break;
-        case "SET_UPVALUE":
-          f.closure.upvalues[op[1]] = pop();
-          break;
-        case "MAKE_REF": {
-          const v = pop();
-          push(vref(v));
-          break;
+      case 9: { // SET_REF
+        const r = fiber.stack[--fiber.sp];
+        const v = fiber.stack[--fiber.sp];
+        if (r.tag !== "ref") error("SET_REF on non-ref value");
+        r.v[0] = v;
+        break;
+      }
+      case 10: { // GET_GLOBAL
+        const idx = op[1];
+        const v = vm.globals.get(idx);
+        if (v === undefined) {
+          const name = idx < vm.globalNames.length ? vm.globalNames[idx] : "?";
+          error(`undefined global: ${name}`);
         }
-        case "DEREF": {
-          const r = pop();
-          if (r.tag !== "ref") error("DEREF on non-ref value");
-          push(r.v[0]);
-          break;
-        }
-        case "SET_REF": {
-          const r = pop();
-          const v = pop();
-          if (r.tag !== "ref") error("SET_REF on non-ref value");
-          r.v[0] = v;
-          break;
-        }
-        case "GET_GLOBAL": {
-          const idx = op[1];
-          const v = vm.globals.get(idx);
-          if (v === undefined) {
-            const name = idx < vm.globalNames.length ? vm.globalNames[idx] : "?";
-            error(`undefined global: ${name}`);
-          }
-          push(v);
-          break;
-        }
-        case "SET_GLOBAL":
-          vm.globals.set(op[1], pop());
-          break;
-        case "DEF_GLOBAL":
-          vm.globals.set(op[1], pop());
-          break;
-        case "ADD": {
-          const b = pop(), a = pop();
-          push(vint(asInt(a) + asInt(b)));
-          break;
-        }
-        case "SUB": {
-          const b = pop(), a = pop();
-          push(vint(asInt(a) - asInt(b)));
-          break;
-        }
-        case "MUL": {
-          const b = pop(), a = pop();
-          push(vint(asInt(a) * asInt(b)));
-          break;
-        }
-        case "DIV": {
-          const b = pop(), a = pop();
-          const bv = asInt(b);
-          if (bv === 0) error("division by zero");
-          push(vint(Math.trunc(asInt(a) / bv)));
-          break;
-        }
-        case "MOD": {
-          const b = pop(), a = pop();
-          const bv = asInt(b);
-          if (bv === 0) error("modulo by zero");
-          push(vint(asInt(a) % bv));
-          break;
-        }
-        case "NEG": {
-          push(vint(-asInt(pop())));
-          break;
-        }
-        case "FADD": {
-          const b = pop(), a = pop();
-          push(vfloat(asFloat(a) + asFloat(b)));
-          break;
-        }
-        case "FSUB": {
-          const b = pop(), a = pop();
-          push(vfloat(asFloat(a) - asFloat(b)));
-          break;
-        }
-        case "FMUL": {
-          const b = pop(), a = pop();
-          push(vfloat(asFloat(a) * asFloat(b)));
-          break;
-        }
-        case "FDIV": {
-          const b = pop(), a = pop();
-          push(vfloat(asFloat(a) / asFloat(b)));
-          break;
-        }
-        case "FNEG": {
-          push(vfloat(-asFloat(pop())));
-          break;
-        }
-        case "EQ": {
-          const b = pop(), a = pop();
-          push(vbool(valuesEqual(a, b)));
-          break;
-        }
-        case "NEQ": {
-          const b = pop(), a = pop();
-          push(vbool(!valuesEqual(a, b)));
-          break;
-        }
-        case "LT": {
-          const b = pop(), a = pop();
-          let result;
-          if (a.tag === "float" && b.tag === "float") result = a.v < b.v;
-          else if (a.tag === "string" && b.tag === "string") result = a.v < b.v;
-          else if (a.tag === "byte" && b.tag === "byte") result = a.v < b.v;
-          else if (a.tag === "rune" && b.tag === "rune") result = a.v < b.v;
-          else result = asInt(a) < asInt(b);
-          push(vbool(result));
-          break;
-        }
-        case "GT": {
-          const b = pop(), a = pop();
-          let result;
-          if (a.tag === "float" && b.tag === "float") result = a.v > b.v;
-          else if (a.tag === "string" && b.tag === "string") result = a.v > b.v;
-          else if (a.tag === "byte" && b.tag === "byte") result = a.v > b.v;
-          else if (a.tag === "rune" && b.tag === "rune") result = a.v > b.v;
-          else result = asInt(a) > asInt(b);
-          push(vbool(result));
-          break;
-        }
-        case "LE": {
-          const b = pop(), a = pop();
-          let result;
-          if (a.tag === "float" && b.tag === "float") result = a.v <= b.v;
-          else if (a.tag === "string" && b.tag === "string") result = a.v <= b.v;
-          else if (a.tag === "byte" && b.tag === "byte") result = a.v <= b.v;
-          else if (a.tag === "rune" && b.tag === "rune") result = a.v <= b.v;
-          else result = asInt(a) <= asInt(b);
-          push(vbool(result));
-          break;
-        }
-        case "GE": {
-          const b = pop(), a = pop();
-          let result;
-          if (a.tag === "float" && b.tag === "float") result = a.v >= b.v;
-          else if (a.tag === "string" && b.tag === "string") result = a.v >= b.v;
-          else if (a.tag === "byte" && b.tag === "byte") result = a.v >= b.v;
-          else if (a.tag === "rune" && b.tag === "rune") result = a.v >= b.v;
-          else result = asInt(a) >= asInt(b);
-          push(vbool(result));
-          break;
-        }
-        case "NOT":
-          push(vbool(!asBool(pop())));
-          break;
-        case "BAND": {
-          const b = pop(), a = pop();
-          push(vint(asInt(a) & asInt(b)));
-          break;
-        }
-        case "BOR": {
-          const b = pop(), a = pop();
-          push(vint(asInt(a) | asInt(b)));
-          break;
-        }
-        case "BXOR": {
-          const b = pop(), a = pop();
-          push(vint(asInt(a) ^ asInt(b)));
-          break;
-        }
-        case "BNOT":
-          push(vint(~asInt(pop())));
-          break;
-        case "BSHL": {
-          const b = pop(), a = pop();
-          push(vint(asInt(a) << asInt(b)));
-          break;
-        }
-        case "BSHR": {
-          const b = pop(), a = pop();
-          push(vint(asInt(a) >>> asInt(b)));
-          break;
-        }
-        case "JUMP":
-          frame().ip = op[1];
-          break;
-        case "JUMP_IF_FALSE": {
-          const v = pop();
-          if (!asBool(v)) frame().ip = op[1];
-          break;
-        }
-        case "JUMP_IF_TRUE": {
-          const v = pop();
-          if (asBool(v)) frame().ip = op[1];
-          break;
-        }
-        case "CLOSURE": {
-          const protoIdx = op[1];
-          const captures = op[2];
-          const fnProto = getProto(proto(), protoIdx);
-          const upvalues = captures.map(cap => resolveCapture(f, cap));
-          push(vclosure(fnProto, upvalues));
-          break;
-        }
-        case "CLOSURE_REC": {
-          const protoIdx = op[1];
-          const captures = op[2];
-          const selfIdx = op[3];
-          const fnProto = getProto(proto(), protoIdx);
-          const upvalues = captures.map(cap => resolveCapture(f, cap));
-          const cls = vclosure(fnProto, upvalues);
-          cls.upvalues[selfIdx] = cls; // circular reference for recursion
-          push(cls);
-          break;
-        }
-        case "CALL": {
-          const arg = pop();
-          const fnVal = pop();
-          if (fnVal.tag === "closure") {
-            const baseSp = fiber.sp;
-            const newLocals = new Array(fnVal.proto.num_locals).fill(VUNIT);
-            newLocals[0] = arg;
-            fiber.frames.push({ closure: fnVal, ip: 0, locals: newLocals, baseSp });
-          } else if (fnVal.tag === "external") {
-            const newArgs = fnVal.args.concat([arg]);
-            if (newArgs.length === fnVal.arity) {
-              push(fnVal.fn(newArgs));
-            } else {
-              push(vexternal(fnVal.name, fnVal.arity, fnVal.fn, newArgs));
-            }
+        fiber.stack[fiber.sp++] = v;
+        break;
+      }
+      case 11: // SET_GLOBAL
+        vm.globals.set(op[1], fiber.stack[--fiber.sp]);
+        break;
+      case 12: // DEF_GLOBAL
+        vm.globals.set(op[1], fiber.stack[--fiber.sp]);
+        break;
+      case 13: { // ADD
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vint(asInt(fiber.stack[fiber.sp - 1]) + asInt(b));
+        break;
+      }
+      case 14: { // SUB
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vint(asInt(fiber.stack[fiber.sp - 1]) - asInt(b));
+        break;
+      }
+      case 15: { // MUL
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vint(asInt(fiber.stack[fiber.sp - 1]) * asInt(b));
+        break;
+      }
+      case 16: { // DIV
+        const b = fiber.stack[--fiber.sp];
+        const bv = asInt(b);
+        if (bv === 0) error("division by zero");
+        fiber.stack[fiber.sp - 1] = vint(Math.trunc(asInt(fiber.stack[fiber.sp - 1]) / bv));
+        break;
+      }
+      case 17: { // MOD
+        const b = fiber.stack[--fiber.sp];
+        const bv = asInt(b);
+        if (bv === 0) error("modulo by zero");
+        fiber.stack[fiber.sp - 1] = vint(asInt(fiber.stack[fiber.sp - 1]) % bv);
+        break;
+      }
+      case 18: // NEG
+        fiber.stack[fiber.sp - 1] = vint(-asInt(fiber.stack[fiber.sp - 1]));
+        break;
+      case 19: { // FADD
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vfloat(asFloat(fiber.stack[fiber.sp - 1]) + asFloat(b));
+        break;
+      }
+      case 20: { // FSUB
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vfloat(asFloat(fiber.stack[fiber.sp - 1]) - asFloat(b));
+        break;
+      }
+      case 21: { // FMUL
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vfloat(asFloat(fiber.stack[fiber.sp - 1]) * asFloat(b));
+        break;
+      }
+      case 22: { // FDIV
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vfloat(asFloat(fiber.stack[fiber.sp - 1]) / asFloat(b));
+        break;
+      }
+      case 23: // FNEG
+        fiber.stack[fiber.sp - 1] = vfloat(-asFloat(fiber.stack[fiber.sp - 1]));
+        break;
+      case 24: { // EQ
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vbool(valuesEqual(fiber.stack[fiber.sp - 1], b));
+        break;
+      }
+      case 25: { // NEQ
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vbool(!valuesEqual(fiber.stack[fiber.sp - 1], b));
+        break;
+      }
+      case 26: { // LT
+        const b = fiber.stack[--fiber.sp];
+        const a = fiber.stack[fiber.sp - 1];
+        let result;
+        if (a.tag === "float" && b.tag === "float") result = a.v < b.v;
+        else if (a.tag === "string" && b.tag === "string") result = a.v < b.v;
+        else if (a.tag === "byte" && b.tag === "byte") result = a.v < b.v;
+        else if (a.tag === "rune" && b.tag === "rune") result = a.v < b.v;
+        else result = asInt(a) < asInt(b);
+        fiber.stack[fiber.sp - 1] = vbool(result);
+        break;
+      }
+      case 27: { // GT
+        const b = fiber.stack[--fiber.sp];
+        const a = fiber.stack[fiber.sp - 1];
+        let result;
+        if (a.tag === "float" && b.tag === "float") result = a.v > b.v;
+        else if (a.tag === "string" && b.tag === "string") result = a.v > b.v;
+        else if (a.tag === "byte" && b.tag === "byte") result = a.v > b.v;
+        else if (a.tag === "rune" && b.tag === "rune") result = a.v > b.v;
+        else result = asInt(a) > asInt(b);
+        fiber.stack[fiber.sp - 1] = vbool(result);
+        break;
+      }
+      case 28: { // LE
+        const b = fiber.stack[--fiber.sp];
+        const a = fiber.stack[fiber.sp - 1];
+        let result;
+        if (a.tag === "float" && b.tag === "float") result = a.v <= b.v;
+        else if (a.tag === "string" && b.tag === "string") result = a.v <= b.v;
+        else if (a.tag === "byte" && b.tag === "byte") result = a.v <= b.v;
+        else if (a.tag === "rune" && b.tag === "rune") result = a.v <= b.v;
+        else result = asInt(a) <= asInt(b);
+        fiber.stack[fiber.sp - 1] = vbool(result);
+        break;
+      }
+      case 29: { // GE
+        const b = fiber.stack[--fiber.sp];
+        const a = fiber.stack[fiber.sp - 1];
+        let result;
+        if (a.tag === "float" && b.tag === "float") result = a.v >= b.v;
+        else if (a.tag === "string" && b.tag === "string") result = a.v >= b.v;
+        else if (a.tag === "byte" && b.tag === "byte") result = a.v >= b.v;
+        else if (a.tag === "rune" && b.tag === "rune") result = a.v >= b.v;
+        else result = asInt(a) >= asInt(b);
+        fiber.stack[fiber.sp - 1] = vbool(result);
+        break;
+      }
+      case 30: // NOT
+        fiber.stack[fiber.sp - 1] = vbool(!asBool(fiber.stack[fiber.sp - 1]));
+        break;
+      case 31: { // BAND
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vint(asInt(fiber.stack[fiber.sp - 1]) & asInt(b));
+        break;
+      }
+      case 32: { // BOR
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vint(asInt(fiber.stack[fiber.sp - 1]) | asInt(b));
+        break;
+      }
+      case 33: { // BXOR
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vint(asInt(fiber.stack[fiber.sp - 1]) ^ asInt(b));
+        break;
+      }
+      case 34: // BNOT
+        fiber.stack[fiber.sp - 1] = vint(~asInt(fiber.stack[fiber.sp - 1]));
+        break;
+      case 35: { // BSHL
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vint(asInt(fiber.stack[fiber.sp - 1]) << asInt(b));
+        break;
+      }
+      case 36: { // BSHR
+        const b = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp - 1] = vint(asInt(fiber.stack[fiber.sp - 1]) >>> asInt(b));
+        break;
+      }
+      case 37: // JUMP
+        f.ip = op[1];
+        break;
+      case 38: { // JUMP_IF_FALSE
+        const v = fiber.stack[--fiber.sp];
+        if (!asBool(v)) f.ip = op[1];
+        break;
+      }
+      case 39: { // JUMP_IF_TRUE
+        const v = fiber.stack[--fiber.sp];
+        if (asBool(v)) f.ip = op[1];
+        break;
+      }
+      case 40: { // CLOSURE
+        const protoIdx = op[1];
+        const captures = op[2];
+        const fnProto = getProto(f.closure.proto, protoIdx);
+        const upvalues = captures.map(cap => resolveCapture(f, cap));
+        fiber.stack[fiber.sp++] = vclosure(fnProto, upvalues);
+        break;
+      }
+      case 41: { // CLOSURE_REC
+        const protoIdx = op[1];
+        const captures = op[2];
+        const selfIdx = op[3];
+        const fnProto = getProto(f.closure.proto, protoIdx);
+        const upvalues = captures.map(cap => resolveCapture(f, cap));
+        const cls = vclosure(fnProto, upvalues);
+        cls.upvalues[selfIdx] = cls; // circular reference for recursion
+        fiber.stack[fiber.sp++] = cls;
+        break;
+      }
+      case 42: { // CALL
+        const arg = fiber.stack[--fiber.sp];
+        const fnVal = fiber.stack[--fiber.sp];
+        if (fnVal.tag === "closure") {
+          const baseSp = fiber.sp;
+          const newLocals = new Array(fnVal.proto.num_locals).fill(VUNIT);
+          newLocals[0] = arg;
+          fiber.frames.push({ closure: fnVal, ip: 0, locals: newLocals, baseSp });
+        } else if (fnVal.tag === "external") {
+          const newArgs = fnVal.args.concat([arg]);
+          if (newArgs.length === fnVal.arity) {
+            fiber.stack[fiber.sp++] = fnVal.fn(newArgs);
           } else {
-            error(`expected function, got ${ppValue(fnVal)}`);
+            fiber.stack[fiber.sp++] = vexternal(fnVal.name, fnVal.arity, fnVal.fn, newArgs);
           }
-          break;
+        } else {
+          error(`expected function, got ${ppValue(fnVal)}`);
         }
-        case "TAIL_CALL": {
-          const arg = pop();
-          const fnVal = pop();
-          if (fnVal.tag === "closure") {
-            const currentBaseSp = frame().baseSp;
-            const newLocals = new Array(fnVal.proto.num_locals).fill(VUNIT);
-            newLocals[0] = arg;
-            fiber.frames[fiber.frames.length - 1] = { closure: fnVal, ip: 0, locals: newLocals, baseSp: currentBaseSp };
-          } else if (fnVal.tag === "external") {
-            const newArgs = fnVal.args.concat([arg]);
-            let result;
-            if (newArgs.length === fnVal.arity) {
-              result = fnVal.fn(newArgs);
-            } else {
-              result = vexternal(fnVal.name, fnVal.arity, fnVal.fn, newArgs);
-            }
-            // Proper tail return: pop frame and return result
-            fiber.sp = frame().baseSp;
-            fiber.frames.pop();
-            if (fiber.frames.length === 0) {
-              const he = findHandlerForFiber(fiber);
-              if (he) {
-                removeHandler(he);
-                fiber = he.parentFiber;
-                vm.currentFiber = fiber;
-                internalCall(asClosure(he.returnHandler), result);
-              } else {
-                return result;
-              }
-            } else {
-              push(result);
-            }
+        break;
+      }
+      case 43: { // TAIL_CALL
+        const arg = fiber.stack[--fiber.sp];
+        const fnVal = fiber.stack[--fiber.sp];
+        if (fnVal.tag === "closure") {
+          const currentBaseSp = f.baseSp;
+          const newLocals = new Array(fnVal.proto.num_locals).fill(VUNIT);
+          newLocals[0] = arg;
+          fiber.frames[fiber.frames.length - 1] = { closure: fnVal, ip: 0, locals: newLocals, baseSp: currentBaseSp };
+        } else if (fnVal.tag === "external") {
+          const newArgs = fnVal.args.concat([arg]);
+          let result;
+          if (newArgs.length === fnVal.arity) {
+            result = fnVal.fn(newArgs);
           } else {
-            error(`expected function, got ${ppValue(fnVal)}`);
+            result = vexternal(fnVal.name, fnVal.arity, fnVal.fn, newArgs);
           }
-          break;
-        }
-        case "RETURN": {
-          const result = pop();
+          // Proper tail return: pop frame and return result
+          fiber.sp = f.baseSp;
           fiber.frames.pop();
           if (fiber.frames.length === 0) {
-            // Last frame — check for handler
-            const he = findHandlerForFiber(fiber);
+            const he = findHandlerForFiber(vm, fiber);
             if (he) {
-              removeHandler(he);
+              removeHandler(vm, he);
               fiber = he.parentFiber;
               vm.currentFiber = fiber;
-              internalCall(asClosure(he.returnHandler), result);
+              internalCall(fiber, asClosure(he.returnHandler), result);
             } else {
               return result;
             }
           } else {
-            push(result);
+            fiber.stack[fiber.sp++] = result;
           }
-          break;
+        } else {
+          error(`expected function, got ${ppValue(fnVal)}`);
         }
-        case "MAKE_TUPLE": {
-          const n = op[1];
-          const values = new Array(n);
-          for (let i = n - 1; i >= 0; i--) values[i] = pop();
-          push(vtuple(values));
-          break;
-        }
-        case "TUPLE_GET": {
-          const idx = op[1];
-          const tup = asTuple(pop());
-          if (idx >= tup.length) error("tuple index out of bounds");
-          push(tup[idx]);
-          break;
-        }
-        case "MAKE_RECORD": {
-          const fieldNames = op[1];
-          const n = fieldNames.length;
-          const values = new Array(n);
-          for (let i = n - 1; i >= 0; i--) values[i] = pop();
-          const fields = fieldNames.map((name, i) => [name, values[i]]);
-          push(vrecord(fields));
-          break;
-        }
-        case "FIELD": {
-          const name = op[1];
-          const rec = asRecord(pop());
-          const entry = rec.find(([n]) => n === name);
-          if (!entry) error(`record has no field: ${name}`);
-          push(entry[1]);
-          break;
-        }
-        case "SET_FIELD": {
-          const name = op[1];
-          const newVal = pop();
-          const rec = asRecord(pop());
-          let found = false;
-          for (let i = 0; i < rec.length; i++) {
-            if (rec[i][0] === name) { rec[i] = [name, newVal]; found = true; break; }
-          }
-          if (!found) error(`record has no field: ${name}`);
-          break;
-        }
-        case "RECORD_UPDATE": {
-          const fieldNames = op[1];
-          const n = fieldNames.length;
-          const newVals = new Array(n);
-          for (let i = n - 1; i >= 0; i--) newVals[i] = pop();
-          const baseRec = asRecord(pop());
-          const copy = baseRec.map(([n, v]) => [n, v]);
-          for (let i = 0; i < n; i++) {
-            const name = fieldNames[i];
-            const idx = copy.findIndex(([n]) => n === name);
-            if (idx < 0) error(`record has no field: ${name}`);
-            copy[idx] = [name, newVals[i]];
-          }
-          push(vrecord(copy));
-          break;
-        }
-        case "RECORD_UPDATE_DYN": {
-          const n = op[1];
-          const pairs = new Array(n);
-          for (let i = n - 1; i >= 0; i--) {
-            const v = pop();
-            const idx = asInt(pop());
-            pairs[i] = [idx, v];
-          }
-          const baseRec = asRecord(pop());
-          const copy = baseRec.map(([n, v]) => [n, v]);
-          for (const [idx, v] of pairs) {
-            if (idx < 0 || idx >= copy.length)
-              error(`RECORD_UPDATE_DYN: index ${idx} out of bounds (record has ${copy.length} fields)`);
-            copy[idx] = [copy[idx][0], v];
-          }
-          push(vrecord(copy));
-          break;
-        }
-        case "MAKE_VARIANT": {
-          const [, tagN, name, hasPayload] = op;
-          if (hasPayload) {
-            push(vvariant(tagN, name, pop()));
-          } else {
-            push(vvariant(tagN, name, null));
-          }
-          break;
-        }
-        case "CONS": {
-          const tl = pop();
-          const hd = pop();
-          const tlList = asList(tl);
-          push(vlist([hd, ...tlList]));
-          break;
-        }
-        case "NIL":
-          push(VNIL);
-          break;
-        case "TAG_EQ": {
-          const tagN = op[1];
-          const v = asVariant(pop());
-          push(vbool(v.tagN === tagN));
-          break;
-        }
-        case "IS_NIL": {
-          const l = asList(pop());
-          push(vbool(l.length === 0));
-          break;
-        }
-        case "IS_CONS": {
-          const l = asList(pop());
-          push(vbool(l.length > 0));
-          break;
-        }
-        case "HEAD": {
-          const l = asList(pop());
-          if (l.length === 0) error("head of empty list");
-          push(l[0]);
-          break;
-        }
-        case "TAIL": {
-          const l = asList(pop());
-          if (l.length === 0) error("tail of empty list");
-          push(vlist(l.slice(1)));
-          break;
-        }
-        case "VARIANT_PAYLOAD": {
-          const v = asVariant(pop());
-          if (v.payload === null) error("variant has no payload");
-          push(v.payload);
-          break;
-        }
-        case "MATCH_FAIL":
-          error(`non-exhaustive match at ${op[1]}`);
-          break;
-        case "PERFORM": {
-          const opNameStr = op[1];
-          const arg = pop();
-          const he = findHandler(opNameStr);
-          if (!he) error(`unhandled effect operation: ${opNameStr}`);
-          const handlerFn = he.ops.find(([name]) => name === opNameStr)[1];
-          const cont = vcontinuation(fiber, he.returnHandler, he.ops);
-          const pair = vtuple([arg, cont]);
-          removeHandler(he);
-          fiber = he.parentFiber;
-          vm.currentFiber = fiber;
-          internalCall(asClosure(handlerFn), pair);
-          break;
-        }
-        case "HANDLE": {
-          const nOps = op[1];
-          const ops = [];
-          for (let i = 0; i < nOps; i++) {
-            const handlerClosure = pop();
-            const opStr = asString(pop());
-            ops.push([opStr, handlerClosure]);
-          }
-          const returnHandler = pop();
-          const bodyThunk = pop();
-          const bodyFiber = makeFiber();
-          const he = {
-            returnHandler,
-            ops,
-            bodyFiber,
-            parentFiber: fiber,
-          };
-          vm.handlerStack.push(he);
-          fiber = bodyFiber;
-          vm.currentFiber = fiber;
-          internalCall(asClosure(bodyThunk), VUNIT);
-          break;
-        }
-        case "RESUME": {
-          const v = pop();
-          const cont = asContinuation(pop());
-          if (cont.used) error("continuation already resumed");
-          cont.used = true;
-          const bodyFiber = cont.fiber;
-          bodyFiber.stack[bodyFiber.sp++] = v;
-          const he = {
-            returnHandler: cont.returnHandler,
-            ops: cont.opHandlers,
-            bodyFiber,
-            parentFiber: fiber,
-          };
-          vm.handlerStack.push(he);
-          fiber = bodyFiber;
-          vm.currentFiber = fiber;
-          break;
-        }
-        case "ENTER_LOOP": {
-          const breakTarget = op[1];
-          vm.controlStack.push({
-            breakIp: breakTarget,
-            fiber: fiber,
-            frameDepth: fiber.frames.length,
-            stackDepth: fiber.sp,
-          });
-          break;
-        }
-        case "EXIT_LOOP": {
-          if (vm.controlStack.length === 0) error("EXIT_LOOP: no control entry");
-          vm.controlStack.pop();
-          break;
-        }
-        case "LOOP_BREAK": {
-          const breakValue = pop();
-          if (vm.controlStack.length === 0) error("LOOP_BREAK: no control entry");
-          const ce = vm.controlStack.pop();
-          const f = ce.fiber;
-          while (f.frames.length > ce.frameDepth) f.frames.pop();
-          f.sp = ce.stackDepth;
-          vm.currentFiber = f;
-          fiber = f;
-          push(breakValue);
-          frame().ip = ce.breakIp;
-          break;
-        }
-        case "LOOP_CONTINUE": {
-          const target = op[1];
-          if (vm.controlStack.length === 0) error("LOOP_CONTINUE: no control entry");
-          const ce = vm.controlStack[vm.controlStack.length - 1];
-          ce.fiber.sp = ce.stackDepth;
-          frame().ip = target;
-          break;
-        }
-        case "FOLD_CONTINUE": {
-          const nPops = op[1];
-          const continueValue = pop();
-          for (let i = 0; i < nPops; i++) {
-            if (fiber.sp > 0) fiber.sp--;
-          }
-          push(continueValue);
-          // Execute RETURN from fold callback
-          const result = pop();
-          if (fiber.frames.length <= 1) error("FOLD_CONTINUE: no frame to return from");
-          fiber.frames.pop();
-          push(result);
-          break;
-        }
-        case "ENTER_FUNC": {
-          vm.returnStack.push({
-            fiber: fiber,
-            frameDepth: fiber.frames.length,
-          });
-          break;
-        }
-        case "EXIT_FUNC": {
-          if (vm.returnStack.length === 0) error("EXIT_FUNC: no return entry");
-          vm.returnStack.pop();
-          break;
-        }
-        case "FUNC_RETURN": {
-          const result = pop();
-          // Find and remove the return entry for this fiber
-          let reIdx = -1;
-          for (let i = vm.returnStack.length - 1; i >= 0; i--) {
-            if (vm.returnStack[i].fiber === fiber) { reIdx = i; break; }
-          }
-          if (reIdx === -1) error("FUNC_RETURN: no return entry");
-          const re = vm.returnStack[reIdx];
-          vm.returnStack.splice(reIdx, 1);
-          const targetDepth = re.frameDepth;
-          // Unwind frames back to the target function
-          while (fiber.frames.length > targetDepth) fiber.frames.pop();
-          // Clean up control_stack entries above target depth
-          vm.controlStack = vm.controlStack.filter(ce =>
-            !(ce.fiber === fiber && ce.frameDepth >= targetDepth)
-          );
-          // Restore stack pointer and pop the target function's frame
-          const baseSp = frame().baseSp;
-          fiber.sp = baseSp;
-          fiber.frames.pop();
-          if (fiber.frames.length === 0) {
-            const he = findHandlerForFiber(fiber);
-            if (he) {
-              removeHandler(he);
-              fiber = he.parentFiber;
-              vm.currentFiber = fiber;
-              internalCall(asClosure(he.returnHandler), result);
-            } else {
-              return result;
-            }
-          } else {
-            push(result);
-          }
-          break;
-        }
-        case "MAKE_MAP": {
-          const n = op[1];
-          const pairs = [];
-          for (let i = 0; i < n; i++) {
-            const v = pop();
-            const k = pop();
-            pairs.unshift([k, v]);
-          }
-          push(vmap(pairs));
-          break;
-        }
-        case "MAKE_ARRAY": {
-          const n = op[1];
-          const elems = [];
-          for (let i = 0; i < n; i++) {
-            elems.unshift(pop());
-          }
-          push(varray(elems));
-          break;
-        }
-        case "INDEX": {
-          const idx = asInt(pop());
-          const base = pop();
-          if (base.tag === "string") {
-            const s = base.v;
-            // Get byte at index (matching OCaml's string byte indexing)
-            const encoder = new TextEncoder();
-            const bytes = encoder.encode(s);
-            if (idx < 0 || idx >= bytes.length)
-              error(`string index out of bounds: ${idx} (length ${bytes.length})`);
-            push(vbyte(bytes[idx]));
-          } else if (base.tag === "array") {
-            if (idx < 0 || idx >= base.v.length)
-              error(`array index out of bounds: ${idx} (length ${base.v.length})`);
-            push(base.v[idx]);
-          } else {
-            error("index operation requires string or array");
-          }
-          break;
-        }
-        case "GET_LOCAL_CALL": {
-          const fnVal = pop();
-          const arg = f.locals[op[1]];
-          if (fnVal.tag === "closure") {
-            const baseSp = fiber.sp;
-            const newLocals = new Array(fnVal.proto.num_locals).fill(VUNIT);
-            newLocals[0] = arg;
-            fiber.frames.push({ closure: fnVal, ip: 0, locals: newLocals, baseSp });
-          } else if (fnVal.tag === "external") {
-            const newArgs = fnVal.args.concat([arg]);
-            if (newArgs.length === fnVal.arity) {
-              push(fnVal.fn(newArgs));
-            } else {
-              push(vexternal(fnVal.name, fnVal.arity, fnVal.fn, newArgs));
-            }
-          } else {
-            error(`expected function, got ${ppValue(fnVal)}`);
-          }
-          break;
-        }
-        case "GET_LOCAL_TUPLE_GET": {
-          const tup = asTuple(f.locals[op[1]]);
-          const idx = op[2];
-          if (idx >= tup.length) error("tuple index out of bounds");
-          push(tup[idx]);
-          break;
-        }
-        case "GET_LOCAL_FIELD": {
-          const rec = asRecord(f.locals[op[1]]);
-          const name = op[2];
-          const entry = rec.find(([n]) => n === name);
-          if (!entry) error(`record has no field: ${name}`);
-          push(entry[1]);
-          break;
-        }
-        case "JUMP_TABLE": {
-          const minTag = op[1];
-          const targets = op[2];
-          const defaultTarget = op[3];
-          const v = asVariant(pop());
-          const idx = v.tagN - minTag;
-          if (idx >= 0 && idx < targets.length) {
-            frame().ip = targets[idx];
-          } else {
-            frame().ip = defaultTarget;
-          }
-          break;
-        }
-        case "HALT":
-          return fiber.sp > 0 ? peek() : VUNIT;
-        default:
-          error(`unknown opcode: ${opName}`);
+        break;
       }
-    }
-  } catch (e) {
-    if (e instanceof RuntimeError) {
-      const f = fiber.frames.length > 0 ? fiber.frames[fiber.frames.length - 1] : null;
-      if (f) {
-        const ip = Math.max(0, f.ip - 1);
-        const lt = f.closure.proto.line_table;
-        const line = lt && ip < lt.length ? lt[ip] : 0;
-        if (line > 0) throw new RuntimeError(`[line ${line}] ${e.message}`);
+      case 44: { // RETURN
+        const result = fiber.stack[--fiber.sp];
+        fiber.frames.pop();
+        if (fiber.frames.length === 0) {
+          // Last frame — check for handler
+          const he = findHandlerForFiber(vm, fiber);
+          if (he) {
+            removeHandler(vm, he);
+            fiber = he.parentFiber;
+            vm.currentFiber = fiber;
+            internalCall(fiber, asClosure(he.returnHandler), result);
+          } else {
+            return result;
+          }
+        } else {
+          fiber.stack[fiber.sp++] = result;
+        }
+        break;
       }
+      case 48: { // MAKE_TUPLE
+        const n = op[1];
+        const values = new Array(n);
+        for (let i = n - 1; i >= 0; i--) values[i] = fiber.stack[--fiber.sp];
+        fiber.stack[fiber.sp++] = vtuple(values);
+        break;
+      }
+      case 49: { // TUPLE_GET
+        const idx = op[1];
+        const tup = asTuple(fiber.stack[--fiber.sp]);
+        if (idx >= tup.length) error("tuple index out of bounds");
+        fiber.stack[fiber.sp++] = tup[idx];
+        break;
+      }
+      case 50: { // MAKE_RECORD
+        const fieldNames = op[1];
+        const n = fieldNames.length;
+        const values = new Array(n);
+        for (let i = n - 1; i >= 0; i--) values[i] = fiber.stack[--fiber.sp];
+        const fields = fieldNames.map((name, i) => [name, values[i]]);
+        fiber.stack[fiber.sp++] = vrecord(fields);
+        break;
+      }
+      case 51: { // FIELD
+        const name = op[1];
+        const rec = asRecord(fiber.stack[--fiber.sp]);
+        const entry = rec.find(([n]) => n === name);
+        if (!entry) error(`record has no field: ${name}`);
+        fiber.stack[fiber.sp++] = entry[1];
+        break;
+      }
+      case 52: { // SET_FIELD
+        const name = op[1];
+        const newVal = fiber.stack[--fiber.sp];
+        const rec = asRecord(fiber.stack[--fiber.sp]);
+        let found = false;
+        for (let i = 0; i < rec.length; i++) {
+          if (rec[i][0] === name) { rec[i] = [name, newVal]; found = true; break; }
+        }
+        if (!found) error(`record has no field: ${name}`);
+        break;
+      }
+      case 75: { // RECORD_UPDATE
+        const fieldNames = op[1];
+        const n = fieldNames.length;
+        const newVals = new Array(n);
+        for (let i = n - 1; i >= 0; i--) newVals[i] = fiber.stack[--fiber.sp];
+        const baseRec = asRecord(fiber.stack[--fiber.sp]);
+        const copy = baseRec.map(([n, v]) => [n, v]);
+        for (let i = 0; i < n; i++) {
+          const name = fieldNames[i];
+          const idx = copy.findIndex(([n]) => n === name);
+          if (idx < 0) error(`record has no field: ${name}`);
+          copy[idx] = [name, newVals[i]];
+        }
+        fiber.stack[fiber.sp++] = vrecord(copy);
+        break;
+      }
+      case 76: { // RECORD_UPDATE_DYN
+        const n = op[1];
+        const pairs = new Array(n);
+        for (let i = n - 1; i >= 0; i--) {
+          const v = fiber.stack[--fiber.sp];
+          const idx = asInt(fiber.stack[--fiber.sp]);
+          pairs[i] = [idx, v];
+        }
+        const baseRec = asRecord(fiber.stack[--fiber.sp]);
+        const copy = baseRec.map(([n, v]) => [n, v]);
+        for (const [idx, v] of pairs) {
+          if (idx < 0 || idx >= copy.length)
+            error(`RECORD_UPDATE_DYN: index ${idx} out of bounds (record has ${copy.length} fields)`);
+          copy[idx] = [copy[idx][0], v];
+        }
+        fiber.stack[fiber.sp++] = vrecord(copy);
+        break;
+      }
+      case 53: { // MAKE_VARIANT
+        const [, tagN, name, hasPayload] = op;
+        if (hasPayload) {
+          fiber.stack[fiber.sp - 1] = vvariant(tagN, name, fiber.stack[fiber.sp - 1]);
+        } else {
+          fiber.stack[fiber.sp++] = vvariant(tagN, name, null);
+        }
+        break;
+      }
+      case 54: { // CONS
+        const tl = fiber.stack[--fiber.sp];
+        const hd = fiber.stack[--fiber.sp];
+        const tlList = asList(tl);
+        fiber.stack[fiber.sp++] = vlist([hd, ...tlList]);
+        break;
+      }
+      case 55: // NIL
+        fiber.stack[fiber.sp++] = VNIL;
+        break;
+      case 56: { // TAG_EQ
+        const tagN = op[1];
+        const v = asVariant(fiber.stack[--fiber.sp]);
+        fiber.stack[fiber.sp++] = vbool(v.tagN === tagN);
+        break;
+      }
+      case 57: { // IS_NIL
+        const l = asList(fiber.stack[--fiber.sp]);
+        fiber.stack[fiber.sp++] = vbool(l.length === 0);
+        break;
+      }
+      case 58: { // IS_CONS
+        const l = asList(fiber.stack[--fiber.sp]);
+        fiber.stack[fiber.sp++] = vbool(l.length > 0);
+        break;
+      }
+      case 59: { // HEAD
+        const l = asList(fiber.stack[--fiber.sp]);
+        if (l.length === 0) error("head of empty list");
+        fiber.stack[fiber.sp++] = l[0];
+        break;
+      }
+      case 60: { // TAIL
+        const l = asList(fiber.stack[--fiber.sp]);
+        if (l.length === 0) error("tail of empty list");
+        fiber.stack[fiber.sp++] = vlist(l.slice(1));
+        break;
+      }
+      case 61: { // VARIANT_PAYLOAD
+        const v = asVariant(fiber.stack[--fiber.sp]);
+        if (v.payload === null) error("variant has no payload");
+        fiber.stack[fiber.sp++] = v.payload;
+        break;
+      }
+      case 62: // MATCH_FAIL
+        error(`non-exhaustive match at ${op[1]}`);
+        break;
+      case 63: { // PERFORM
+        const opNameStr = op[1];
+        const arg = fiber.stack[--fiber.sp];
+        const he = findHandler(vm, opNameStr);
+        if (!he) error(`unhandled effect operation: ${opNameStr}`);
+        const handlerFn = he.ops.find(([name]) => name === opNameStr)[1];
+        const cont = vcontinuation(fiber, he.returnHandler, he.ops);
+        const pair = vtuple([arg, cont]);
+        removeHandler(vm, he);
+        fiber = he.parentFiber;
+        vm.currentFiber = fiber;
+        internalCall(fiber, asClosure(handlerFn), pair);
+        break;
+      }
+      case 64: { // HANDLE
+        const nOps = op[1];
+        const ops = [];
+        for (let i = 0; i < nOps; i++) {
+          const handlerClosure = fiber.stack[--fiber.sp];
+          const opStr = asString(fiber.stack[--fiber.sp]);
+          ops.push([opStr, handlerClosure]);
+        }
+        const returnHandler = fiber.stack[--fiber.sp];
+        const bodyThunk = fiber.stack[--fiber.sp];
+        const bodyFiber = makeFiber();
+        const he = {
+          returnHandler,
+          ops,
+          bodyFiber,
+          parentFiber: fiber,
+        };
+        vm.handlerStack.push(he);
+        fiber = bodyFiber;
+        vm.currentFiber = fiber;
+        internalCall(fiber, asClosure(bodyThunk), VUNIT);
+        break;
+      }
+      case 65: { // RESUME
+        const v = fiber.stack[--fiber.sp];
+        const cont = asContinuation(fiber.stack[--fiber.sp]);
+        if (cont.used) error("continuation already resumed");
+        cont.used = true;
+        const bodyFiber = cont.fiber;
+        bodyFiber.stack[bodyFiber.sp++] = v;
+        const he = {
+          returnHandler: cont.returnHandler,
+          ops: cont.opHandlers,
+          bodyFiber,
+          parentFiber: fiber,
+        };
+        vm.handlerStack.push(he);
+        fiber = bodyFiber;
+        vm.currentFiber = fiber;
+        break;
+      }
+      case 66: { // ENTER_LOOP
+        const breakTarget = op[1];
+        vm.controlStack.push({
+          breakIp: breakTarget,
+          fiber: fiber,
+          frameDepth: fiber.frames.length,
+          stackDepth: fiber.sp,
+        });
+        break;
+      }
+      case 67: { // EXIT_LOOP
+        if (vm.controlStack.length === 0) error("EXIT_LOOP: no control entry");
+        vm.controlStack.pop();
+        break;
+      }
+      case 68: { // LOOP_BREAK
+        const breakValue = fiber.stack[--fiber.sp];
+        if (vm.controlStack.length === 0) error("LOOP_BREAK: no control entry");
+        const ce = vm.controlStack.pop();
+        const cf = ce.fiber;
+        while (cf.frames.length > ce.frameDepth) cf.frames.pop();
+        cf.sp = ce.stackDepth;
+        vm.currentFiber = cf;
+        fiber = cf;
+        fiber.stack[fiber.sp++] = breakValue;
+        fiber.frames[fiber.frames.length - 1].ip = ce.breakIp;
+        break;
+      }
+      case 69: { // LOOP_CONTINUE
+        const target = op[1];
+        if (vm.controlStack.length === 0) error("LOOP_CONTINUE: no control entry");
+        const ce = vm.controlStack[vm.controlStack.length - 1];
+        ce.fiber.sp = ce.stackDepth;
+        f.ip = target;
+        break;
+      }
+      case 70: { // FOLD_CONTINUE
+        const nPops = op[1];
+        const continueValue = fiber.stack[--fiber.sp];
+        for (let i = 0; i < nPops; i++) {
+          if (fiber.sp > 0) fiber.sp--;
+        }
+        fiber.stack[fiber.sp++] = continueValue;
+        // Execute RETURN from fold callback
+        const result = fiber.stack[--fiber.sp];
+        if (fiber.frames.length <= 1) error("FOLD_CONTINUE: no frame to return from");
+        fiber.frames.pop();
+        fiber.stack[fiber.sp++] = result;
+        break;
+      }
+      case 46: { // ENTER_FUNC
+        vm.returnStack.push({
+          fiber: fiber,
+          frameDepth: fiber.frames.length,
+        });
+        break;
+      }
+      case 47: { // EXIT_FUNC
+        if (vm.returnStack.length === 0) error("EXIT_FUNC: no return entry");
+        vm.returnStack.pop();
+        break;
+      }
+      case 45: { // FUNC_RETURN
+        const result = fiber.stack[--fiber.sp];
+        // Find and remove the return entry for this fiber
+        let reIdx = -1;
+        for (let i = vm.returnStack.length - 1; i >= 0; i--) {
+          if (vm.returnStack[i].fiber === fiber) { reIdx = i; break; }
+        }
+        if (reIdx === -1) error("FUNC_RETURN: no return entry");
+        const re = vm.returnStack[reIdx];
+        vm.returnStack.splice(reIdx, 1);
+        const targetDepth = re.frameDepth;
+        // Unwind frames back to the target function
+        while (fiber.frames.length > targetDepth) fiber.frames.pop();
+        // Clean up control_stack entries above target depth
+        vm.controlStack = vm.controlStack.filter(ce =>
+          !(ce.fiber === fiber && ce.frameDepth >= targetDepth)
+        );
+        // Restore stack pointer and pop the target function's frame
+        const baseSp = fiber.frames[fiber.frames.length - 1].baseSp;
+        fiber.sp = baseSp;
+        fiber.frames.pop();
+        if (fiber.frames.length === 0) {
+          const he = findHandlerForFiber(vm, fiber);
+          if (he) {
+            removeHandler(vm, he);
+            fiber = he.parentFiber;
+            vm.currentFiber = fiber;
+            internalCall(fiber, asClosure(he.returnHandler), result);
+          } else {
+            return result;
+          }
+        } else {
+          fiber.stack[fiber.sp++] = result;
+        }
+        break;
+      }
+      case 71: { // MAKE_MAP
+        const n = op[1];
+        const pairs = [];
+        for (let i = 0; i < n; i++) {
+          const v = fiber.stack[--fiber.sp];
+          const k = fiber.stack[--fiber.sp];
+          pairs.unshift([k, v]);
+        }
+        fiber.stack[fiber.sp++] = vmap(pairs);
+        break;
+      }
+      case 72: { // MAKE_ARRAY
+        const n = op[1];
+        const elems = [];
+        for (let i = 0; i < n; i++) {
+          elems.unshift(fiber.stack[--fiber.sp]);
+        }
+        fiber.stack[fiber.sp++] = varray(elems);
+        break;
+      }
+      case 73: { // INDEX
+        const idx = asInt(fiber.stack[--fiber.sp]);
+        const base = fiber.stack[--fiber.sp];
+        if (base.tag === "string") {
+          const s = base.v;
+          // Get byte at index (matching OCaml's string byte indexing)
+          const encoder = new TextEncoder();
+          const bytes = encoder.encode(s);
+          if (idx < 0 || idx >= bytes.length)
+            error(`string index out of bounds: ${idx} (length ${bytes.length})`);
+          fiber.stack[fiber.sp++] = vbyte(bytes[idx]);
+        } else if (base.tag === "array") {
+          if (idx < 0 || idx >= base.v.length)
+            error(`array index out of bounds: ${idx} (length ${base.v.length})`);
+          fiber.stack[fiber.sp++] = base.v[idx];
+        } else {
+          error("index operation requires string or array");
+        }
+        break;
+      }
+      case 77: { // GET_LOCAL_CALL
+        const fnVal = fiber.stack[--fiber.sp];
+        const arg = f.locals[op[1]];
+        if (fnVal.tag === "closure") {
+          const baseSp = fiber.sp;
+          const newLocals = new Array(fnVal.proto.num_locals).fill(VUNIT);
+          newLocals[0] = arg;
+          fiber.frames.push({ closure: fnVal, ip: 0, locals: newLocals, baseSp });
+        } else if (fnVal.tag === "external") {
+          const newArgs = fnVal.args.concat([arg]);
+          if (newArgs.length === fnVal.arity) {
+            fiber.stack[fiber.sp++] = fnVal.fn(newArgs);
+          } else {
+            fiber.stack[fiber.sp++] = vexternal(fnVal.name, fnVal.arity, fnVal.fn, newArgs);
+          }
+        } else {
+          error(`expected function, got ${ppValue(fnVal)}`);
+        }
+        break;
+      }
+      case 78: { // GET_LOCAL_TUPLE_GET
+        const tup = asTuple(f.locals[op[1]]);
+        const idx = op[2];
+        if (idx >= tup.length) error("tuple index out of bounds");
+        fiber.stack[fiber.sp++] = tup[idx];
+        break;
+      }
+      case 79: { // GET_LOCAL_FIELD
+        const rec = asRecord(f.locals[op[1]]);
+        const name = op[2];
+        const entry = rec.find(([n]) => n === name);
+        if (!entry) error(`record has no field: ${name}`);
+        fiber.stack[fiber.sp++] = entry[1];
+        break;
+      }
+      case 80: { // JUMP_TABLE
+        const minTag = op[1];
+        const targets = op[2];
+        const defaultTarget = op[3];
+        const v = asVariant(fiber.stack[--fiber.sp]);
+        const idx = v.tagN - minTag;
+        if (idx >= 0 && idx < targets.length) {
+          f.ip = targets[idx];
+        } else {
+          f.ip = defaultTarget;
+        }
+        break;
+      }
+      case 74: // HALT
+        return fiber.sp > 0 ? fiber.stack[fiber.sp - 1] : VUNIT;
+      default:
+        error(`unknown opcode: ${op[0]}`);
     }
-    throw e;
   }
 }
 
@@ -926,7 +900,21 @@ function executeProto(vm, proto) {
   const locals = new Array(proto.num_locals).fill(VUNIT);
   fiber.frames.push({ closure, ip: 0, locals, baseSp: 0 });
   vm.currentFiber = fiber;
-  return run(vm);
+  try {
+    return run(vm);
+  } catch (e) {
+    if (e instanceof RuntimeError) {
+      const fiber = vm.currentFiber;
+      const f = fiber.frames.length > 0 ? fiber.frames[fiber.frames.length - 1] : null;
+      if (f) {
+        const ip = Math.max(0, f.ip - 1);
+        const lt = f.closure.proto.line_table;
+        const line = lt && ip < lt.length ? lt[ip] : 0;
+        if (line > 0) throw new RuntimeError(`[line ${line}] ${e.message}`);
+      }
+    }
+    throw e;
+  }
 }
 
 // --- Create a fresh VM ---
@@ -1656,12 +1644,48 @@ function deserializeValue(j) {
   }
 }
 
+const OPCODE_NAMES = [
+  "CONST", "POP", "DUP", "GET_LOCAL", "SET_LOCAL", "GET_UPVALUE", "SET_UPVALUE",
+  "MAKE_REF", "DEREF", "SET_REF", "GET_GLOBAL", "SET_GLOBAL", "DEF_GLOBAL",
+  "ADD", "SUB", "MUL", "DIV", "MOD", "NEG",
+  "FADD", "FSUB", "FMUL", "FDIV", "FNEG",
+  "EQ", "NEQ", "LT", "GT", "LE", "GE", "NOT",
+  "BAND", "BOR", "BXOR", "BNOT", "BSHL", "BSHR",
+  "JUMP", "JUMP_IF_FALSE", "JUMP_IF_TRUE",
+  "CLOSURE", "CLOSURE_REC",
+  "CALL", "TAIL_CALL", "RETURN", "FUNC_RETURN", "ENTER_FUNC", "EXIT_FUNC",
+  "MAKE_TUPLE", "TUPLE_GET",
+  "MAKE_RECORD", "FIELD", "SET_FIELD", "MAKE_VARIANT",
+  "CONS", "NIL", "TAG_EQ", "IS_NIL", "IS_CONS", "HEAD", "TAIL",
+  "VARIANT_PAYLOAD", "MATCH_FAIL",
+  "PERFORM", "HANDLE", "RESUME",
+  "ENTER_LOOP", "EXIT_LOOP", "LOOP_BREAK", "LOOP_CONTINUE", "FOLD_CONTINUE",
+  "MAKE_MAP", "MAKE_ARRAY", "INDEX", "HALT",
+  "RECORD_UPDATE", "RECORD_UPDATE_DYN",
+];
+
+// Map string opcode names to numeric tags for the VM switch
+const OPCODE_TO_NUM = {};
+OPCODE_NAMES.forEach((name, idx) => OPCODE_TO_NUM[name] = idx);
+// Combined opcodes (JSON-only, not in binary format)
+OPCODE_TO_NUM["GET_LOCAL_CALL"] = 77;
+OPCODE_TO_NUM["GET_LOCAL_TUPLE_GET"] = 78;
+OPCODE_TO_NUM["GET_LOCAL_FIELD"] = 79;
+OPCODE_TO_NUM["JUMP_TABLE"] = 80;
+
+function convertCode(code) {
+  for (let i = 0; i < code.length; i++) {
+    code[i][0] = OPCODE_TO_NUM[code[i][0]];
+  }
+  return code;
+}
+
 function deserializePrototype(j) {
   return {
     name: j.name,
     arity: j.arity,
     num_locals: j.num_locals,
-    code: j.code,
+    code: convertCode(j.code),
     constants: j.constants.map(deserializeValue),
     line_table: j.line_table || [],
   };
@@ -1722,26 +1746,6 @@ function loadBundle(jsonString) {
 }
 
 // --- Binary MMLB deserializer ---
-
-const OPCODE_NAMES = [
-  "CONST", "POP", "DUP", "GET_LOCAL", "SET_LOCAL", "GET_UPVALUE", "SET_UPVALUE",
-  "MAKE_REF", "DEREF", "SET_REF", "GET_GLOBAL", "SET_GLOBAL", "DEF_GLOBAL",
-  "ADD", "SUB", "MUL", "DIV", "MOD", "NEG",
-  "FADD", "FSUB", "FMUL", "FDIV", "FNEG",
-  "EQ", "NEQ", "LT", "GT", "LE", "GE", "NOT",
-  "BAND", "BOR", "BXOR", "BNOT", "BSHL", "BSHR",
-  "JUMP", "JUMP_IF_FALSE", "JUMP_IF_TRUE",
-  "CLOSURE", "CLOSURE_REC",
-  "CALL", "TAIL_CALL", "RETURN", "FUNC_RETURN", "ENTER_FUNC", "EXIT_FUNC",
-  "MAKE_TUPLE", "TUPLE_GET",
-  "MAKE_RECORD", "FIELD", "SET_FIELD", "MAKE_VARIANT",
-  "CONS", "NIL", "TAG_EQ", "IS_NIL", "IS_CONS", "HEAD", "TAIL",
-  "VARIANT_PAYLOAD", "MATCH_FAIL",
-  "PERFORM", "HANDLE", "RESUME",
-  "ENTER_LOOP", "EXIT_LOOP", "LOOP_BREAK", "LOOP_CONTINUE", "FOLD_CONTINUE",
-  "MAKE_MAP", "MAKE_ARRAY", "INDEX", "HALT",
-  "RECORD_UPDATE", "RECORD_UPDATE_DYN",
-];
 
 // Tags for opcodes that take a single u32 operand
 const U32_OPCODES = new Set([
@@ -1856,11 +1860,10 @@ function loadBundleBinary(arrayBuffer) {
 
   function readOpcode() {
     const tag = readU8();
-    const name = OPCODE_NAMES[tag];
 
     // Simple u32 operand opcodes
     if (U32_OPCODES.has(tag)) {
-      return [name, readU32()];
+      return [tag, readU32()];
     }
 
     switch (tag) {
@@ -1873,44 +1876,44 @@ function loadBundleBinary(arrayBuffer) {
       case 44: case 45: case 46: case 47:
       case 54: case 55: case 57: case 58: case 59: case 60:
       case 61: case 65: case 67: case 68: case 73: case 74:
-        return [name];
+        return [tag];
 
       case 40: { // CLOSURE
         const protoIdx = readU32();
         const caps = readCaptures();
-        return ["CLOSURE", protoIdx, caps];
+        return [40, protoIdx, caps];
       }
       case 41: { // CLOSURE_REC
         const protoIdx = readU32();
         const caps = readCaptures();
         const self = readU32();
-        return ["CLOSURE_REC", protoIdx, caps, self];
+        return [41, protoIdx, caps, self];
       }
       case 50: { // MAKE_RECORD
         const count = readU32();
         const fieldNames = new Array(count);
         for (let i = 0; i < count; i++) fieldNames[i] = strs[readU32()];
-        return ["MAKE_RECORD", fieldNames];
+        return [50, fieldNames];
       }
       case 51: // FIELD
-        return ["FIELD", strs[readU32()]];
+        return [51, strs[readU32()]];
       case 52: // SET_FIELD
-        return ["SET_FIELD", strs[readU32()]];
+        return [52, strs[readU32()]];
       case 53: { // MAKE_VARIANT
         const tagN = readU32();
         const vname = strs[readU32()];
         const hasPayload = readU8() !== 0;
-        return ["MAKE_VARIANT", tagN, vname, hasPayload];
+        return [53, tagN, vname, hasPayload];
       }
       case 62: // MATCH_FAIL
-        return ["MATCH_FAIL", strs[readU32()]];
+        return [62, strs[readU32()]];
       case 63: // PERFORM
-        return ["PERFORM", strs[readU32()]];
+        return [63, strs[readU32()]];
       case 75: { // RECORD_UPDATE
         const count = readU32();
         const fieldNames = new Array(count);
         for (let i = 0; i < count; i++) fieldNames[i] = strs[readU32()];
-        return ["RECORD_UPDATE", fieldNames];
+        return [75, fieldNames];
       }
       default:
         throw new Error(`unknown opcode tag: ${tag}`);
