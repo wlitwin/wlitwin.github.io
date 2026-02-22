@@ -468,10 +468,27 @@ function run(vm) {
             fiber.frames[fiber.frames.length - 1] = { closure: fnVal, ip: 0, locals: newLocals, baseSp: currentBaseSp };
           } else if (fnVal.tag === "external") {
             const newArgs = fnVal.args.concat([arg]);
+            let result;
             if (newArgs.length === fnVal.arity) {
-              push(fnVal.fn(newArgs));
+              result = fnVal.fn(newArgs);
             } else {
-              push(vexternal(fnVal.name, fnVal.arity, fnVal.fn, newArgs));
+              result = vexternal(fnVal.name, fnVal.arity, fnVal.fn, newArgs);
+            }
+            // Proper tail return: pop frame and return result
+            fiber.sp = frame().baseSp;
+            fiber.frames.pop();
+            if (fiber.frames.length === 0) {
+              const he = findHandlerForFiber(fiber);
+              if (he) {
+                removeHandler(he);
+                fiber = he.parentFiber;
+                vm.currentFiber = fiber;
+                internalCall(asClosure(he.returnHandler), result);
+              } else {
+                return result;
+              }
+            } else {
+              push(result);
             }
           } else {
             error(`expected function, got ${ppValue(fnVal)}`);
@@ -819,6 +836,54 @@ function run(vm) {
             push(base.v[idx]);
           } else {
             error("index operation requires string or array");
+          }
+          break;
+        }
+        case "GET_LOCAL_CALL": {
+          const fnVal = pop();
+          const arg = f.locals[op[1]];
+          if (fnVal.tag === "closure") {
+            const baseSp = fiber.sp;
+            const newLocals = new Array(fnVal.proto.num_locals).fill(VUNIT);
+            newLocals[0] = arg;
+            fiber.frames.push({ closure: fnVal, ip: 0, locals: newLocals, baseSp });
+          } else if (fnVal.tag === "external") {
+            const newArgs = fnVal.args.concat([arg]);
+            if (newArgs.length === fnVal.arity) {
+              push(fnVal.fn(newArgs));
+            } else {
+              push(vexternal(fnVal.name, fnVal.arity, fnVal.fn, newArgs));
+            }
+          } else {
+            error(`expected function, got ${ppValue(fnVal)}`);
+          }
+          break;
+        }
+        case "GET_LOCAL_TUPLE_GET": {
+          const tup = asTuple(f.locals[op[1]]);
+          const idx = op[2];
+          if (idx >= tup.length) error("tuple index out of bounds");
+          push(tup[idx]);
+          break;
+        }
+        case "GET_LOCAL_FIELD": {
+          const rec = asRecord(f.locals[op[1]]);
+          const name = op[2];
+          const entry = rec.find(([n]) => n === name);
+          if (!entry) error(`record has no field: ${name}`);
+          push(entry[1]);
+          break;
+        }
+        case "JUMP_TABLE": {
+          const minTag = op[1];
+          const targets = op[2];
+          const defaultTarget = op[3];
+          const v = asVariant(pop());
+          const idx = v.tagN - minTag;
+          if (idx >= 0 && idx < targets.length) {
+            frame().ip = targets[idx];
+          } else {
+            frame().ip = defaultTarget;
           }
           break;
         }
