@@ -519,7 +519,7 @@ source.addEventListener("scroll", () => {
 });
 updateHighlight();
 
-// Configure marked.js to highlight code blocks
+// Configure marked.js to highlight code blocks and add heading IDs
 marked.use({
   renderer: {
     code(src, lang) {
@@ -528,6 +528,12 @@ marked.use({
       const hl = (!language || language === 'ocaml' || language === 'miniml' || language === 'ml')
         ? highlightMiniML(text) : escHtml(text);
       return '<pre><code>' + hl + '</code></pre>\n';
+    },
+    heading(token) {
+      const text = typeof token === 'object' ? (token.text || '') : token;
+      const depth = typeof token === 'object' ? (token.depth || 1) : 1;
+      const slug = text.toLowerCase().replace(/<[^>]*>/g, '').replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+      return `<h${depth} id="${slug}">${text}</h${depth}>\n`;
     }
   }
 });
@@ -2088,7 +2094,7 @@ DOCS.forEach(doc => {
   docsSidebar.appendChild(a);
 });
 
-async function loadDoc(file) {
+async function loadDoc(file, anchor) {
   // Update sidebar active state
   document.querySelectorAll(".docs-sidebar a").forEach(a => {
     a.classList.toggle("active", a.dataset.file === file);
@@ -2098,7 +2104,8 @@ async function loadDoc(file) {
 
   if (docsCache[file]) {
     content.innerHTML = docsCache[file];
-    content.scrollTop = 0;
+    if (anchor) scrollToAnchor(content, anchor);
+    else content.scrollTop = 0;
     return;
   }
 
@@ -2111,11 +2118,26 @@ async function loadDoc(file) {
     const html = marked.parse(md);
     docsCache[file] = html;
     content.innerHTML = html;
-    content.scrollTop = 0;
+    if (anchor) scrollToAnchor(content, anchor);
+    else content.scrollTop = 0;
   } catch (e) {
     content.innerHTML = '<div class="docs-loading error">Failed to load document: ' + e.message + '</div>';
   }
 }
+
+function scrollToAnchor(container, id) {
+  const el = container.querySelector('#' + CSS.escape(id));
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Handle anchor clicks within docs content
+document.getElementById("docsContent").addEventListener("click", function(e) {
+  const link = e.target.closest("a[href^='#']");
+  if (!link) return;
+  e.preventDefault();
+  const id = link.getAttribute("href").slice(1);
+  scrollToAnchor(this, id);
+});
 </script>
 </body>
 </html>
