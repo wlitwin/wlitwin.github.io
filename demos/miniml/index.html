@@ -265,6 +265,7 @@ let () = print $"fib(20) = {fib 20}"
         <option value="canvas">Canvas GUI</option>
         <option value="framework">Framework GUI</option>
         <option value="layout">Layout Engine</option>
+        <option value="snake">Snake Game</option>
       </select>
       <div class="spacer"></div>
       <label class="toggle-label"><input type="checkbox" id="optimizeToggle"> Optimize</label>
@@ -319,6 +320,9 @@ globalThis._canvasMouseDown = false;
 globalThis._canvasMouseClicked = false;
 globalThis._canvasCtx = null;
 globalThis._canvasApp = null;
+globalThis._canvasKeysDown = {};
+globalThis._canvasKeysPressed = {};
+let _prevKeysDown = {};
 
 globalThis._canvasInit = function(w, h) {
   const dpr = window.devicePixelRatio || 1;
@@ -345,6 +349,15 @@ appCanvas.addEventListener("mousemove", (e) => {
 appCanvas.addEventListener("mousedown", () => { globalThis._canvasMouseDown = true; });
 appCanvas.addEventListener("mouseup", () => { globalThis._canvasMouseDown = false; });
 appCanvas.addEventListener("mouseleave", () => { globalThis._canvasMouseDown = false; });
+document.addEventListener("keydown", (e) => {
+  if (globalThis._canvasCtx) {
+    e.preventDefault();
+    globalThis._canvasKeysDown[e.key] = true;
+  }
+});
+document.addEventListener("keyup", (e) => {
+  delete globalThis._canvasKeysDown[e.key];
+});
 
 function stopCanvasApp() {
   if (animFrameId !== null) {
@@ -354,6 +367,9 @@ function stopCanvasApp() {
   stopBtn.style.display = "none";
   globalThis._canvasApp = null;
   globalThis._canvasCtx = null;
+  globalThis._canvasKeysDown = {};
+  globalThis._canvasKeysPressed = {};
+  _prevKeysDown = {};
 }
 
 stopBtn.addEventListener("click", () => {
@@ -701,6 +717,16 @@ async function runProgram() {
       const isDown = globalThis._canvasMouseDown;
       globalThis._canvasMouseClicked = isDown && !mouseWasDown;
       mouseWasDown = isDown;
+
+      // Update key pressed state: true for exactly one frame per key
+      const currentKeys = { ...globalThis._canvasKeysDown };
+      globalThis._canvasKeysPressed = {};
+      for (const key in currentKeys) {
+        if (!_prevKeysDown[key]) {
+          globalThis._canvasKeysPressed[key] = true;
+        }
+      }
+      _prevKeysDown = currentKeys;
 
       try {
         state = MiniML.callClosure(vmInst, frameFn, state);
@@ -2014,6 +2040,203 @@ let frame s =
     else s.page
   in
   { page = new_page; frame_num = s.frame_num + 1 }
+
+let () = Canvas.start_app init frame
+`,
+  snake: `-- Snake Game
+-- Arrow keys or WASD to move, eat food to grow, don't hit walls or yourself!
+-- Shows: algebraic types, records, pattern matching, lists, immutable state
+
+extern Canvas.init : int -> int -> unit
+extern Canvas.clear : string -> unit
+extern Canvas.fill_rect : float -> float -> float -> float -> string -> unit
+extern Canvas.stroke_rect : float -> float -> float -> float -> string -> unit
+extern Canvas.fill_circle : float -> float -> float -> string -> unit
+extern Canvas.draw_text : string -> float -> float -> string -> unit
+extern Canvas.set_font : string -> unit
+extern Canvas.key_pressed : string -> bool
+extern Canvas.start_app : (unit -> 'a) -> ('a -> 'a) -> unit
+
+-- Direction type
+type direction = Up | Down | Left | Right
+
+-- Game state
+type state = {
+  snake: (int * int) list;
+  dir: direction;
+  food: (int * int);
+  score: int;
+  started: bool;
+  game_over: bool;
+  tick: int;
+  rng: int
+}
+
+let grid_w = 25
+let grid_h = 25
+let cell = 20.0
+let speed = 8
+
+-- Simple LCG random number generator
+let next_rng seed =
+  (seed * 1103515245 + 12345) mod 2147483647
+
+let rand_pos seed =
+  let r1 = next_rng seed in
+  let r2 = next_rng r1 in
+  let x = (if r1 < 0 do 0 - r1 else r1) mod grid_w in
+  let y = (if r2 < 0 do 0 - r2 else r2) mod grid_h in
+  ((x, y), r2)
+
+-- Check if a position is occupied by the snake
+let rec mem_pos pos snake =
+  match snake with
+  | [] -> false
+  | (hd :: tl) -> if hd = pos do true else mem_pos pos tl
+
+-- Generate food not on the snake
+let rec gen_food seed snake =
+  let (pos, new_seed) = rand_pos seed in
+  if mem_pos pos snake do gen_food new_seed snake
+  else (pos, new_seed)
+
+-- Drop the last element of a list
+let rec drop_last lst =
+  match lst with
+  | [] -> []
+  | [_] -> []
+  | (x :: rest) -> x :: drop_last rest
+
+-- Opposite direction check (prevent 180-degree turns)
+let opposite d1 d2 =
+  match (d1, d2) with
+  | (Up, Down) -> true
+  | (Down, Up) -> true
+  | (Left, Right) -> true
+  | (Right, Left) -> true
+  | _ -> false
+
+-- Read direction from arrow keys or WASD
+let read_dir default =
+  if Canvas.key_pressed "ArrowUp" || Canvas.key_pressed "w" do Up
+  else if Canvas.key_pressed "ArrowDown" || Canvas.key_pressed "s" do Down
+  else if Canvas.key_pressed "ArrowLeft" || Canvas.key_pressed "a" do Left
+  else if Canvas.key_pressed "ArrowRight" || Canvas.key_pressed "d" do Right
+  else default
+
+-- Check if any direction key was pressed
+let any_key_pressed () =
+  Canvas.key_pressed "ArrowUp" || Canvas.key_pressed "ArrowDown"
+  || Canvas.key_pressed "ArrowLeft" || Canvas.key_pressed "ArrowRight"
+  || Canvas.key_pressed "w" || Canvas.key_pressed "a"
+  || Canvas.key_pressed "s" || Canvas.key_pressed "d"
+
+let new_game seed =
+  let start_snake = [(12, 12); (11, 12); (10, 12)] in
+  let (food, rng) = gen_food seed start_snake in
+  { snake = start_snake;
+    dir = Right;
+    food = food;
+    score = 0;
+    started = false;
+    game_over = false;
+    tick = 0;
+    rng = rng }
+
+let init () =
+  Canvas.init 500 500;
+  new_game 42
+
+-- Move the snake one step: compute new head, check collisions, update state
+let step s new_dir =
+  let (hx, hy) = List.hd s.snake in
+  let (nx, ny) = match new_dir with
+    | Up -> (hx, hy - 1)
+    | Down -> (hx, hy + 1)
+    | Left -> (hx - 1, hy)
+    | Right -> (hx + 1, hy)
+  in
+  if nx < 0 || nx >= grid_w || ny < 0 || ny >= grid_h do
+    { s with game_over = true }
+  else if mem_pos (nx, ny) s.snake do
+    { s with game_over = true }
+  else if (nx, ny) = s.food do
+    let new_snake = (nx, ny) :: s.snake in
+    let (new_food, new_rng) = gen_food s.rng new_snake in
+    { s with snake = new_snake; food = new_food;
+             score = s.score + 1; rng = new_rng; dir = new_dir }
+  else
+    let new_snake = (nx, ny) :: drop_last s.snake in
+    { s with snake = new_snake; dir = new_dir }
+
+-- Draw the grid, snake, food, and score
+let draw s =
+  Canvas.clear "#1a202c";
+  let _ = List.init grid_h (fn y ->
+    List.init grid_w (fn x ->
+      let xf = float_of_int x * cell in
+      let yf = float_of_int y * cell in
+      let color = if (x + y) mod 2 = 0 do "#222832" else "#1e2430" in
+      Canvas.fill_rect xf yf cell cell color
+    )
+  ) in
+  let (fx, fy) = s.food in
+  Canvas.fill_circle
+    (float_of_int fx * cell + cell / 2.0)
+    (float_of_int fy * cell + cell / 2.0)
+    (cell / 2.5) "#FC8181";
+  let _ = List.iteri (fn i (sx, sy) ->
+    let xf = float_of_int sx * cell + 1.0 in
+    let yf = float_of_int sy * cell + 1.0 in
+    let color = if i = 0 do "#68D391" else "#48BB78" in
+    Canvas.fill_rect xf yf (cell - 2.0) (cell - 2.0) color
+  ) s.snake in
+  Canvas.set_font "bold 16px monospace";
+  Canvas.draw_text $"Score: {s.score}" 10.0 6.0 "#E2E8F0"
+
+-- Draw a centered overlay box with a message
+let draw_overlay title subtitle =
+  Canvas.fill_rect 100.0 180.0 300.0 100.0 "#2D3748";
+  Canvas.stroke_rect 100.0 180.0 300.0 100.0 "#FFCC66";
+  Canvas.set_font "bold 28px sans-serif";
+  Canvas.draw_text title 130.0 200.0 "#FFCC66";
+  Canvas.set_font "14px monospace";
+  Canvas.draw_text subtitle 112.0 245.0 "#A0AEC0"
+
+let frame s =
+  -- Waiting to start: draw scene, show prompt, start on any direction key
+  if not s.started do (
+    draw s;
+    draw_overlay "Snake Game" "Press arrow keys or WASD to start";
+    if any_key_pressed () do
+      { s with started = true; dir = read_dir s.dir }
+    else s
+  )
+  -- Game over: draw scene, show result, restart on any key
+  else if s.game_over do (
+    draw s;
+    Canvas.fill_rect 100.0 180.0 300.0 100.0 "#2D3748";
+    Canvas.stroke_rect 100.0 180.0 300.0 100.0 "#FC8181";
+    Canvas.set_font "bold 28px sans-serif";
+    Canvas.draw_text "Game Over!" 145.0 200.0 "#FC8181";
+    Canvas.set_font "16px monospace";
+    Canvas.draw_text $"Final score: {s.score}" 160.0 240.0 "#E2E8F0";
+    Canvas.set_font "14px monospace";
+    Canvas.draw_text "Press any key to restart" 130.0 265.0 "#A0AEC0";
+    if any_key_pressed () do new_game s.rng
+    else s
+  )
+  -- Playing: read input, update, draw
+  else (
+    let new_dir = read_dir s.dir in
+    let new_dir = if opposite s.dir new_dir do s.dir else new_dir in
+    let s =
+      if s.tick mod speed = 0 do step s new_dir
+      else { s with dir = new_dir }
+    in
+    draw s;
+    { s with tick = s.tick + 1 }
+  )
 
 let () = Canvas.start_app init frame
 `,

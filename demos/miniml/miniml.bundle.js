@@ -1683,6 +1683,12 @@ reg("Canvas.mouse_down", 1, (_args) =>
 reg("Canvas.mouse_clicked", 1, (_args) =>
   vbool(!!globalThis._canvasMouseClicked));
 
+reg("Canvas.key_down", 1, (args) =>
+  vbool(!!globalThis._canvasKeysDown[asString(args[0])]));
+
+reg("Canvas.key_pressed", 1, (args) =>
+  vbool(!!globalThis._canvasKeysPressed[asString(args[0])]));
+
 reg("Canvas.start_app", 2, (args) => {
   globalThis._canvasApp = {
     initFn: asClosure(args[0]),

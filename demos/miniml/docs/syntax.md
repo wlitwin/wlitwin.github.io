@@ -679,12 +679,18 @@ both `int` and `float` (and custom types with a `Num` instance).
 2.0 + 3.0       -- 5.0
 ```
 
-### Unary negation
+### Unary operators
 
 ```
 -(3)
 -(3.5)
+not flag
+lnot bits
 ```
+
+Unary operators (`-`, `not`, `lnot`) bind looser than field access but tighter
+than function application. This means `not r.field` is `not (r.field)`, matching
+OCaml behavior.
 
 ### Comparison
 

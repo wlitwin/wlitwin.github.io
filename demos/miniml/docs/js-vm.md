@@ -230,6 +230,8 @@ extern Canvas.mouse_x : unit -> float
 extern Canvas.mouse_y : unit -> float
 extern Canvas.mouse_down : unit -> bool
 extern Canvas.mouse_clicked : unit -> bool
+extern Canvas.key_down : string -> bool
+extern Canvas.key_pressed : string -> bool
 extern Canvas.start_app : (unit -> 'a) -> ('a -> 'a) -> unit
 ```
 
@@ -253,6 +255,10 @@ extern Canvas.start_app : (unit -> 'a) -> ('a -> 'a) -> unit
 | `Canvas.mouse_y ()` | Current mouse Y position (float) |
 | `Canvas.mouse_down ()` | True while mouse button is held |
 | `Canvas.mouse_clicked ()` | True for exactly one frame per click |
+| `Canvas.key_down key` | True while the key is held (e.g., `"ArrowUp"`, `"a"`) |
+| `Canvas.key_pressed key` | True for exactly one frame per key press |
+
+Key names use the standard `KeyboardEvent.key` values (e.g., `"ArrowUp"`, `"ArrowDown"`, `"ArrowLeft"`, `"ArrowRight"`, `" "` for space, `"a"` through `"z"` for letter keys).
 
 ### App Lifecycle
 
@@ -309,7 +315,7 @@ User code ──→ Self-hosted compiler ──→ JSON bundle ──→ JS VM �
 ### Features
 
 - **Syntax highlighting** with Ayu Mirage color scheme
-- **17 sample programs** including interactive canvas demos
+- **18 sample programs** including interactive canvas demos and a Snake game
 - **Optimization toggle** — passes `--no-optimize` to the self-hosted compiler when unchecked
 - **Timing display** — shows compilation and execution time separately
 - **Docs tab** — built-in documentation viewer (renders markdown from `docs/`)
