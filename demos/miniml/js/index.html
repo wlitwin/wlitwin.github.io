@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MiniML Playground</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
   /* Ayu Mirage palette */
   :root {
@@ -269,6 +270,12 @@ let () = print $"fib(20) = {fib 20}"
       </select>
       <div class="spacer"></div>
       <label class="toggle-label"><input type="checkbox" id="optimizeToggle"> Optimize</label>
+      <select id="modeSelect">
+        <option value="js-js">JS &rarr; JS</option>
+        <option value="js-vm">JS &rarr; VM</option>
+        <option value="bc-vm">Bytecode &rarr; VM</option>
+        <option value="bc-js">Bytecode &rarr; JS</option>
+      </select>
       <span id="statusText" class="status"></span>
     </div>
 
@@ -554,9 +561,11 @@ marked.use({
   }
 });
 
-// Compiler bundle cache
-let compilerJson = null;  // JSON string for compiler bundle
+// Compiler bundle caches
+let compilerJson = null;  // JSON string for bytecode compiler bundle
 let compilerLoading = false;
+let compilerNativeJs = null;  // JS string for native JS compiler
+let compilerNativeLoading = false;
 
 function appendOutput(text, cls) {
   const span = document.createElement("span");
@@ -574,24 +583,45 @@ async function loadCompiler() {
   if (compilerJson) return compilerJson;
   if (compilerLoading) return null;
   compilerLoading = true;
-  setStatus('<span class="spinner"></span>Loading compiler...');
+  setStatus('<span class="spinner"></span>Loading bytecode compiler...');
   try {
     const resp = await fetch("compiler.json");
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     compilerJson = await resp.text();
-    setStatus("Compiler loaded");
+    setStatus("Bytecode compiler loaded");
     return compilerJson;
   } catch (e) {
     setStatus("");
-    appendOutput("Failed to load compiler: " + e.message, "error");
+    appendOutput("Failed to load bytecode compiler: " + e.message, "error");
     return null;
   } finally {
     compilerLoading = false;
   }
 }
 
-// Pre-fetch compiler on page load
+async function loadCompilerNative() {
+  if (compilerNativeJs) return compilerNativeJs;
+  if (compilerNativeLoading) return null;
+  compilerNativeLoading = true;
+  setStatus('<span class="spinner"></span>Loading JS compiler...');
+  try {
+    const resp = await fetch("compiler_native.js");
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    compilerNativeJs = await resp.text();
+    setStatus("JS compiler loaded");
+    return compilerNativeJs;
+  } catch (e) {
+    setStatus("");
+    appendOutput("Failed to load JS compiler: " + e.message, "error");
+    return null;
+  } finally {
+    compilerNativeLoading = false;
+  }
+}
+
+// Pre-fetch both compilers on page load
 loadCompiler();
+loadCompilerNative();
 
 async function runProgram() {
   // Clean up any running canvas app
@@ -611,57 +641,93 @@ async function runProgram() {
     return;
   }
 
-  // Load compiler if needed
-  const compiler = await loadCompiler();
-  if (!compiler) {
-    runBtn.disabled = false;
-    return;
-  }
+  const mode = document.getElementById("modeSelect").value;
+  const optimize = document.getElementById("optimizeToggle").checked;
+  const [compilerType, outputType] = mode.split("-");  // "bc"/"js", "vm"/"js"
+
+  const emitFlag = outputType === "js" ? "--emit-js" : "--emit-json";
+  const compilerArgs = optimize
+    ? ["compiler", emitFlag, "input.mml"]
+    : ["compiler", emitFlag, "--no-optimize", "input.mml"];
+
+  const readFile = (filename) => {
+    if (filename === "input.mml") return code;
+    if (MiniML.STDLIB_SOURCES[filename]) return MiniML.STDLIB_SOURCES[filename];
+    throw new Error("File not found: " + filename);
+  };
 
   // Stage 1: Compile
   setStatus('<span class="spinner"></span>Compiling...');
   // Yield to let browser paint the status update before blocking
   await new Promise(r => setTimeout(r, 10));
-  const compileOutput = [];
 
-  const optimize = document.getElementById("optimizeToggle").checked;
-  globalThis._vmArgs = optimize
-    ? ["compiler", "--emit-json", "input.mml"]
-    : ["compiler", "--emit-json", "--no-optimize", "input.mml"];
-  globalThis._vmReadFile = (filename) => {
-    if (filename === "input.mml") return code;
-    if (MiniML.STDLIB_SOURCES[filename]) return MiniML.STDLIB_SOURCES[filename];
-    throw new Error("File not found: " + filename);
-  };
-  globalThis._vmOutput = (s) => compileOutput.push(s);
-
-  let compiledJson;
+  let compiled;
   const t0 = performance.now();
-  try {
-    MiniML.loadBundle(compiler);
-    compiledJson = compileOutput.join("\n");
-  } catch (e) {
-    const elapsed = (performance.now() - t0).toFixed(1);
+
+  if (compilerType === "bc") {
+    // Bytecode compiler path — run compiler.json in VM
+    const compiler = await loadCompiler();
+    if (!compiler) { runBtn.disabled = false; return; }
+
+    const compileOutput = [];
+    globalThis._vmArgs = compilerArgs;
+    globalThis._vmReadFile = readFile;
+    globalThis._vmOutput = (s) => compileOutput.push(s);
+
+    try {
+      MiniML.loadBundle(compiler);
+      compiled = compileOutput.join(outputType === "js" ? "" : "\n");
+    } catch (e) {
+      const elapsed = (performance.now() - t0).toFixed(1);
+      globalThis._vmArgs = null;
+      globalThis._vmReadFile = null;
+      globalThis._vmOutput = null;
+      setStatus("");
+      let msg = e.message || String(e);
+      msg = msg.replace(/^\[line \d+\] /, "");
+      appendOutput("Compile error: " + msg, "compile-error");
+      appendOutput(`\n--- failed in ${elapsed}ms ---`, "timing");
+      runBtn.disabled = false;
+      return;
+    }
+
     globalThis._vmArgs = null;
     globalThis._vmReadFile = null;
     globalThis._vmOutput = null;
-    setStatus("");
-    // Strip outer VM's [line N] prefix - the compiler's own line is noise
-    let msg = e.message || String(e);
-    msg = msg.replace(/^\[line \d+\] /, "");
-    appendOutput("Compile error: " + msg, "compile-error");
-    appendOutput(`\n--- failed in ${elapsed}ms ---`, "timing");
-    runBtn.disabled = false;
-    return;
-  }
+  } else {
+    // JS compiler path — eval compiler_native.js
+    const compilerJs = await loadCompilerNative();
+    if (!compilerJs) { runBtn.disabled = false; return; }
 
-  globalThis._vmArgs = null;
-  globalThis._vmReadFile = null;
-  globalThis._vmOutput = null;
+    const compileOutput = [];
+    globalThis._jsSysArgs = compilerArgs;
+    globalThis._jsReadFile = readFile;
+    globalThis._jsOutput = (s) => compileOutput.push(s);
+
+    try {
+      new Function(compilerJs)();
+      compiled = compileOutput.join("");
+    } catch (e) {
+      const elapsed = (performance.now() - t0).toFixed(1);
+      globalThis._jsSysArgs = null;
+      globalThis._jsReadFile = null;
+      globalThis._jsOutput = null;
+      setStatus("");
+      let msg = e.message || String(e);
+      appendOutput("Compile error: " + msg, "compile-error");
+      appendOutput(`\n--- failed in ${elapsed}ms ---`, "timing");
+      runBtn.disabled = false;
+      return;
+    }
+
+    globalThis._jsSysArgs = null;
+    globalThis._jsReadFile = null;
+    globalThis._jsOutput = null;
+  }
 
   const compileTime = (performance.now() - t0).toFixed(1);
 
-  if (!compiledJson || !compiledJson.trim()) {
+  if (!compiled || !compiled.trim()) {
     setStatus("");
     appendOutput("Compiler produced no output.", "error");
     runBtn.disabled = false;
@@ -670,44 +736,73 @@ async function runProgram() {
 
   // Stage 2: Execute
   setStatus('<span class="spinner"></span>Running...');
-  globalThis._vmOutput = (s) => appendOutput(s);
-
   const t1 = performance.now();
-  try {
-    const result = MiniML.loadBundle(compiledJson);
-    const runTime = (performance.now() - t1).toFixed(1);
-    if (result !== MiniML.VUNIT && result.tag !== "unit") {
-      appendOutput(MiniML.ppValue(result));
+
+  if (outputType === "vm") {
+    // Execute bytecode in VM
+    globalThis._vmOutput = (s) => appendOutput(s);
+
+    try {
+      const result = MiniML.loadBundle(compiled);
+      const runTime = (performance.now() - t1).toFixed(1);
+      if (result !== MiniML.VUNIT && result.tag !== "unit") {
+        appendOutput(MiniML.ppValue(result));
+      }
+      setStatus("");
+      appendOutput(`\n--- compiled in ${compileTime}ms, ran in ${runTime}ms ---`, "timing");
+    } catch (e) {
+      const runTime = (performance.now() - t1).toFixed(1);
+      setStatus("");
+      if (e instanceof MiniML.RuntimeError) {
+        appendOutput("Runtime error: " + e.message, "error");
+      } else {
+        appendOutput("Error: " + e.message, "error");
+      }
+      appendOutput(`\n--- compiled in ${compileTime}ms, failed in ${runTime}ms ---`, "timing");
     }
-    setStatus("");
-    appendOutput(`\n--- compiled in ${compileTime}ms, ran in ${runTime}ms ---`, "timing");
-  } catch (e) {
-    const runTime = (performance.now() - t1).toFixed(1);
-    setStatus("");
-    if (e instanceof MiniML.RuntimeError) {
-      appendOutput("Runtime error: " + e.message, "error");
-    } else {
-      appendOutput("Error: " + e.message, "error");
+  } else {
+    // Execute raw JS
+    globalThis._jsOutput = (s) => appendOutput(s);
+
+    try {
+      new Function(compiled)();
+      const runTime = (performance.now() - t1).toFixed(1);
+      setStatus("");
+      appendOutput(`\n--- compiled in ${compileTime}ms, ran in ${runTime}ms ---`, "timing");
+    } catch (e) {
+      const runTime = (performance.now() - t1).toFixed(1);
+      setStatus("");
+      appendOutput("Runtime error: " + (e.message || String(e)), "error");
+      appendOutput(`\n--- compiled in ${compileTime}ms, failed in ${runTime}ms ---`, "timing");
+    } finally {
+      globalThis._jsOutput = null;
     }
-    appendOutput(`\n--- compiled in ${compileTime}ms, failed in ${runTime}ms ---`, "timing");
   }
 
   // Stage 3: Start canvas animation loop if app was registered
   if (globalThis._canvasApp) {
-    const { initFn, frameFn } = globalThis._canvasApp;
+    const { initFn, frameFn, jsMode, call: jsCall } = globalThis._canvasApp;
     const vmInst = globalThis._vmInstance;
     stopBtn.style.display = "inline-block";
 
-    // Keep _vmOutput active so print inside frame functions shows in output
-    // globalThis._vmOutput stays set
+    // Keep output hooks active so print inside frame functions shows in output
+    if (jsMode) {
+      globalThis._jsOutput = (s) => appendOutput(s);
+    }
+    // globalThis._vmOutput stays set for VM mode
 
     let state;
     try {
-      state = MiniML.callClosure(vmInst, initFn, MiniML.VUNIT);
+      if (jsMode) {
+        state = jsCall(initFn, [undefined]);
+      } else {
+        state = MiniML.callClosure(vmInst, initFn, MiniML.VUNIT);
+      }
     } catch (e) {
       appendOutput("Canvas init error: " + e.message, "error");
       stopCanvasApp();
       globalThis._vmOutput = null;
+      globalThis._jsOutput = null;
       runBtn.disabled = false;
       return;
     }
@@ -729,11 +824,16 @@ async function runProgram() {
       _prevKeysDown = currentKeys;
 
       try {
-        state = MiniML.callClosure(vmInst, frameFn, state);
+        if (jsMode) {
+          state = jsCall(frameFn, [state]);
+        } else {
+          state = MiniML.callClosure(vmInst, frameFn, state);
+        }
       } catch (e) {
         appendOutput("Canvas frame error: " + e.message, "error");
         stopCanvasApp();
         globalThis._vmOutput = null;
+        globalThis._jsOutput = null;
         runBtn.disabled = false;
         return;
       }
@@ -2262,6 +2362,7 @@ const DOCS = [
   { file: "modules.md",  title: "Module System" },
   { file: "compiler.md", title: "Compiler Pipeline" },
   { file: "js-vm.md",    title: "JavaScript VM" },
+  { file: "harness.md",  title: "Browser Harness" },
   { separator: true, title: "Type System Internals" },
   { file: "typesystem/00-overview.md",        title: "Overview" },
   { file: "typesystem/01-types.md",           title: "Types & Representation" },
@@ -2335,7 +2436,7 @@ async function loadDoc(file, anchor) {
   content.innerHTML = '<div class="docs-loading"><span class="spinner"></span> Loading...</div>';
 
   try {
-    const resp = await fetch("docs/" + file);
+    const resp = await fetch("../docs/" + file);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const md = await resp.text();
     const html = marked.parse(md);

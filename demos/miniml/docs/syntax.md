@@ -62,16 +62,23 @@ Block comments use `(* ... *)` and are nestable.
    still inside outer comment *)
 ```
 
-### Special comment annotations
+### Annotations
 
-The `-- @partial` annotation suppresses exhaustiveness checking on the
-immediately following `match` expression.
+The `@partial` annotation suppresses exhaustiveness checking on the
+immediately following `match` expression. It can be written as a bare
+annotation or inside a comment:
 
 ```
+@partial
+match some_option with
+| Some x -> x
+
 -- @partial
 match some_option with
 | Some x -> x
 ```
+
+Both forms are equivalent — the lexer recognizes `@partial` in either context.
 
 ---
 
@@ -484,9 +491,14 @@ match n with
 
 ### Partial annotation
 
-The `-- @partial` annotation suppresses exhaustiveness checking:
+The `@partial` annotation suppresses exhaustiveness checking. It can be
+written as a bare annotation or inside a comment:
 
 ```
+@partial
+match opt with
+| Some x -> x
+
 -- @partial
 match opt with
 | Some x -> x

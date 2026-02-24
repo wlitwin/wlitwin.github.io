@@ -101,4 +101,4 @@ let rec (type 'a) eval (e : 'a expr) : 'a =
 - **[Algebraic Effects](effects.md)** — Effect declarations, handlers, continuations, and practical patterns
 - **[Standard Library](stdlib.md)** — Built-in functions, type classes, and module reference
 - **[Module System](modules.md)** — Defining modules, visibility, opaque types, and open declarations
-- **[JavaScript VM](js-vm.md)** — Running MiniML programs in Node.js or the browser
+- **[JavaScript VM & JS Backend](js-vm.md)** — Running MiniML in Node.js or the browser via the bytecode VM or standalone JS compilation

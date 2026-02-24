@@ -132,6 +132,7 @@ type pattern =
   | PatOr of pattern * pattern
   | PatArray of pattern list
   | PatMap of (pattern * pattern) list
+  | PatPolyVariant of string * pattern option
 ```
 
 Each of these forms has a corresponding case in `check_pattern`.
@@ -285,6 +286,41 @@ detail.
 
 Record patterns are explained in detail in the record pattern inference
 section below.
+
+### Polymorphic Variant Patterns
+
+```ocaml
+  | Ast.PatPolyVariant (tag, None) ->
+    let tail = new_pvvar level in
+    let row = Types.PVRow (tag, None, tail) in
+    try_unify ty (Types.TPolyVariant row);
+    []
+  | Ast.PatPolyVariant (tag, Some sub_pat) ->
+    let payload_ty = new_tvar level in
+    let tail = new_pvvar level in
+    let row = Types.PVRow (tag, Some payload_ty, tail) in
+    try_unify ty (Types.TPolyVariant row);
+    check_pattern ctx level sub_pat payload_ty
+```
+
+A poly variant pattern like `` `Foo `` or `` `Bar x `` constructs an open
+poly variant row type (using a `PVVar` tail) with the given tag, and unifies
+it with the scrutinee type. For tags with a payload, the sub-pattern is
+checked against a fresh type variable representing the payload type.
+
+For example:
+
+```
+match x with
+| `Circle r -> 3.14 *. r *. r
+| `Square s -> s *. s
+```
+
+The scrutinee `x` is unified with
+`TPolyVariant(PVRow("Circle", Some 'a, PVRow("Square", Some 'b, PVVar(...))))`,
+and the payload variables `r` and `s` get bound to `'a` and `'b` respectively.
+Since the row ends with a `PVVar`, this match accepts any poly variant with
+at least these two tags.
 
 ### Alias Patterns
 
@@ -1222,10 +1258,31 @@ if not partial then
   !exhaustiveness_check_ref ctx (Types.repr scrut_te.ty) all_arms;
 ```
 
-This flag is used internally by derived code (such as auto-generated `Show`
-and `Eq` instances) where the compiler constructs match expressions that are
-known to be correct by construction, or where partial matching is intentional.
-User-written match expressions always have this flag set to `false`.
+This flag is set to `true` in two cases:
+
+1. **User-written `@partial` annotation.** Users can suppress the exhaustiveness
+   check on a specific match expression by placing `@partial` before it. Two
+   equivalent syntaxes are supported:
+
+   ```
+   @partial
+   match opt with
+   | Some x -> x
+   ```
+
+   ```
+   -- @partial
+   match opt with
+   | Some x -> x
+   ```
+
+   Both forms cause the lexer to emit a `PARTIAL` token, and the parser sets
+   the boolean flag to `true`. This is useful for functions like `unwrap` where
+   the caller guarantees the value will match.
+
+2. **Derived code.** Auto-generated `Show` and `Eq` instances construct match
+   expressions that are known to be correct by construction. These also set
+   the flag to `true`.
 
 
 ## Summary
@@ -1236,8 +1293,10 @@ Pattern matching typechecking has two phases:
    unifying the scrutinee type with the type implied by the pattern, and
    collecting variable bindings. Constructor patterns trigger a lookup in the
    type environment to determine the parent variant type and instantiate its
-   type parameters. Record patterns use field names to infer which record type
-   is involved when the scrutinee type is not yet known. For GADT types,
+   type parameters. Polymorphic variant patterns construct open row types
+   and unify them with the scrutinee. Record patterns use field names to
+   infer which record type is involved when the scrutinee type is not yet
+   known. For GADT types,
    `check_pattern_gadt` handles constructor patterns specially, creating fresh
    tvars for both universals and existentials, and building the return type
    from `ctor_return_ty_params` to establish local type equations via
