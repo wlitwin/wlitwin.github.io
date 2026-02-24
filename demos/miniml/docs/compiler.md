@@ -29,44 +29,47 @@ Here's the compilation pipeline:
   │      constraints│  Rewrites typeclass calls → dictionary field accesses
   └────┬───────────┘
        │
-       ├──────────────────────────────┐
-       ▼                              ▼
-  ┌──────────────┐           ┌───────────────┐
-  │ 4a. COMPILER │           │ 4b. JS CODEGEN│  lib/js_codegen.ml
-  │  (bytecode)  │           │               │  tprogram → standalone JS
-  │  lib/compiler│           │  Direct-style  │  CPS for effects
-  │  .ml         │           │  + trampoline  │  Partial application
-  └────┬─────────┘           └───────┬───────┘
-       │                             │
-       ▼                             ▼
-  ┌──────────────┐           ┌───────────────┐
-  │ 4c.OPTIMIZER │           │ JS OUTPUT     │  --emit-js
-  │  lib/optimize│           │ Standalone .js │  Runs in Node.js
-  │  .ml         │           │ with builtins  │  or browser
-  └────┬─────────┘           └───────────────┘
-       │
-       ▼
-  ┌──────────────┐
-  │ 5. VM        │  lib/vm.ml (OCaml) or js/vm.js (JavaScript)
-  │              │  compiled_program → value
-  │              │  Stack-based, ~88 opcodes, tail-call opt
-  └──────────────┘
+       ├────────────────────┬──────────────────────┐
+       ▼                    ▼                      ▼
+  ┌──────────────┐  ┌───────────────┐  ┌────────────────────┐
+  │ 4a. COMPILER │  │ 4b. JS CODEGEN│  │ 4c. NATIVE CODEGEN │
+  │  (bytecode)  │  │               │  │                    │
+  │  lib/compiler│  │  Direct-style │  │  lib/native/       │
+  │  .ml         │  │  + CPS/tramp  │  │  codegen.ml        │
+  └────┬─────────┘  └───────┬───────┘  └────────┬───────────┘
+       │                    │                    │
+       ▼                    ▼                    ▼
+  ┌──────────────┐  ┌───────────────┐  ┌────────────────────┐
+  │ OPTIMIZER    │  │ JS OUTPUT     │  │ NATIVE OUTPUT      │
+  │  lib/optimize│  │ Standalone .js│  │ tprogram → LLVM IR │
+  │  .ml         │  │ --emit-js     │  │ → clang → binary   │
+  └────┬─────────┘  └───────────────┘  │ mmlc / --emit-ir   │
+       │                               └────────────────────┘
+       ├──────────────────────┐
+       ▼                      ▼
+  ┌──────────────┐   ┌───────────────┐
+  │ SERIALIZE    │   │ VM            │
+  │ --emit-json  │   │ lib/vm.ml     │
+  │ --emit-binary│   │ js/vm.js      │
+  └──────────────┘   └───────────────┘
 ```
 
-The pipeline branches after typechecking into two backends:
+The pipeline branches after typechecking into three backends:
 
-- **Bytecode backend** (`--emit-json` or default): Compiles to stack-based bytecode, optionally optimized, then executed by the OCaml or JavaScript VM.
+- **Bytecode backend** (`--emit-json`, `--emit-binary`, or default): Compiles to stack-based bytecode, optionally optimized, then either executed directly by the OCaml or JavaScript VM, or serialized to JSON (`--emit-json`) or a compact binary format (`--emit-binary`) for later execution (`--run-json`, `--run-binary`).
 - **JS codegen backend** (`--emit-js`): Compiles typed AST directly to standalone JavaScript. Uses direct-style compilation for most code, with CPS transformation and trampolining for algebraic effects. The output is a self-contained `.js` file that runs in Node.js or the browser without a VM.
+- **Native backend** (`mmlc` binary, or `--emit-ir`): Compiles typed AST to LLVM IR text (`lib/native/codegen.ml`), then invokes clang to produce a native binary linked against a C runtime (`native_rt/runtime.c`). Use `--emit-ir` to inspect the generated LLVM IR without compiling. Orchestrated by `lib/native/driver.ml`.
 
   Key IRs:
 
 - Ast.expr — untyped, sugar included (EFor, EAnnot, etc.)
 - texpr — typed, desugared (every node has ty: Types.ty), constraints transformed to explicit dict passing
 - Bytecode.opcode — stack-based instructions (CONST, ADD, CALL, CLOSURE, JUMP_IF_FALSE, etc.)
+- LLVM IR text — emitted by native codegen, consumed by clang
 
 ## Optimization Passes
 
-After stage 4 (compilation), the bytecode goes through a peephole optimizer (`lib/optimize.ml`) before being serialized or executed. The optimizer is enabled by default and can be disabled with `--no-optimize` in the self-hosted compiler or via the "Optimize" checkbox in the web playground.
+After stage 4a (bytecode compilation), the bytecode goes through a peephole optimizer (`lib/optimize.ml`) before being serialized or executed. The optimizer is enabled by default and can be disabled with `--no-optimize` in the self-hosted compiler or via the "Optimize" checkbox in the web playground (bytecode modes only).
 
 The optimizer uses a three-phase architecture:
 
@@ -78,7 +81,7 @@ The optimizer is applied recursively to nested prototypes in constants before op
 
 ### Pass 1: Dead Code After TAIL_CALL
 
-Removes unreachable instructions after a `TAIL_CALL` up to the next jump target. Since `TAIL_CALL` never returns, any code between it and the next reachable point is dead.
+Removes unreachable instructions after a `TAIL_CALL` or `TAIL_CALL_N` up to the next jump target. Since tail calls never return, any code between them and the next reachable point is dead.
 
 ```
 TAIL_CALL 1
@@ -133,9 +136,9 @@ Fuses common two-instruction sequences into single specialized opcodes. This red
 | `GET_GLOBAL i; CALL k` | `GET_GLOBAL_CALL(i, k)` |
 | `GET_GLOBAL i; FIELD f` | `GET_GLOBAL_FIELD(i, f)` |
 
-### Pass 6: Jump Tables (currently disabled)
+### Pass 6: Jump Tables
 
-Detects chains of `GET_LOCAL; TAG_EQ; JUMP_IF_FALSE` (generated by match expressions on variants) and replaces them with a single `JUMP_TABLE` instruction for O(1) dispatch. Only applies when the tag range is dense (range <= 2x the number of arms).
+Detects chains of `GET_LOCAL; TAG_EQ; JUMP_IF_FALSE` (generated by match expressions on variants) and replaces them with a single `JUMP_TABLE` instruction for O(1) dispatch. Only applies when the tag range is dense (range <= 2x the number of arms) and all tags are unique (no nested patterns or guards). Additionally validates that no external jumps target positions within the chain.
 
 ```
 -- Before:                    -- After:
@@ -148,8 +151,6 @@ TAG_EQ 1
 JUMP_IF_FALSE next2
 ...
 ```
-
-This pass is currently disabled pending investigation of an edge case.
 
 ### Pass 7: Push/Pop Cancellation
 
