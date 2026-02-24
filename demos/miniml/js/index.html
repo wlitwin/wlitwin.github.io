@@ -850,6 +850,16 @@ async function runProgram() {
 
 runBtn.addEventListener("click", runProgram);
 
+// Hide optimize checkbox when output is JS (optimizer only applies to bytecode)
+const modeSelect = document.getElementById("modeSelect");
+const optimizeLabel = document.getElementById("optimizeToggle").parentElement;
+function updateOptimizeVisibility() {
+  const outputType = modeSelect.value.split("-")[1];
+  optimizeLabel.style.display = outputType === "vm" ? "" : "none";
+}
+modeSelect.addEventListener("change", updateOptimizeVisibility);
+updateOptimizeVisibility();
+
 clearBtn.addEventListener("click", () => {
   output.textContent = "";
   setStatus("");
