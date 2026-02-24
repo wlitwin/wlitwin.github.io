@@ -207,16 +207,35 @@ const MiniML = {
     let mouseWasDown = false;
     let keysWereDown = {};
 
-    function onMouseMove(e) {
+    function updatePointer(clientX, clientY) {
       const r = canvas.getBoundingClientRect();
-      globalThis._canvasMouseX = e.clientX - r.left;
-      globalThis._canvasMouseY = e.clientY - r.top;
+      globalThis._canvasMouseX = clientX - r.left;
+      globalThis._canvasMouseY = clientY - r.top;
     }
+    function onMouseMove(e) { updatePointer(e.clientX, e.clientY); }
     function onMouseDown() { globalThis._canvasMouseDown = true; }
     function onMouseUp() { globalThis._canvasMouseDown = false; }
+    function onTouchStart(e) {
+      e.preventDefault();
+      var t = e.touches[0];
+      updatePointer(t.clientX, t.clientY);
+      globalThis._canvasMouseDown = true;
+    }
+    function onTouchMove(e) {
+      e.preventDefault();
+      var t = e.touches[0];
+      updatePointer(t.clientX, t.clientY);
+    }
+    function onTouchEnd(e) {
+      e.preventDefault();
+      globalThis._canvasMouseDown = false;
+    }
     canvas.addEventListener("mousemove", onMouseMove);
     canvas.addEventListener("mousedown", onMouseDown);
     canvas.addEventListener("mouseup", onMouseUp);
+    canvas.addEventListener("touchstart", onTouchStart, { passive: false });
+    canvas.addEventListener("touchmove", onTouchMove, { passive: false });
+    canvas.addEventListener("touchend", onTouchEnd, { passive: false });
 
     // Key events
     function onKeyDown(e) { globalThis._canvasKeysDown[e.key] = true; }
@@ -236,6 +255,9 @@ const MiniML = {
       canvas.removeEventListener("mousemove", onMouseMove);
       canvas.removeEventListener("mousedown", onMouseDown);
       canvas.removeEventListener("mouseup", onMouseUp);
+      canvas.removeEventListener("touchstart", onTouchStart);
+      canvas.removeEventListener("touchmove", onTouchMove);
+      canvas.removeEventListener("touchend", onTouchEnd);
       document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("keyup", onKeyUp);
       globalThis._canvasCtx = null;

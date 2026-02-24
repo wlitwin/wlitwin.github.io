@@ -60,7 +60,7 @@
     border-radius: 4px; padding: 12px; min-height: 120px; white-space: pre-wrap;
     max-height: 400px; overflow-y: auto; line-height: 1.5;
   }
-  .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
   button {
     padding: 8px 20px; font-size: 14px; border: none; border-radius: 4px;
     cursor: pointer; font-weight: 600;
@@ -213,6 +213,8 @@
     }
     .docs-sidebar a.active { border-left-color: transparent; border-bottom-color: var(--accent); }
     .docs-content { max-height: none; }
+    .toolbar .spacer { display: none; }
+    .toolbar select { flex: 1; min-width: 0; }
   }
 </style>
 </head>
@@ -345,17 +347,33 @@ globalThis._canvasInit = function(w, h) {
   appCanvas.style.height = `${h}px`;
 };
 
-appCanvas.addEventListener("mousemove", (e) => {
+function updateCanvasPointer(clientX, clientY) {
   const dpr = window.devicePixelRatio || 1;
   const rect = appCanvas.getBoundingClientRect();
   const scaleX = appCanvas.width / (rect.width * dpr);
   const scaleY = appCanvas.height / (rect.height * dpr);
-  globalThis._canvasMouseX = (e.clientX - rect.left) * scaleX;
-  globalThis._canvasMouseY = (e.clientY - rect.top) * scaleY;
-});
+  globalThis._canvasMouseX = (clientX - rect.left) * scaleX;
+  globalThis._canvasMouseY = (clientY - rect.top) * scaleY;
+}
+appCanvas.addEventListener("mousemove", (e) => { updateCanvasPointer(e.clientX, e.clientY); });
 appCanvas.addEventListener("mousedown", () => { globalThis._canvasMouseDown = true; });
 appCanvas.addEventListener("mouseup", () => { globalThis._canvasMouseDown = false; });
 appCanvas.addEventListener("mouseleave", () => { globalThis._canvasMouseDown = false; });
+appCanvas.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  const t = e.touches[0];
+  updateCanvasPointer(t.clientX, t.clientY);
+  globalThis._canvasMouseDown = true;
+}, { passive: false });
+appCanvas.addEventListener("touchmove", (e) => {
+  e.preventDefault();
+  const t = e.touches[0];
+  updateCanvasPointer(t.clientX, t.clientY);
+}, { passive: false });
+appCanvas.addEventListener("touchend", (e) => {
+  e.preventDefault();
+  globalThis._canvasMouseDown = false;
+}, { passive: false });
 document.addEventListener("keydown", (e) => {
   if (globalThis._canvasCtx) {
     e.preventDefault();
