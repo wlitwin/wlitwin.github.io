@@ -407,7 +407,7 @@ stopBtn.addEventListener("click", () => {
 const HL_KEYWORDS = new Set([
   'let','rec','in','if','else','fn','match','with','type','of','not','mod',
   'true','false','class','instance','effect','extern','perform','handle','try',
-  'resume','return','continue','mut','for','do','break','when','where','module',
+  'provide','resume','return','continue','mut','for','do','break','when','where','module',
   'pub','open','end','opaque','and','deriving','land','lor','lxor','lnot','lsl','lsr'
 ]);
 
@@ -431,9 +431,7 @@ function highlightMiniML(code) {
     // Line comment --
     if (code[i] === '-' && code[i+1] === '-') {
       let j = i; while (i < n && code[i] !== '\n') i++;
-      const cmt = escHtml(code.slice(j, i));
-      // Highlight @annotations inside comments
-      r += '<span class="hl-comment">' + cmt.replace(/@(\w+)/g, '</span><span class="hl-annotation">@$1</span><span class="hl-comment">') + '</span>';
+      r += sp('comment', code.slice(j, i));
       continue;
     }
     // Block comment (* ... *) with nesting
@@ -518,6 +516,12 @@ function highlightMiniML(code) {
         if (i < n && code[i] === '.' && i+1 < n && isDig(code[i+1])) { i++; while (i < n && isDig(code[i])) i++; }
       }
       r += sp('number', code.slice(j, i)); continue;
+    }
+    // Annotation @name
+    if (code[i] === '@' && i+1 < n && isIdS(code[i+1])) {
+      let j = i; i++;
+      while (i < n && isIdC(code[i])) i++;
+      r += sp('annotation', code.slice(j, i)); continue;
     }
     // Identifier or keyword
     if (isIdS(code[i])) {

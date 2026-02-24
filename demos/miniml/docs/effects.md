@@ -85,7 +85,7 @@ with
 
 ## Performing Effects
 
-Use `perform` to invoke an effect operation. The operation name and its argument are required:
+Use `perform` to invoke an effect operation:
 
 ```
 perform yield 42
@@ -93,6 +93,13 @@ perform yield 42
 
 ```
 let x = perform get () in
+x + 1
+```
+
+When an effect operation takes `unit`, the argument can be elided:
+
+```
+let x = perform get in    -- shorthand for perform get ()
 x + 1
 ```
 
@@ -123,6 +130,13 @@ with
 | return x -> <transform x>
 | op1 arg k -> <handle op1>
 | op2 arg k -> <handle op2>
+```
+
+The argument in an operation arm can be elided when not needed -- the parser inserts a wildcard `_`. If only one name appears before the arrow, it is the continuation:
+
+```
+| op k -> <handle op>           -- shorthand for  | op _ k -> <handle op>
+| op -> <handle op>             -- shorthand for  | op _ __k -> <handle op>
 ```
 
 ### A Complete Example
@@ -202,6 +216,13 @@ Key differences from `handle/with`:
 - There is no `return` arm -- the body's return value passes through unchanged.
 - There is no continuation parameter `k` -- the handler cannot resume the computation.
 - The handler arms only receive the operation argument.
+
+The argument in an arm can be elided when not needed -- the parser inserts a wildcard `_`:
+
+```
+try body with
+| raise -> "error"              -- shorthand for  | raise _ -> "error"
+```
 
 ### Exception-Style Error Handling
 

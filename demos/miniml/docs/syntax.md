@@ -65,20 +65,13 @@ Block comments use `(* ... *)` and are nestable.
 ### Annotations
 
 The `@partial` annotation suppresses exhaustiveness checking on the
-immediately following `match` expression. It can be written as a bare
-annotation or inside a comment:
+immediately following `match` expression:
 
 ```
 @partial
 match some_option with
 | Some x -> x
-
--- @partial
-match some_option with
-| Some x -> x
 ```
-
-Both forms are equivalent — the lexer recognizes `@partial` in either context.
 
 ---
 
@@ -491,15 +484,10 @@ match n with
 
 ### Partial annotation
 
-The `@partial` annotation suppresses exhaustiveness checking. It can be
-written as a bare annotation or inside a comment:
+The `@partial` annotation suppresses exhaustiveness checking:
 
 ```
 @partial
-match opt with
-| Some x -> x
-
--- @partial
 match opt with
 | Some x -> x
 ```
@@ -1650,6 +1638,12 @@ perform ask ()
 perform get_val 42
 ```
 
+When an effect operation takes `unit`, the argument can be elided:
+
+```
+perform ask                     -- shorthand for perform ask ()
+```
+
 ### Handling effects with handle/with
 
 The `handle ... with` form provides full control over the continuation:
@@ -1665,6 +1659,14 @@ with
 
 The `return` arm processes the final value. Effect operation arms receive the
 argument and a continuation `k` which can be resumed with `resume k value`.
+
+Handler arms support wildcard elision — if the argument is not needed, it can
+be omitted and the parser inserts a wildcard `_`:
+
+```
+| get_val k -> resume k 10      -- shorthand for  | get_val _ k -> resume k 10
+| get_val -> resume __k 10      -- shorthand for  | get_val _ __k -> resume __k 10
+```
 
 ### Handler without resume (aborting)
 
@@ -1712,6 +1714,13 @@ try 42 with
 | raise msg -> 0
 ```
 
+The argument in an arm can be elided when not needed — the parser inserts a
+wildcard `_`:
+
+```
+| raise -> "error"              -- shorthand for  | raise _ -> "error"
+```
+
 Multiple operations can be handled:
 
 ```
@@ -1721,6 +1730,89 @@ with
 | file_not_found path -> "missing: " ^ path
 | invalid_input msg -> "invalid: " ^ msg
 ```
+
+### Provide/with (simplified capability-style form)
+
+`provide/with` is the dual of `try/with` — it handles effects that **always
+resume** with a value. The continuation is implicit and each arm's result is
+the value to resume with.
+
+```
+effect Config = get_db : unit -> string; get_port : unit -> int end
+
+provide
+  let db = perform get_db () in
+  let port = perform get_port () in
+  db ^ ":" ^ show port
+with
+| get_db () -> "localhost"
+| get_port () -> 5432
+```
+
+The argument in an arm can be elided when not needed — the parser inserts a
+wildcard `_`:
+
+```
+provide
+  perform get_db ^ ":" ^ show (perform get_port)
+with
+| get_db -> "localhost"         -- shorthand for  | get_db _ -> "localhost"
+| get_port -> 5432
+```
+
+This desugars to:
+
+```
+handle ... with
+| return x -> x
+| get_db () k -> resume k "localhost"
+| get_port () k -> resume k 5432
+```
+
+Arms that take arguments work the same way — the result is resumed:
+
+```
+effect Lookup = find : string -> int end
+
+provide
+  perform find "a" + perform find "b"
+with
+| find key -> if key = "a" do 1 else 2
+```
+
+Side-effecting operations that return unit:
+
+```
+effect Logger = log : string -> unit end
+
+provide
+  perform log "hello";
+  perform log "world"
+with
+| log msg -> print msg
+```
+
+`provide/with` can be freely nested and mixed with `try/with` and
+`handle/with`:
+
+```
+provide
+  try
+    let user = perform get_user () in
+    if user = "admin" do perform fail "nope" else user
+  with
+  | fail msg -> "fallback"
+with
+| get_user () -> "admin"
+```
+
+Summary of the three handler forms:
+
+| Form | Resume? | Use case |
+|------|---------|----------|
+| `try/with` | Never | Exceptions, early return, abort |
+| `provide/with` | Always (once) | DI, config, logging, context |
+| `handle/with` | Controlled | Coroutines, generators, backtracking |
 
 ---
 

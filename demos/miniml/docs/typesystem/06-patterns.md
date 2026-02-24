@@ -1261,8 +1261,7 @@ if not partial then
 This flag is set to `true` in two cases:
 
 1. **User-written `@partial` annotation.** Users can suppress the exhaustiveness
-   check on a specific match expression by placing `@partial` before it. Two
-   equivalent syntaxes are supported:
+   check on a specific match expression by placing `@partial` before it:
 
    ```
    @partial
@@ -1270,15 +1269,9 @@ This flag is set to `true` in two cases:
    | Some x -> x
    ```
 
-   ```
-   -- @partial
-   match opt with
-   | Some x -> x
-   ```
-
-   Both forms cause the lexer to emit a `PARTIAL` token, and the parser sets
-   the boolean flag to `true`. This is useful for functions like `unwrap` where
-   the caller guarantees the value will match.
+   The lexer emits a `PARTIAL` token, and the parser sets the boolean flag to
+   `true`. This is useful for functions like `unwrap` where the caller
+   guarantees the value will match.
 
 2. **Derived code.** Auto-generated `Show` and `Eq` instances construct match
    expressions that are known to be correct by construction. These also set
