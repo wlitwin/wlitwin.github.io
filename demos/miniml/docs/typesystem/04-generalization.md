@@ -167,7 +167,7 @@ let generalize level ty =
     | TTuple ts -> TTuple (List.map go ts)
     | TList t -> TList (go t)
     | TArray t -> TArray (go t)
-    | TMap (k, v) -> TMap (go k, go v)
+
     | TRecord row -> TRecord (go_rrow row)
     | TPolyVariant row -> TPolyVariant (go_pvrow row)
     | TVariant (name, args) -> TVariant (name, List.map go args)
@@ -240,7 +240,7 @@ let generalize_with_map level ty =
     | TTuple ts -> TTuple (List.map go ts)
     | TList t -> TList (go t)
     | TArray t -> TArray (go t)
-    | TMap (k, v) -> TMap (go k, go v)
+
     | TRecord row -> TRecord (go_rrow row)
     | TPolyVariant row -> TPolyVariant (go_pvrow row)
     | TVariant (name, args) -> TVariant (name, List.map go args)
@@ -321,7 +321,7 @@ let instantiate level (s : scheme) =
       | TTuple ts -> TTuple (List.map go ts)
       | TList t -> TList (go t)
       | TArray t -> TArray (go t)
-      | TMap (k, v) -> TMap (go k, go v)
+  
       | TRecord row -> TRecord (go_rrow row)
       | TPolyVariant row -> TPolyVariant (go_pvrow row)
       | TVariant (name, args) -> TVariant (name, List.map go args)
@@ -392,7 +392,7 @@ let instantiate_with_mapping level (s : scheme) =
       | TTuple ts -> TTuple (List.map go ts)
       | TList t -> TList (go t)
       | TArray t -> TArray (go t)
-      | TMap (k, v) -> TMap (go k, go v)
+  
       | TRecord fields -> TRecord (List.map (fun (n, t) -> (n, go t)) fields)
       | TVariant (name, args) -> TVariant (name, List.map go args)
       | t -> t

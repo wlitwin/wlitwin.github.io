@@ -23,7 +23,6 @@ type ty =
   | TList of ty
   | TRecord of record_row
   | TVariant of string * ty list
-  | TMap of ty * ty
   | TArray of ty
   | TPolyVariant of pvrow
   | TVar of tvar ref
@@ -79,11 +78,11 @@ string is the type name, and the list holds the type arguments. A
 non-parameterized type like `type color = Red | Green | Blue` uses an empty
 parameter list: `TVariant("color", [])`.
 
-**TMap(k, v)** -- Key-value map types. `Map.of_list [(1, "one"); (2, "two")]`
-has type `TMap(TInt, TString)`.
+**TArray(t)** -- Mutable array types. `#[1; 2; 3]` has type `TArray TInt`.
 
-**TArray(t)** -- Mutable array types. `[| 1; 2; 3 |]` has type
-`TArray TInt`.
+Note: Maps and sets are represented as newtypes via `TVariant`. For example,
+`#{"a": 1}` has type `TVariant("map", [TString; TInt])`. The `newtypes` field
+in `type_env` tracks which variant names are newtypes for constructor erasure.
 
 **TPolyVariant(row)** -- Polymorphic variant types. Like records, these use
 Rémy-style row types, represented by the `pvrow` type (see below). Poly
@@ -240,7 +239,6 @@ let rec deep_repr ty =
   | TTuple ts -> TTuple (List.map deep_repr ts)
   | TList t -> TList (deep_repr t)
   | TArray t -> TArray (deep_repr t)
-  | TMap (k, v) -> TMap (deep_repr k, deep_repr v)
   | TRecord row -> TRecord (deep_repr_rrow row)
   | TVariant (name, args) -> TVariant (name, List.map deep_repr args)
   | TPolyVariant row -> TPolyVariant (deep_repr_pvrow row)
@@ -501,6 +499,7 @@ type type_env = {
   modules: (string * module_info) list;
   type_aliases: (string * string) list;
   type_synonyms: (string * int * ty) list;
+  newtypes: string list;
 }
 ```
 
@@ -543,6 +542,11 @@ Each field serves a distinct purpose:
 - **type_synonyms** -- Type aliases like `type name = string`. Each entry is
   (name, number of parameters, expanded type). The typechecker expands these
   during type annotation resolution.
+
+- **newtypes** -- A list of type names declared with `newtype`. This tells all
+  three backends (bytecode, JS, native) to erase the constructor at runtime.
+  For example, `newtype email = Email of string` adds `"email"` to this list,
+  and `Email "foo"` compiles to just `"foo"` with no wrapping.
 
 **Constructor info** provides the details needed to typecheck pattern matching
 and construction:

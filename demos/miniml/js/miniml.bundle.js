@@ -23,8 +23,13 @@ const vstring = (v) => ({ tag: "string", v });
 const vbyte = (v) => ({ tag: "byte", v: v & 0xFF });
 const vrune = (v) => ({ tag: "rune", v });
 const vtuple = (vs) => ({ tag: "tuple", v: vs });
-const vlist = (vs) => ({ tag: "list", v: vs });
-const VNIL = vlist([]);
+// Lists use linked cons cells: {tag:"list", hd, tl} for cons, VNIL for nil
+const VNIL = Object.freeze({ tag: "list" });
+function vlist(arr) {
+  let result = VNIL;
+  for (let i = arr.length - 1; i >= 0; i--) result = { tag: "list", hd: arr[i], tl: result };
+  return result;
+}
 const vrecord = (fields) => ({ tag: "record", v: fields }); // fields: [[name, val], ...]
 const vvariant = (tagN, name, payload) => ({ tag: "variant", tagN, name, payload });
 const vclosure = (proto, upvalues) => ({ tag: "closure", proto, upvalues });
@@ -45,7 +50,13 @@ function asString(v) { if (v.tag === "string") return v.v; error(`expected strin
 function asClosure(v) { if (v.tag === "closure") return v; error(`expected function, got ${ppValue(v)}`); }
 function asTuple(v) { if (v.tag === "tuple") return v.v; error(`expected tuple, got ${ppValue(v)}`); }
 function asRecord(v) { if (v.tag === "record") return v.v; error(`expected record, got ${ppValue(v)}`); }
-function asList(v) { if (v.tag === "list") return v.v; error(`expected list, got ${ppValue(v)}`); }
+function asList(v) { if (v.tag === "list") return v; error(`expected list, got ${ppValue(v)}`); }
+function listToArray(v) {
+  const result = [];
+  let cur = asList(v);
+  while ("hd" in cur) { result.push(cur.hd); cur = cur.tl; }
+  return result;
+}
 function asVariant(v) { if (v.tag === "variant") return v; error(`expected variant, got ${ppValue(v)}`); }
 function asContinuation(v) { if (v.tag === "continuation") return v; error(`expected continuation, got ${ppValue(v)}`); }
 function asByte(v) { if (v.tag === "byte") return v.v; error(`expected byte, got ${ppValue(v)}`); }
@@ -68,10 +79,14 @@ function valuesEqual(a, b) {
       if (a.v.length !== b.v.length) return false;
       for (let i = 0; i < a.v.length; i++) if (!valuesEqual(a.v[i], b.v[i])) return false;
       return true;
-    case "list":
-      if (a.v.length !== b.v.length) return false;
-      for (let i = 0; i < a.v.length; i++) if (!valuesEqual(a.v[i], b.v[i])) return false;
-      return true;
+    case "list": {
+      let ca = a, cb = b;
+      while ("hd" in ca && "hd" in cb) {
+        if (!valuesEqual(ca.hd, cb.hd)) return false;
+        ca = ca.tl; cb = cb.tl;
+      }
+      return !("hd" in ca) && !("hd" in cb);
+    }
     case "variant":
       if (a.tagN !== b.tagN) return false;
       if (a.payload === null && b.payload === null) return true;
@@ -115,7 +130,12 @@ function ppValue(v) {
     case "rune": return "'" + runeToUtf8(v.v) + "'";
     case "unit": return "()";
     case "tuple": return "(" + v.v.map(ppValue).join(", ") + ")";
-    case "list": return "[" + v.v.map(ppValue).join("; ") + "]";
+    case "list": {
+      const elems = [];
+      let cur = v;
+      while ("hd" in cur) { elems.push(ppValue(cur.hd)); cur = cur.tl; }
+      return "[" + elems.join("; ") + "]";
+    }
     case "record":
       return "{ " + v.v.map(([n, val]) => n + " = " + ppValue(val)).join("; ") + " }";
     case "variant":
@@ -848,8 +868,8 @@ function run(vm) {
       case 54: { // CONS
         const tl = fiber.stack[--fiber.sp];
         const hd = fiber.stack[--fiber.sp];
-        const tlList = asList(tl);
-        fiber.stack[fiber.sp++] = vlist([hd, ...tlList]);
+        asList(tl); // validate
+        fiber.stack[fiber.sp++] = { tag: "list", hd, tl };
         break;
       }
       case 55: // NIL
@@ -860,22 +880,26 @@ function run(vm) {
         fiber.stack[fiber.sp - 1] = vbool(asVariant(fiber.stack[fiber.sp - 1]).tagN === tagN);
         break;
       }
-      case 57: // IS_NIL
-        fiber.stack[fiber.sp - 1] = vbool(asList(fiber.stack[fiber.sp - 1]).length === 0);
+      case 57: { // IS_NIL
+        const v = asList(fiber.stack[fiber.sp - 1]);
+        fiber.stack[fiber.sp - 1] = vbool(!("hd" in v));
         break;
-      case 58: // IS_CONS
-        fiber.stack[fiber.sp - 1] = vbool(asList(fiber.stack[fiber.sp - 1]).length > 0);
+      }
+      case 58: { // IS_CONS
+        const v = asList(fiber.stack[fiber.sp - 1]);
+        fiber.stack[fiber.sp - 1] = vbool("hd" in v);
         break;
+      }
       case 59: { // HEAD
-        const l = asList(fiber.stack[fiber.sp - 1]);
-        if (l.length === 0) error("head of empty list");
-        fiber.stack[fiber.sp - 1] = l[0];
+        const v = asList(fiber.stack[fiber.sp - 1]);
+        if (!("hd" in v)) error("head of empty list");
+        fiber.stack[fiber.sp - 1] = v.hd;
         break;
       }
       case 60: { // TAIL
-        const l = asList(fiber.stack[fiber.sp - 1]);
-        if (l.length === 0) error("tail of empty list");
-        fiber.stack[fiber.sp - 1] = vlist(l.slice(1));
+        const v = asList(fiber.stack[fiber.sp - 1]);
+        if (!("hd" in v)) error("tail of empty list");
+        fiber.stack[fiber.sp - 1] = v.tl;
         break;
       }
       case 61: { // VARIANT_PAYLOAD
@@ -1203,6 +1227,27 @@ function run(vm) {
         fiber.stack[fiber.sp++] = entry[1];
         break;
       }
+      case 85: { // UPDATE_REC
+        const placeholder = fiber.stack[--fiber.sp];
+        const computed = fiber.stack[--fiber.sp];
+        if (placeholder.tag === "list" && computed.tag === "list") {
+          placeholder.hd = computed.hd;
+          placeholder.tl = computed.tl;
+        } else if (placeholder.tag === "tuple" && computed.tag === "tuple") {
+          for (let i = 0; i < computed.v.length; i++) placeholder.v[i] = computed.v[i];
+        } else if (placeholder.tag === "record" && computed.tag === "record") {
+          for (let i = 0; i < computed.v.length; i++) placeholder.v[i] = computed.v[i];
+        } else if (placeholder.tag === "array" && computed.tag === "array") {
+          for (let i = 0; i < computed.v.length; i++) placeholder.v[i] = computed.v[i];
+        } else if (placeholder.tag === "variant" && computed.tag === "variant") {
+          placeholder.tagN = computed.tagN;
+          placeholder.name = computed.name;
+          placeholder.payload = computed.payload;
+        } else {
+          error("UPDATE_REC: type mismatch between placeholder and computed value");
+        }
+        break;
+      }
       case 74: // HALT
         return fiber.sp > 0 ? fiber.stack[fiber.sp - 1] : VUNIT;
       default:
@@ -1353,20 +1398,7 @@ reg("string_of_float", 1, (args) => {
 reg("string_of_bool", 1, (args) =>
   vstring(asBool(args[0]) ? "true" : "false"));
 
-// Map pattern matching helpers
-reg("__map_has", 2, (args) => {
-  const pairs = asMap(args[0]);
-  const key = args[1];
-  return vbool(pairs.some(([k]) => valuesEqual(k, key)));
-});
-
-reg("__map_get", 2, (args) => {
-  const pairs = asMap(args[0]);
-  const key = args[1];
-  const entry = pairs.find(([k]) => valuesEqual(k, key));
-  if (!entry) error("key not found in map");
-  return entry[1];
-});
+// Map pattern matching now uses Map.has/Map.get from stdlib
 
 // Array operations
 reg("array_get", 2, (args) => {
@@ -1482,9 +1514,9 @@ reg("copy_continuation", 1, (args) => {
 // Show value (polymorphic)
 reg("__show_value", 1, (args) => vstring(ppValue(args[0])));
 
-// --- Index class instances ---
+// --- Typeclass primitive externs (referenced by stdlib/classes.mml) ---
 
-reg("index_at_array", 2, (args) => {
+reg("__index_at_array", 2, (args) => {
   const idx = asInt(args[0]);
   const arr = asArray(args[1]);
   if (idx < 0 || idx >= arr.length)
@@ -1492,7 +1524,7 @@ reg("index_at_array", 2, (args) => {
   return arr[idx];
 });
 
-reg("index_at_string", 2, (args) => {
+reg("__index_at_string", 2, (args) => {
   const idx = asInt(args[0]);
   const s = asString(args[1]);
   if (idx < 0 || idx >= s.length)
@@ -1500,209 +1532,122 @@ reg("index_at_string", 2, (args) => {
   return vbyte(s.charCodeAt(idx));
 });
 
-reg("index_at_map", 2, (args) => {
-  const key = args[0];
-  const pairs = asMap(args[1]);
-  for (const [k, v] of pairs) {
-    if (valuesEqual(k, key)) return v;
-  }
-  error(`key not found: ${ppValue(key)}`);
-});
-
-// --- Num class instances ---
-
-reg("num_add_int", 2, (args) =>
+reg("__num_add_int", 2, (args) =>
   vint(asInt(args[0]) + asInt(args[1])));
-reg("num_sub_int", 2, (args) =>
+reg("__num_sub_int", 2, (args) =>
   vint(asInt(args[0]) - asInt(args[1])));
-reg("num_mul_int", 2, (args) =>
+reg("__num_mul_int", 2, (args) =>
   vint(asInt(args[0]) * asInt(args[1])));
-reg("num_div_int", 2, (args) => {
+reg("__num_div_int", 2, (args) => {
   const b = asInt(args[1]);
   if (b === 0) error("division by zero");
   return vint(Math.trunc(asInt(args[0]) / b));
 });
-reg("num_neg_int", 1, (args) =>
+reg("__num_neg_int", 1, (args) =>
   vint(-asInt(args[0])));
 
-reg("num_add_float", 2, (args) =>
+reg("__num_add_float", 2, (args) =>
   vfloat(asFloat(args[0]) + asFloat(args[1])));
-reg("num_sub_float", 2, (args) =>
+reg("__num_sub_float", 2, (args) =>
   vfloat(asFloat(args[0]) - asFloat(args[1])));
-reg("num_mul_float", 2, (args) =>
+reg("__num_mul_float", 2, (args) =>
   vfloat(asFloat(args[0]) * asFloat(args[1])));
-reg("num_div_float", 2, (args) =>
+reg("__num_div_float", 2, (args) =>
   vfloat(asFloat(args[0]) / asFloat(args[1])));
-reg("num_neg_float", 1, (args) =>
+reg("__num_neg_float", 1, (args) =>
   vfloat(-asFloat(args[0])));
 
-// --- Eq class instances ---
-
-reg("eq_int", 2, (args) =>
+reg("__eq_int", 2, (args) =>
   vbool(asInt(args[0]) === asInt(args[1])));
-reg("neq_int", 2, (args) =>
+reg("__neq_int", 2, (args) =>
   vbool(asInt(args[0]) !== asInt(args[1])));
-
-reg("eq_float", 2, (args) =>
+reg("__eq_float", 2, (args) =>
   vbool(asFloat(args[0]) === asFloat(args[1])));
-reg("neq_float", 2, (args) =>
+reg("__neq_float", 2, (args) =>
   vbool(asFloat(args[0]) !== asFloat(args[1])));
-
-reg("eq_string", 2, (args) =>
+reg("__eq_string", 2, (args) =>
   vbool(asString(args[0]) === asString(args[1])));
-reg("neq_string", 2, (args) =>
+reg("__neq_string", 2, (args) =>
   vbool(asString(args[0]) !== asString(args[1])));
-
-reg("eq_bool", 2, (args) =>
+reg("__eq_bool", 2, (args) =>
   vbool(asBool(args[0]) === asBool(args[1])));
-reg("neq_bool", 2, (args) =>
+reg("__neq_bool", 2, (args) =>
   vbool(asBool(args[0]) !== asBool(args[1])));
-
-reg("eq_byte", 2, (args) =>
+reg("__eq_byte", 2, (args) =>
   vbool(asByte(args[0]) === asByte(args[1])));
-reg("neq_byte", 2, (args) =>
+reg("__neq_byte", 2, (args) =>
   vbool(asByte(args[0]) !== asByte(args[1])));
-
-reg("eq_rune", 2, (args) =>
+reg("__eq_rune", 2, (args) =>
   vbool(asRune(args[0]) === asRune(args[1])));
-reg("neq_rune", 2, (args) =>
+reg("__neq_rune", 2, (args) =>
   vbool(asRune(args[0]) !== asRune(args[1])));
 
-// --- Ord class instances ---
-
-reg("lt_int", 2, (args) =>
+reg("__lt_int", 2, (args) =>
   vbool(asInt(args[0]) < asInt(args[1])));
-reg("gt_int", 2, (args) =>
+reg("__gt_int", 2, (args) =>
   vbool(asInt(args[0]) > asInt(args[1])));
-reg("le_int", 2, (args) =>
+reg("__le_int", 2, (args) =>
   vbool(asInt(args[0]) <= asInt(args[1])));
-reg("ge_int", 2, (args) =>
+reg("__ge_int", 2, (args) =>
   vbool(asInt(args[0]) >= asInt(args[1])));
-
-reg("lt_float", 2, (args) =>
+reg("__lt_float", 2, (args) =>
   vbool(asFloat(args[0]) < asFloat(args[1])));
-reg("gt_float", 2, (args) =>
+reg("__gt_float", 2, (args) =>
   vbool(asFloat(args[0]) > asFloat(args[1])));
-reg("le_float", 2, (args) =>
+reg("__le_float", 2, (args) =>
   vbool(asFloat(args[0]) <= asFloat(args[1])));
-reg("ge_float", 2, (args) =>
+reg("__ge_float", 2, (args) =>
   vbool(asFloat(args[0]) >= asFloat(args[1])));
-
-reg("lt_string", 2, (args) =>
+reg("__lt_string", 2, (args) =>
   vbool(asString(args[0]) < asString(args[1])));
-reg("gt_string", 2, (args) =>
+reg("__gt_string", 2, (args) =>
   vbool(asString(args[0]) > asString(args[1])));
-reg("le_string", 2, (args) =>
+reg("__le_string", 2, (args) =>
   vbool(asString(args[0]) <= asString(args[1])));
-reg("ge_string", 2, (args) =>
+reg("__ge_string", 2, (args) =>
   vbool(asString(args[0]) >= asString(args[1])));
-
-reg("lt_byte", 2, (args) =>
+reg("__lt_byte", 2, (args) =>
   vbool(asByte(args[0]) < asByte(args[1])));
-reg("gt_byte", 2, (args) =>
+reg("__gt_byte", 2, (args) =>
   vbool(asByte(args[0]) > asByte(args[1])));
-reg("le_byte", 2, (args) =>
+reg("__le_byte", 2, (args) =>
   vbool(asByte(args[0]) <= asByte(args[1])));
-reg("ge_byte", 2, (args) =>
+reg("__ge_byte", 2, (args) =>
   vbool(asByte(args[0]) >= asByte(args[1])));
-
-reg("lt_rune", 2, (args) =>
+reg("__lt_rune", 2, (args) =>
   vbool(asRune(args[0]) < asRune(args[1])));
-reg("gt_rune", 2, (args) =>
+reg("__gt_rune", 2, (args) =>
   vbool(asRune(args[0]) > asRune(args[1])));
-reg("le_rune", 2, (args) =>
+reg("__le_rune", 2, (args) =>
   vbool(asRune(args[0]) <= asRune(args[1])));
-reg("ge_rune", 2, (args) =>
+reg("__ge_rune", 2, (args) =>
   vbool(asRune(args[0]) >= asRune(args[1])));
 
-// --- Bitwise class instances ---
-
-reg("band_int", 2, (args) =>
+reg("__band_int", 2, (args) =>
   vint(asInt(args[0]) & asInt(args[1])));
-reg("bor_int", 2, (args) =>
+reg("__bor_int", 2, (args) =>
   vint(asInt(args[0]) | asInt(args[1])));
-reg("bxor_int", 2, (args) =>
+reg("__bxor_int", 2, (args) =>
   vint(asInt(args[0]) ^ asInt(args[1])));
-reg("bshl_int", 2, (args) =>
+reg("__bshl_int", 2, (args) =>
   vint(asInt(args[0]) << asInt(args[1])));
-reg("bshr_int", 2, (args) =>
+reg("__bshr_int", 2, (args) =>
   vint(asInt(args[0]) >>> asInt(args[1])));
-reg("bnot_int", 1, (args) =>
+reg("__bnot_int", 1, (args) =>
   vint(~asInt(args[0])));
 
-// --- Show class instances ---
-
-reg("show_int", 1, (args) =>
+reg("__show_int", 1, (args) =>
   vstring(String(asInt(args[0]))));
-
-reg("show_float", 1, (args) =>
+reg("__show_float", 1, (args) =>
   vstring(formatFloat(asFloat(args[0]))));
-
-reg("show_bool", 1, (args) =>
+reg("__show_bool", 1, (args) =>
   vstring(asBool(args[0]) ? "true" : "false"));
-
-reg("show_string", 1, (args) => args[0]);
-
-reg("show_unit", 1, () => vstring("()"));
-
-reg("show_byte", 1, (args) =>
+reg("__show_string", 1, (args) => args[0]);
+reg("__show_unit", 1, () => vstring("()"));
+reg("__show_byte", 1, (args) =>
   vstring("#" + asByte(args[0]).toString(16).padStart(2, "0")));
-
-reg("show_rune", 1, (args) =>
+reg("__show_rune", 1, (args) =>
   vstring(ppValue(args[0])));
-
-reg("show_map", 1, (args) =>
-  vstring(ppValue(args[0])));
-
-// --- Map class instances ---
-
-reg("map_of_list", 1, (args) => {
-  const lst = asList(args[0]);
-  const pairs = lst.map((v) => {
-    const t = asTuple(v);
-    return [t[0], t[1]];
-  });
-  return vmap(pairs);
-});
-
-reg("map_get", 2, (args) => {
-  const key = args[0];
-  const pairs = asMap(args[1]);
-  const entry = pairs.find(([k]) => valuesEqual(k, key));
-  if (entry) return vvariant(1, "Some", entry[1]);
-  return vvariant(0, "None", null);
-});
-
-reg("map_set", 3, (args) => {
-  const k = args[0], v = args[1];
-  const pairs = asMap(args[2]);
-  const updated = [[k, v], ...pairs.filter(([k2]) => !valuesEqual(k2, k))];
-  return vmap(updated);
-});
-
-reg("map_has", 2, (args) => {
-  const key = args[0];
-  const pairs = asMap(args[1]);
-  return vbool(pairs.some(([k]) => valuesEqual(k, key)));
-});
-
-reg("map_remove", 2, (args) => {
-  const key = args[0];
-  const pairs = asMap(args[1]);
-  return vmap(pairs.filter(([k]) => !valuesEqual(k, key)));
-});
-
-reg("map_size", 1, (args) =>
-  vint(asMap(args[0]).length));
-
-reg("map_keys", 1, (args) =>
-  vlist(asMap(args[0]).map(([k]) => k)));
-
-reg("map_values", 1, (args) =>
-  vlist(asMap(args[0]).map(([, v]) => v)));
-
-reg("map_to_list", 1, (args) =>
-  vlist(asMap(args[0]).map(([k, v]) => vtuple([k, v]))));
 
 // --- String module (std.ml register_string) ---
 
@@ -1787,7 +1732,7 @@ reg("String.to_bytes", 1, (args) => {
 });
 
 reg("String.of_bytes", 1, (args) => {
-  const lst = asList(args[0]);
+  const lst = listToArray(args[0]);
   const bytes = new Uint8Array(lst.map(asByte));
   return vstring(utf8BytesToString(bytes));
 });
@@ -1813,7 +1758,7 @@ reg("String.to_runes", 1, (args) => {
 });
 
 reg("String.of_runes", 1, (args) => {
-  const lst = asList(args[0]);
+  const lst = listToArray(args[0]);
   return vstring(lst.map((r) => runeToUtf8(asRune(r))).join(""));
 });
 
@@ -1860,7 +1805,7 @@ reg("String.rindex_opt", 2, (args) => {
 
 reg("String.concat", 2, (args) => {
   const sep = asString(args[0]);
-  const lst = asList(args[1]);
+  const lst = listToArray(args[1]);
   const strs = lst.map(v => asString(v));
   return vstring(strs.join(sep));
 });
@@ -1904,7 +1849,7 @@ reg("Array.to_list", 1, (args) =>
   vlist(Array.from(asArray(args[0]))));
 
 reg("Array.of_list", 1, (args) =>
-  varray(asList(args[0]).slice()));
+  varray(listToArray(args[0])));
 
 reg("Array.copy", 1, (args) =>
   varray(asArray(args[0]).slice()));
@@ -2119,6 +2064,7 @@ const OPCODE_NAMES = [
   "GET_LOCAL_CALL", "GET_LOCAL_TUPLE_GET", "GET_LOCAL_FIELD", "JUMP_TABLE",
   "GET_GLOBAL_CALL", "GET_GLOBAL_FIELD",
   "CALL_N", "TAIL_CALL_N",
+  "UPDATE_REC",
 ];
 
 // Map string opcode names to numeric tags for the VM switch
@@ -2495,7 +2441,7 @@ function loadBundleBinary(arrayBuffer) {
 
 
 // ---- Stdlib sources (embedded for self-hosted compiler) ----
-const STDLIB_SOURCES = {"stdlib/byte.mml":"module Byte =\n  pub let to_int (b : byte) : int = __byte_to_int b\n  pub let of_int (n : int) : byte = __byte_of_int n\n  pub let to_string (b : byte) : string = __byte_to_string b\n  pub let is_alpha (b : byte) : bool =\n    let n = Byte.to_int b in\n    (n >= 65 && n <= 90) || (n >= 97 && n <= 122)\n  pub let is_digit (b : byte) : bool =\n    let n = Byte.to_int b in\n    n >= 48 && n <= 57\n  pub let is_space (b : byte) : bool =\n    let n = Byte.to_int b in\n    n = 32 || n = 9 || n = 10 || n = 13\n  pub let is_upper (b : byte) : bool =\n    let n = Byte.to_int b in\n    n >= 65 && n <= 90\n  pub let is_lower (b : byte) : bool =\n    let n = Byte.to_int b in\n    n >= 97 && n <= 122\n  pub let to_upper (b : byte) : byte =\n    let n = Byte.to_int b in\n    if n >= 97 && n <= 122 do Byte.of_int (n - 32) else b\n  pub let to_lower (b : byte) : byte =\n    let n = Byte.to_int b in\n    if n >= 65 && n <= 90 do Byte.of_int (n + 32) else b\nend\n","stdlib/rune.mml":"module Rune =\n  pub let to_int (r : rune) : int = __rune_to_int r\n  pub let of_int (n : int) : rune = __rune_of_int n\n  pub let to_string (r : rune) : string = __rune_to_string r\n  pub let is_alpha (r : rune) : bool =\n    let n = Rune.to_int r in\n    (n >= 65 && n <= 90) || (n >= 97 && n <= 122)\n  pub let is_digit (r : rune) : bool =\n    let n = Rune.to_int r in\n    n >= 48 && n <= 57\n  pub let is_space (r : rune) : bool =\n    let n = Rune.to_int r in\n    n = 32 || n = 9 || n = 10 || n = 13\n  pub let is_upper (r : rune) : bool =\n    let n = Rune.to_int r in\n    n >= 65 && n <= 90\n  pub let is_lower (r : rune) : bool =\n    let n = Rune.to_int r in\n    n >= 97 && n <= 122\nend\n","stdlib/math.mml":"module Math =\n  pub let abs (x : int) : int = if x < 0 do 0 - x else x\n  pub let min (a : int) (b : int) : int = if a < b do a else b\n  pub let max (a : int) (b : int) : int = if a > b do a else b\n  pub let pow (a : float) (b : float) : float = __math_pow a b\n  pub let sqrt (x : float) : float = __math_sqrt x\n  pub let floor (x : float) : int = __math_floor x\n  pub let ceil (x : float) : int = __math_ceil x\n  pub let round (x : float) : int = __math_round x\nend\n","stdlib/list.mml":"module List =\n  pub let fold (f: 'b -> 'a -> 'b) (acc: 'b) (xs: 'a list) : 'b =\n    let rec go a l =\n      match l with\n      | [] -> a\n      | x :: rest -> go (f a x) rest\n    in go acc xs\n\n  pub let length xs = List.fold (fn acc _ -> acc + 1) 0 xs\n\n  pub let rev xs = List.fold (fn acc x -> x :: acc) [] xs\n\n  pub let hd xs =\n    @partial\n    match xs with\n    | x :: _ -> x\n\n  pub let tl xs =\n    @partial\n    match xs with\n    | _ :: rest -> rest\n\n  pub let nth xs n =\n    let rec go l i =\n      @partial\n      match l with\n      | x :: rest -> if i = 0 do x else go rest (i - 1)\n    in go xs n\n\n  pub let concat a b = List.fold (fn acc x -> x :: acc) b (List.rev a)\n\n  pub let is_empty xs = match xs with\n    | [] -> true\n    | _ -> false\n\n  pub let flatten xss = List.fold (fn acc xs -> List.concat acc xs) [] xss\n\n  pub let map (f: 'a -> 'b) (xs: 'a list) : 'b list =\n    let rec go acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest -> go (f x :: acc) rest\n    in go [] xs\n\n  pub let filter (f: 'a -> bool) (xs: 'a list) : 'a list =\n    let rec go acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest ->\n        if f x do go (x :: acc) rest\n        else go acc rest\n    in go [] xs\n\n  pub let find (f: 'a -> bool) (xs: 'a list) : 'a option =\n    let rec go l =\n      match l with\n      | [] -> None\n      | x :: rest -> if f x do Some x else go rest\n    in go xs\n\n  pub let exists (f: 'a -> bool) (xs: 'a list) : bool =\n    let rec go l =\n      match l with\n      | [] -> false\n      | x :: rest -> if f x do true else go rest\n    in go xs\n\n  pub let forall (f: 'a -> bool) (xs: 'a list) : bool =\n    let rec go l =\n      match l with\n      | [] -> true\n      | x :: rest -> if f x do go rest else false\n    in go xs\n\n  pub let zip (xs: 'a list) (ys: 'b list) : ('a * 'b) list =\n    let rec go acc a b =\n      match a with\n      | [] -> List.rev acc\n      | x :: ra ->\n        @partial\n        match b with\n        | y :: rb -> go ((x, y) :: acc) ra rb\n    in go [] xs ys\n\n  pub let mapi (f: int -> 'a -> 'b) (xs: 'a list) : 'b list =\n    let rec go i acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest -> go (i + 1) (f i x :: acc) rest\n    in go 0 [] xs\n\n  pub let sort (cmp: 'a -> 'a -> int) (xs: 'a list) : 'a list =\n    let rec insert x sorted =\n      match sorted with\n      | [] -> [x]\n      | y :: rest ->\n        if cmp x y < 1 do x :: sorted\n        else y :: insert x rest\n    in\n    List.fold (fn acc x -> insert x acc) [] xs\n\n  pub let fold_right (f: 'a -> 'b -> 'b) (xs: 'a list) (acc: 'b) : 'b =\n    let rec go l =\n      match l with\n      | [] -> acc\n      | x :: rest -> f x (go rest)\n    in go xs\n\n  pub let find_map (f: 'a -> 'b option) (xs: 'a list) : 'b option =\n    let rec go l =\n      match l with\n      | [] -> None\n      | x :: rest ->\n        match f x with\n        | Some _ as result -> result\n        | None -> go rest\n    in go xs\n\n  pub let assoc_opt key xs =\n    let rec go l =\n      match l with\n      | [] -> None\n      | (k, v) :: rest ->\n        if k = key do Some v else go rest\n    in go xs\n\n  pub let init n f =\n    let rec go i acc =\n      if i < 0 do acc\n      else go (i - 1) (f i :: acc)\n    in go (n - 1) []\n\n  pub let concat_map f xs =\n    List.flatten (List.map f xs)\n\n  pub let iter2 f xs ys =\n    let rec go a b =\n      match a with\n      | [] -> ()\n      | x :: ra ->\n        @partial\n        match b with\n        | y :: rb -> f x y; go ra rb\n    in go xs ys\n\n  pub let map2 (f: 'a -> 'b -> 'c) (xs: 'a list) (ys: 'b list) : 'c list =\n    let rec go acc a b =\n      match a with\n      | [] -> List.rev acc\n      | x :: ra ->\n        @partial\n        match b with\n        | y :: rb -> go (f x y :: acc) ra rb\n    in go [] xs ys\n\n  pub let fold2 (f: 'c -> 'a -> 'b -> 'c) (acc: 'c) (xs: 'a list) (ys: 'b list) : 'c =\n    let rec go a l1 l2 =\n      match l1 with\n      | [] -> a\n      | x :: r1 ->\n        @partial\n        match l2 with\n        | y :: r2 -> go (f a x y) r1 r2\n    in go acc xs ys\n\n  pub let forall2 (f: 'a -> 'b -> bool) (xs: 'a list) (ys: 'b list) : bool =\n    let rec go a b =\n      match a with\n      | [] -> true\n      | x :: ra ->\n        @partial\n        match b with\n        | y :: rb -> if f x y do go ra rb else false\n    in go xs ys\n\n  pub let iteri (f: int -> 'a -> unit) (xs: 'a list) : unit =\n    let rec go i l =\n      match l with\n      | [] -> ()\n      | x :: rest -> f i x; go (i + 1) rest\n    in go 0 xs\n\n  pub let mem_assoc key xs =\n    let rec go l =\n      match l with\n      | [] -> false\n      | (k, _) :: rest ->\n        if k = key do true else go rest\n    in go xs\n\n  pub let assoc key xs =\n    match List.assoc_opt key xs with\n    | Some v -> v\n    | None -> failwith \"List.assoc: not found\"\n\n  pub let iter (f: 'a -> unit) (xs: 'a list) : unit =\n    let rec go xs =\n      match xs with\n      | [] -> ()\n      | x :: rest -> f x; go rest\n    in go xs\n\n  pub let mem x xs =\n    let rec go xs =\n      match xs with\n      | [] -> false\n      | y :: rest -> if x = y do true else go rest\n    in go xs\n\n  pub let rev_append xs ys =\n    let rec go xs acc =\n      match xs with\n      | [] -> acc\n      | x :: rest -> go rest (x :: acc)\n    in go xs ys\n\n  pub let nth_opt xs n =\n    let rec go xs i =\n      match xs with\n      | [] -> None\n      | x :: rest -> if i = 0 do Some x else go rest (i - 1)\n    in go xs n\n\n  pub let find_index f xs =\n    let rec go xs i =\n      match xs with\n      | [] -> None\n      | x :: rest -> if f x do Some i else go rest (i + 1)\n    in go xs 0\n\n  pub let filteri f xs =\n    let rec go xs i acc =\n      match xs with\n      | [] -> List.rev acc\n      | x :: rest ->\n        if f i x do go rest (i + 1) (x :: acc)\n        else go rest (i + 1) acc\n    in go xs 0 []\n\n  pub let filter_map (f: 'a -> 'b option) (xs: 'a list) : 'b list =\n    let rec go xs acc =\n      match xs with\n      | [] -> List.rev acc\n      | x :: rest ->\n        match f x with\n        | Some y -> go rest (y :: acc)\n        | None -> go rest acc\n    in go xs []\n\n  pub let sort_uniq cmp xs =\n    let sorted = List.sort cmp xs in\n    let rec dedup xs =\n      match xs with\n      | [] -> []\n      | x :: [] -> x :: []\n      | x :: y :: rest ->\n        if cmp x y = 0 do dedup (y :: rest)\n        else x :: dedup (y :: rest)\n    in dedup sorted\nend\n","stdlib/array_extra.mml":"module Array =\n  pub let init n f =\n    if n <= 0 do #[]\n    else\n      let arr = Array.make n (f 0) in\n      let rec go i =\n        if i >= n do arr\n        else (Array.set arr i (f i); go (i + 1))\n      in go 1\n\n  pub let map f arr =\n    let n = Array.length arr in\n    if n = 0 do #[]\n    else\n      let result = Array.make n (f (Array.get arr 0)) in\n      let rec go i =\n        if i >= n do result\n        else (Array.set result i (f (Array.get arr i)); go (i + 1))\n      in go 1\n\n  pub let iter f arr =\n    let n = Array.length arr in\n    let rec go i =\n      if i >= n do ()\n      else (f (Array.get arr i); go (i + 1))\n    in go 0\n\n  pub let iteri f arr =\n    let n = Array.length arr in\n    let rec go i =\n      if i >= n do ()\n      else (f i (Array.get arr i); go (i + 1))\n    in go 0\n\n  pub let forall f arr =\n    let n = Array.length arr in\n    let rec go i =\n      if i >= n do true\n      else if f (Array.get arr i) do go (i + 1)\n      else false\n    in go 0\n\n  pub let fold f acc arr =\n    let n = Array.length arr in\n    let rec go i a =\n      if i >= n do a\n      else go (i + 1) (f a (Array.get arr i))\n    in go 0 acc\nend\n","stdlib/result.mml":"module Result =\n  pub type ('a, 'b) t = Ok of 'a | Err of 'b\n  pub let map (f: 'a -> 'c) (r: ('a, 'b) t) : ('c, 'b) t =\n    match r with\n    | Ok v -> Ok (f v)\n    | Err e -> Err e\n  pub let bind (f: 'a -> ('c, 'b) t) (r: ('a, 'b) t) : ('c, 'b) t =\n    match r with\n    | Ok v -> f v\n    | Err e -> Err e\n  pub let unwrap (r: ('a, 'b) t) : 'a =\n    @partial\n    match r with\n    | Ok v -> v\nend\n","stdlib/option.mml":"module Option =\n  pub let map (f: 'a -> 'b) (opt: 'a option) : 'b option =\n    match opt with\n    | Some x -> Some (f x)\n    | None -> None\n  pub let bind (f: 'a -> 'b option) (opt: 'a option) : 'b option =\n    match opt with\n    | Some x -> f x\n    | None -> None\n  pub let unwrap (opt: 'a option) : 'a =\n    @partial\n    match opt with\n    | Some x -> x\n  pub let unwrap_or (default: 'a) (opt: 'a option) : 'a =\n    match opt with\n    | Some x -> x\n    | None -> default\n  pub let is_some (opt: 'a option) : bool =\n    match opt with\n    | Some _ -> true\n    | None -> false\n  pub let is_none (opt: 'a option) : bool =\n    match opt with\n    | Some _ -> false\n    | None -> true\n  pub let to_list (opt: 'a option) : 'a list =\n    match opt with\n    | Some x -> [x]\n    | None -> []\n  pub let iter (f: 'a -> unit) (opt: 'a option) : unit =\n    match opt with\n    | Some x -> f x\n    | None -> ()\n  pub let flat_map (f: 'a -> 'b option) (opt: 'a option) : 'b option =\n    match opt with\n    | Some x -> f x\n    | None -> None\nend\n","stdlib/buffer.mml":"module Buffer =\n  pub type t = { mut data: byte array; mut len: int }\n\n  pub let create (n: int) : t =\n    { data = Array.make (if n < 16 do 16 else n) #00; len = 0 }\n\n  pub let length (buf: t) : int = buf.len\n\n  pub let clear (buf: t) : unit =\n    buf.len := 0\n\n  pub let grow (buf: t) (needed: int) : unit =\n    let cap = Array.length buf.data in\n    if buf.len + needed > cap do\n      let new_cap = Math.max (cap * 2) (buf.len + needed) in\n      let new_data = Array.make new_cap #00 in\n      let rec copy i =\n        if i < buf.len do\n          Array.set new_data i (Array.get buf.data i);\n          copy (i + 1)\n        else ()\n      in\n      copy 0;\n      buf.data := new_data\n    else ()\n\n  pub let add_byte (buf: t) (b: byte) : unit =\n    Buffer.grow buf 1;\n    Array.set buf.data buf.len b;\n    buf.len := buf.len + 1\n\n  pub let add_string (buf: t) (s: string) : unit =\n    let bytes = String.to_byte_array s in\n    let n = Array.length bytes in\n    Buffer.grow buf n;\n    let rec copy i =\n      if i < n do\n        Array.set buf.data (buf.len + i) (Array.get bytes i);\n        copy (i + 1)\n      else ()\n    in\n    copy 0;\n    buf.len := buf.len + n\n\n  pub let sub (buf: t) (pos: int) (len: int) : string =\n    String.of_byte_array (Array.sub buf.data pos len)\n\n  pub let truncate (buf: t) (n: int) : unit =\n    buf.len := n\n\n  pub let contents (buf: t) : string =\n    String.of_byte_array (Array.sub buf.data 0 buf.len)\n\n  pub let add_buffer (dst: t) (src: t) : unit =\n    let n = src.len in\n    Buffer.grow dst n;\n    let rec copy i =\n      if i < n do\n        Array.set dst.data (dst.len + i) (Array.get src.data i);\n        copy (i + 1)\n      else ()\n    in\n    copy 0;\n    dst.len := dst.len + n\nend\n","stdlib/iter.mml":"instance Iter ('a list) 'a =\n  let fold f acc xs =\n    let rec go a l = match l with\n      | [] -> a\n      | x :: rest -> go (f a x) rest\n    in go acc xs\nend\n\ninstance Iter ('a array) 'a =\n  let fold = fn f -> fn acc -> fn arr ->\n    let rec go = fn a -> fn i ->\n      if i = array_length arr do a\n      else go (f a (array_get arr i)) (i + 1)\n    in go acc 0\nend\n","stdlib/hash.mml":"class Hash 'a =\n  hash : 'a -> int\nend\n\ninstance Hash int =\n  let hash n = n\nend\ninstance Hash string =\n  let hash s =\n    let bytes = String.to_byte_array s in\n    fold (fn h b -> h * 31 + Byte.to_int b) 5381 bytes\nend\ninstance Hash bool =\n  let hash b = if b do 1 else 0\nend\ninstance Hash byte =\n  let hash b = Byte.to_int b\nend\ninstance Hash rune =\n  let hash r = Rune.to_int r\nend\n","stdlib/hashtbl.mml":"module Hashtbl =\n  pub type ('k, 'v) t = { mut buckets: ('k * 'v) list array; mut size: int }\n  pub let create (n: int) =\n    let cap = if n < 16 do 16 else n in\n    { buckets = Array.make cap []; size = 0 }\n\n  pub let clear tbl =\n    let cap = Array.length tbl.buckets in\n    tbl.buckets := Array.make cap [];\n    tbl.size := 0\n\n  pub let length tbl = tbl.size\n\n  pub let bucket_index tbl (key: 'k) where Hash 'k =\n    let h = hash key in\n    let h = if h < 0 do 0 - h else h in\n    h mod (Array.length tbl.buckets)\n\n  pub let to_list tbl =\n    let cap = Array.length tbl.buckets in\n    let rec collect i acc =\n      if i >= cap do acc\n      else\n        let bucket = Array.get tbl.buckets i in\n        collect (i + 1) (List.concat bucket acc)\n    in\n    collect 0 []\n\n  let rehash tbl hash_fn =\n    let entries = Hashtbl.to_list tbl in\n    let new_cap = Array.length tbl.buckets * 2 in\n    tbl.buckets := Array.make new_cap [];\n    tbl.size := 0;\n    List.fold (fn _ (k, v) ->\n      let h = hash_fn k in\n      let h = if h < 0 do 0 - h else h in\n      let idx = h mod new_cap in\n      let bucket = Array.get tbl.buckets idx in\n      Array.set tbl.buckets idx ((k, v) :: bucket);\n      tbl.size := tbl.size + 1\n    ) () entries\n\n  pub let set tbl (key: 'k) value where Hash 'k, Eq 'k =\n    let idx = Hashtbl.bucket_index tbl key in\n    let bucket = Array.get tbl.buckets idx in\n    let rec replace = fn\n      | [] -> [(key, value)]\n      | (k, v) :: rest ->\n        if k = key do (key, value) :: rest\n        else (k, v) :: replace rest\n    in\n    let new_bucket = replace bucket in\n    let grew = List.length new_bucket > List.length bucket in\n    Array.set tbl.buckets idx new_bucket;\n    if grew do do\n      tbl.size := tbl.size + 1;\n      if tbl.size > Array.length tbl.buckets * 2 do\n        Hashtbl.rehash tbl hash\n      else ()\n    end else ()\n\n  pub let get tbl (key: 'k) where Hash 'k, Eq 'k =\n    let idx = Hashtbl.bucket_index tbl key in\n    let bucket = Array.get tbl.buckets idx in\n    let rec find = fn\n      | [] -> None\n      | (k, v) :: rest ->\n        if k = key do Some v\n        else find rest\n    in\n    find bucket\n\n  pub let has tbl (key: 'k) where Hash 'k, Eq 'k =\n    match Hashtbl.get tbl key with\n    | Some _ -> true\n    | None -> false\n\n  pub let remove tbl (key: 'k) where Hash 'k, Eq 'k =\n    let idx = Hashtbl.bucket_index tbl key in\n    let bucket = Array.get tbl.buckets idx in\n    let new_bucket = List.filter (fn (k, _) -> k <> key) bucket in\n    do\n      if List.length new_bucket < List.length bucket do\n        tbl.size := tbl.size - 1\n      else ()\n    end;\n    Array.set tbl.buckets idx new_bucket\n\n  pub let find tbl key =\n    match Hashtbl.get tbl key with\n    | Some v -> v\n    | None -> failwith \"Hashtbl.find: key not found\"\n\n  pub let fold f tbl acc =\n    let entries = Hashtbl.to_list tbl in\n    List.fold (fn a (k, v) -> f k v a) acc entries\n\n  pub let iter f tbl =\n    let entries = Hashtbl.to_list tbl in\n    List.iter (fn (k, v) -> f k v) entries\n\n  pub let keys tbl =\n    List.map (fn (k, _) -> k) (Hashtbl.to_list tbl)\n\n  pub let values tbl =\n    List.map (fn (_, v) -> v) (Hashtbl.to_list tbl)\nend\n","stdlib/ref.mml":"module Ref =\n  pub type 'a t = { mut contents: 'a }\n  pub let create v = { contents = v }\n  pub let get r = r.contents\n  pub let set r v = r.contents := v\nend\n","stdlib/dynarray.mml":"module Dynarray =\n  pub type 'a t = { mut arr: 'a array; mut count: int }\n\n  pub let create n default =\n    { arr = Array.make (if n < 16 do 16 else n) default; count = 0 }\n\n  pub let length d = d.count\n\n  pub let get d i =\n    if i < 0 || i >= d.count do failwith \"Dynarray.get: index out of bounds\"\n    else Array.get d.arr i\n\n  pub let set d i v =\n    if i < 0 || i >= d.count do failwith \"Dynarray.set: index out of bounds\"\n    else Array.set d.arr i v\n\n  pub let grow d needed default =\n    let cap = Array.length d.arr in\n    if d.count + needed > cap do\n      let new_cap = Math.max (cap * 2) (d.count + needed) in\n      let new_arr = Array.make new_cap default in\n      let rec copy i =\n        if i < d.count do\n          Array.set new_arr i (Array.get d.arr i);\n          copy (i + 1)\n        else ()\n      in\n      copy 0;\n      d.arr := new_arr\n    else ()\n\n  pub let empty () =\n    { arr = #[]; count = 0 }\n\n  pub let push d v =\n    Dynarray.grow d 1 v;\n    Array.set d.arr d.count v;\n    d.count := d.count + 1\n\n  pub let pop d =\n    if d.count = 0 do failwith \"Dynarray.pop: empty\"\n    else\n      d.count := d.count - 1;\n      Array.get d.arr d.count\n\n  pub let clear d =\n    d.count := 0\n\n  pub let to_list d =\n    let rec collect i acc =\n      if i < 0 do acc\n      else collect (i - 1) (Dynarray.get d i :: acc)\n    in\n    collect (d.count - 1) []\n\n  pub let to_array d =\n    Array.sub d.arr 0 d.count\nend\n","stdlib/set.mml":"type 'a set = ('a, unit) map\n;;\nmodule Set =\n  pub let empty () : 'a set = #{}\n\n  pub let singleton (x : 'a) : 'a set = set x () #{}\n\n  pub let of_list xs : 'a set =\n    List.fold (fn acc x -> set x () acc) #{} xs\n\n  pub let add elem (s : 'a set) : 'a set = set elem () s\n\n  pub let remove elem (s : 'a set) : 'a set = remove elem s\n\n  pub let mem elem (s : 'a set) = has elem s\n\n  pub let size (s : 'a set) = size s\n\n  pub let to_list (s : 'a set) = keys s\n\n  pub let union (s1 : 'a set) (s2 : 'a set) : 'a set =\n    List.fold (fn acc x -> set x () acc) s2 (keys s1)\n\n  pub let inter (s1 : 'a set) (s2 : 'a set) : 'a set =\n    List.fold (fn acc x ->\n      if has x s2 do set x () acc else acc\n    ) (Set.empty ()) (keys s1)\n\n  pub let diff (s1 : 'a set) (s2 : 'a set) : 'a set =\n    List.fold (fn acc x ->\n      if not (has x s2) do set x () acc else acc\n    ) (Set.empty ()) (keys s1)\n\n  pub let is_empty (s : 'a set) = size s = 0\n\n  pub let is_subset (s1 : 'a set) (s2 : 'a set) =\n    List.forall (fn x -> has x s2) (keys s1)\nend\n;;\ninstance Iter (('a, unit) map) 'a =\n  let fold f acc s =\n    let rec go a l = match l with\n      | [] -> a\n      | x :: rest -> go (f a x) rest\n    in go acc (Set.to_list s)\nend\n","stdlib/enum.mml":"module Enum =\n  pub let reduce f xs =\n    @partial\n    match xs with\n    | x :: rest -> List.fold f x rest\n\n  pub let sum xs = List.fold (fn a b -> a + b) 0 xs\n\n  pub let count f xs =\n    List.fold (fn acc x -> if f x do acc + 1 else acc) 0 xs\n\n  pub let take n xs =\n    let rec go i acc l =\n      if i >= n do List.rev acc\n      else match l with\n        | [] -> List.rev acc\n        | x :: rest -> go (i + 1) (x :: acc) rest\n    in go 0 [] xs\n\n  pub let drop n xs =\n    let rec go i l =\n      if i >= n do l\n      else match l with\n        | [] -> []\n        | _ :: rest -> go (i + 1) rest\n    in go 0 xs\n\n  pub let take_while f xs =\n    let rec go acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest ->\n        if f x do go (x :: acc) rest\n        else List.rev acc\n    in go [] xs\n\n  pub let drop_while f xs =\n    let rec go l =\n      match l with\n      | [] -> []\n      | x :: rest ->\n        if f x do go rest\n        else l\n    in go xs\n\n  pub let flat_map f xs = List.flatten (List.map f xs)\n\n  pub let each f xs = List.fold (fn _ x -> f x) () xs\n\n  pub let reject f xs = List.filter (fn x -> not (f x)) xs\n\n  pub let enumerate xs = List.mapi (fn i x -> (i, x)) xs\n\n  pub let join sep xs =\n    match xs with\n    | [] -> \"\"\n    | first :: rest ->\n      List.fold (fn acc x -> acc ^ sep ^ x) first rest\n\n  pub let chunk n xs =\n    let rec go acc l =\n      match l with\n      | [] -> List.rev acc\n      | _ -> go (Enum.take n l :: acc) (Enum.drop n l)\n    in go [] xs\n\n  pub let dedup xs =\n    let rec go prev acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest ->\n        if x = prev do go prev acc rest\n        else go x (x :: acc) rest\n    in match xs with\n      | [] -> []\n      | x :: rest -> go x [x] rest\n\n  pub let uniq xs =\n    List.rev (List.fold (fn acc x ->\n      if List.exists (fn y -> y = x) acc do acc\n      else x :: acc\n    ) [] xs)\n\n  pub let scan f init xs =\n    List.rev (List.fold (fn acc x ->\n      match acc with\n      | [] -> [f init x]\n      | prev :: _ -> f prev x :: acc\n    ) [init] xs)\n\n  pub let intersperse sep xs =\n    match xs with\n    | [] -> []\n    | first :: rest ->\n      List.fold (fn acc x -> List.concat acc [sep; x]) [first] rest\n\n  pub let zip_with f xs ys =\n    List.map (fn p -> match p with (a, b) -> f a b) (List.zip xs ys)\n\n  pub let min_by f xs =\n    @partial\n    match xs with\n    | x :: rest ->\n      List.fold (fn best y -> if f y < f best do y else best) x rest\n\n  pub let max_by f xs =\n    @partial\n    match xs with\n    | x :: rest ->\n      List.fold (fn best y -> if f y > f best do y else best) x rest\n\n  pub let group_by f xs =\n    List.fold (fn m x ->\n      let k = f x in\n      match get k m with\n      | None -> set k [x] m\n      | Some vs -> set k (List.concat vs [x]) m\n    ) #{} xs\nend\n","stdlib/seq.mml":"type 'a seq = ('a -> unit) -> unit\n;;\neffect SeqStop =\n  __seq_stop : unit -> unit\nend\nmodule Seq =\n  pub let range start stop : int seq = fn yield ->\n    let rec go i =\n      if i >= stop do ()\n      else (yield i; go (i + 1))\n    in go start\n\n  pub let of_list xs : 'a seq = fn yield ->\n    let rec go l =\n      match l with\n      | [] -> ()\n      | x :: rest -> yield x; go rest\n    in go xs\n\n  pub let repeat x : 'a seq = fn yield ->\n    let rec go u = yield x; go u\n    in go 0\n\n  pub let iterate seed step : 'a seq = fn yield ->\n    let rec go x = yield x; go (step x)\n    in go seed\n\n  pub let map f s : 'a seq = fn yield ->\n    s (fn x -> yield (f x))\n\n  pub let filter f s : 'a seq = fn yield ->\n    s (fn x -> if f x do yield x else ())\n\n  pub let take n (s : 'a seq) : 'a seq = fn yield ->\n    let mut i = 0 in\n    try\n      s (fn x ->\n        if i >= n do perform __seq_stop ()\n        else (yield x; i := i + 1))\n    with\n    | __seq_stop () -> ()\n\n  pub let take_while f (s : 'a seq) : 'a seq = fn yield ->\n    try\n      s (fn x ->\n        if f x do yield x\n        else perform __seq_stop ())\n    with\n    | __seq_stop () -> ()\n\n  pub let drop n (s : 'a seq) : 'a seq = fn yield ->\n    let mut i = 0 in\n    s (fn x ->\n      if i >= n do yield x\n      else i := i + 1)\n\n  pub let drop_while f (s : 'a seq) : 'a seq = fn yield ->\n    let mut dropping = true in\n    s (fn x ->\n      if dropping do\n        (if f x do () else (dropping := false; yield x))\n      else yield x)\n\n  pub let flat_map (f : 'a -> 'b seq) (s : 'a seq) : 'b seq = fn yield ->\n    s (fn x -> (f x) yield)\n\n  pub let enumerate (s : 'a seq) : 'b seq = fn yield ->\n    let mut i = 0 in\n    s (fn x ->\n      yield (i, x);\n      i := i + 1)\n\n  pub let chunk n (s : 'a seq) : 'b seq = fn yield ->\n    let mut buf = [] in\n    let mut count = 0 in\n    s (fn x ->\n      buf := List.concat buf [x];\n      count := count + 1;\n      if count >= n do\n        (yield buf; buf := []; count := 0)\n      else ());\n    if count > 0 do yield buf else ()\n\n  pub let to_list (s : 'a seq) =\n    let mut acc = [] in\n    s (fn x -> acc := x :: acc);\n    List.rev acc\n\n  pub let fold f init (s : 'a seq) =\n    let mut acc = init in\n    s (fn x -> acc := f acc x);\n    acc\n\n  pub let each (f : 'a -> unit) (s : 'a seq) = s f\n\n  pub let count (s : 'a seq) =\n    let mut n = 0 in\n    s (fn _ -> n := n + 1);\n    n\n\n  pub let sum (s : int seq) =\n    let mut total = 0 in\n    s (fn x -> total := total + x);\n    total\n\n  pub let find f (s : 'a seq) =\n    let mut result = None in\n    let _ = try\n      s (fn x ->\n        if f x do (result := Some x; perform __seq_stop ())\n        else ())\n    with\n    | __seq_stop () -> ()\n    in result\n\n  pub let any f (s : 'a seq) =\n    let mut result = false in\n    let _ = try\n      s (fn x ->\n        if f x do (result := true; perform __seq_stop ())\n        else ())\n    with\n    | __seq_stop () -> ()\n    in result\n\n  pub let all f (s : 'a seq) =\n    let mut result = true in\n    let _ = try\n      s (fn x ->\n        if f x do ()\n        else (result := false; perform __seq_stop ()))\n    with\n    | __seq_stop () -> ()\n    in result\nend\n","stdlib/fmt.mml":"module Fmt =\n  pub let pad_left (n: int) (c: string) (s: string) : string =\n    let len = String.length s in\n    if len >= n do s\n    else\n      let rec pad acc remaining =\n        if remaining <= 0 do acc ^ s\n        else pad (acc ^ c) (remaining - 1)\n      in\n      pad \"\" (n - len)\n\n  pub let pad_right (n: int) (c: string) (s: string) : string =\n    let len = String.length s in\n    if len >= n do s\n    else\n      let rec pad acc remaining =\n        if remaining <= 0 do s ^ acc\n        else pad (acc ^ c) (remaining - 1)\n      in\n      pad \"\" (n - len)\n\n  pub let int_to_hex (n: int) : string =\n    let digits = \"0123456789abcdef\" in\n    if n = 0 do \"0\"\n    else\n      let rec go num acc =\n        if num = 0 do acc\n        else\n          let d = num mod 16 in\n          let d = if d < 0 do d + 16 else d in\n          let ch = String.sub digits d 1 in\n          go (num / 16) (ch ^ acc)\n      in\n      let abs_n = if n < 0 do 0 - n else n in\n      let hex = go abs_n \"\" in\n      if n < 0 do \"-\" ^ hex else hex\n\n  pub let int_to_bin (n: int) : string =\n    if n = 0 do \"0\"\n    else\n      let rec go num acc =\n        if num = 0 do acc\n        else\n          let bit = if num mod 2 = 0 do \"0\" else \"1\" in\n          go (num / 2) (bit ^ acc)\n      in\n      let abs_n = if n < 0 do 0 - n else n in\n      let bin = go abs_n \"\" in\n      if n < 0 do \"-\" ^ bin else bin\n\n  pub let int_to_oct (n: int) : string =\n    if n = 0 do \"0\"\n    else\n      let rec go num acc =\n        if num = 0 do acc\n        else\n          let d = num mod 8 in\n          let d = if d < 0 do d + 8 else d in\n          go (num / 8) (show d ^ acc)\n      in\n      let abs_n = if n < 0 do 0 - n else n in\n      let oct = go abs_n \"\" in\n      if n < 0 do \"-\" ^ oct else oct\n\n  pub let zero_pad (width: int) (s: string) : string =\n    Fmt.pad_left width \"0\" s\nend\n","stdlib/show.mml":"instance Show ('a list) where Show 'a =\n  let show xs = match xs with\n    | [] -> \"[]\"\n    | _ -> \"[\" ^ fold (fn acc x ->\n        if acc = \"\" do show x else acc ^ \"; \" ^ show x\n      ) \"\" xs ^ \"]\"\nend\n\ninstance Show ('a array) where Show 'a =\n  let show arr =\n    if array_length arr = 0 do \"#[]\"\n    else \"#[\" ^ fold (fn acc x ->\n      if acc = \"\" do show x else acc ^ \"; \" ^ show x\n    ) \"\" arr ^ \"]\"\nend\n\ninstance Show ('a option) where Show 'a =\n  let show opt = match opt with\n    | None -> \"None\"\n    | Some x -> \"Some \" ^ show x\nend\n\ninstance Show ('a * 'b) where Show 'a, Show 'b =\n  let show p =\n    let (a, b) = p in\n    \"(\" ^ show a ^ \", \" ^ show b ^ \")\"\nend\n\ninstance Show ('a * 'b * 'c) where Show 'a, Show 'b, Show 'c =\n  let show p =\n    let (a, b, c) = p in\n    \"(\" ^ show a ^ \", \" ^ show b ^ \", \" ^ show c ^ \")\"\nend\n","stdlib/iter_map.mml":"instance Iter (('k, 'v) map) ('k * 'v) =\n  let fold f acc m =\n    let rec go a l = match l with\n      | [] -> a\n      | x :: rest -> go (f a x) rest\n    in go acc (to_list m)\nend\n","stdlib/compat.mml":"let compare a b =\n  if a < b do -1\n  else if a > b do 1\n  else 0\n\nlet int_of_string s =\n  match String.to_int s with\n  | Some n -> n\n  | None -> failwith $\"int_of_string: invalid argument \\\"{s}\\\"\"\n\nlet float_of_string s =\n  match String.to_float s with\n  | Some f -> f\n  | None -> failwith $\"float_of_string: invalid argument \\\"{s}\\\"\"\n\nlet max (a : int) (b : int) : int = if a > b do a else b\n\nlet min (a : int) (b : int) : int = if a < b do a else b\n\nlet fst (a, _) = a\n\nlet snd (_, b) = b\n\nlet list_find f xs =\n  match List.find f xs with\n  | Some x -> x\n  | None -> failwith \"list_find: not found\"\n"};
+const STDLIB_SOURCES = {"stdlib/classes.mml":"(* ---- Typeclass primitive externs ---- *)\n(* These are provided by each backend (OCaml VM, JS, native) *)\n\n(* Num primitives *)\nextern __num_add_int : int -> int -> int\nextern __num_sub_int : int -> int -> int\nextern __num_mul_int : int -> int -> int\nextern __num_div_int : int -> int -> int\nextern __num_neg_int : int -> int\nextern __num_add_float : float -> float -> float\nextern __num_sub_float : float -> float -> float\nextern __num_mul_float : float -> float -> float\nextern __num_div_float : float -> float -> float\nextern __num_neg_float : float -> float\n\n(* Eq primitives *)\nextern __eq_int : int -> int -> bool\nextern __neq_int : int -> int -> bool\nextern __eq_float : float -> float -> bool\nextern __neq_float : float -> float -> bool\nextern __eq_string : string -> string -> bool\nextern __neq_string : string -> string -> bool\nextern __eq_bool : bool -> bool -> bool\nextern __neq_bool : bool -> bool -> bool\nextern __eq_byte : byte -> byte -> bool\nextern __neq_byte : byte -> byte -> bool\nextern __eq_rune : rune -> rune -> bool\nextern __neq_rune : rune -> rune -> bool\n\n(* Ord primitives *)\nextern __lt_int : int -> int -> bool\nextern __gt_int : int -> int -> bool\nextern __le_int : int -> int -> bool\nextern __ge_int : int -> int -> bool\nextern __lt_float : float -> float -> bool\nextern __gt_float : float -> float -> bool\nextern __le_float : float -> float -> bool\nextern __ge_float : float -> float -> bool\nextern __lt_string : string -> string -> bool\nextern __gt_string : string -> string -> bool\nextern __le_string : string -> string -> bool\nextern __ge_string : string -> string -> bool\nextern __lt_byte : byte -> byte -> bool\nextern __gt_byte : byte -> byte -> bool\nextern __le_byte : byte -> byte -> bool\nextern __ge_byte : byte -> byte -> bool\nextern __lt_rune : rune -> rune -> bool\nextern __gt_rune : rune -> rune -> bool\nextern __le_rune : rune -> rune -> bool\nextern __ge_rune : rune -> rune -> bool\n\n(* Bitwise primitives *)\nextern __band_int : int -> int -> int\nextern __bor_int : int -> int -> int\nextern __bxor_int : int -> int -> int\nextern __bshl_int : int -> int -> int\nextern __bshr_int : int -> int -> int\nextern __bnot_int : int -> int\n\n(* Show primitives *)\nextern __show_int : int -> string\nextern __show_float : float -> string\nextern __show_bool : bool -> string\nextern __show_string : string -> string\nextern __show_unit : unit -> string\nextern __show_byte : byte -> string\nextern __show_rune : rune -> string\n\n(* Index primitives *)\nextern __index_at_array : int -> 'a array -> 'a\nextern __index_at_string : int -> string -> byte\n\n;;\n\n(* ---- Class definitions ---- *)\n\nclass Num 'a =\n  (+) : 'a -> 'a -> 'a\n  (-) : 'a -> 'a -> 'a\n  (*) : 'a -> 'a -> 'a\n  (/) : 'a -> 'a -> 'a\n  neg : 'a -> 'a\nend\n;;\nclass Eq 'a =\n  (=) : 'a -> 'a -> bool\n  (<>) : 'a -> 'a -> bool\nend\n;;\nclass Ord 'a =\n  (<) : 'a -> 'a -> bool\n  (>) : 'a -> 'a -> bool\n  (<=) : 'a -> 'a -> bool\n  (>=) : 'a -> 'a -> bool\nend\n;;\nclass Bitwise 'a =\n  (land) : 'a -> 'a -> 'a\n  (lor) : 'a -> 'a -> 'a\n  (lxor) : 'a -> 'a -> 'a\n  (lsl) : 'a -> 'a -> 'a\n  (lsr) : 'a -> 'a -> 'a\n  (lnot) : 'a -> 'a\nend\n;;\nclass Show 'a =\n  show : 'a -> string\nend\n;;\nclass Iter 'a 'b where 'a -> 'b =\n  fold : ('c -> 'b -> 'c) -> 'c -> 'a -> 'c\nend\n;;\nclass Index 'c 'k 'v where 'c -> 'k 'v =\n  at : 'k -> 'c -> 'v\nend\n\n;;\n\n(* ---- Primitive instances ---- *)\n\ninstance Num int =\n  let (+) = __num_add_int\n  let (-) = __num_sub_int\n  let (*) = __num_mul_int\n  let (/) = __num_div_int\n  let neg = __num_neg_int\nend\n;;\ninstance Num float =\n  let (+) = __num_add_float\n  let (-) = __num_sub_float\n  let (*) = __num_mul_float\n  let (/) = __num_div_float\n  let neg = __num_neg_float\nend\n\n;;\n\ninstance Eq int =\n  let (=) = __eq_int\n  let (<>) = __neq_int\nend\n;;\ninstance Eq float =\n  let (=) = __eq_float\n  let (<>) = __neq_float\nend\n;;\ninstance Eq string =\n  let (=) = __eq_string\n  let (<>) = __neq_string\nend\n;;\ninstance Eq bool =\n  let (=) = __eq_bool\n  let (<>) = __neq_bool\nend\n;;\ninstance Eq byte =\n  let (=) = __eq_byte\n  let (<>) = __neq_byte\nend\n;;\ninstance Eq rune =\n  let (=) = __eq_rune\n  let (<>) = __neq_rune\nend\n\n;;\n\ninstance Ord int =\n  let (<) = __lt_int\n  let (>) = __gt_int\n  let (<=) = __le_int\n  let (>=) = __ge_int\nend\n;;\ninstance Ord float =\n  let (<) = __lt_float\n  let (>) = __gt_float\n  let (<=) = __le_float\n  let (>=) = __ge_float\nend\n;;\ninstance Ord string =\n  let (<) = __lt_string\n  let (>) = __gt_string\n  let (<=) = __le_string\n  let (>=) = __ge_string\nend\n;;\ninstance Ord byte =\n  let (<) = __lt_byte\n  let (>) = __gt_byte\n  let (<=) = __le_byte\n  let (>=) = __ge_byte\nend\n;;\ninstance Ord rune =\n  let (<) = __lt_rune\n  let (>) = __gt_rune\n  let (<=) = __le_rune\n  let (>=) = __ge_rune\nend\n\n;;\n\ninstance Bitwise int =\n  let (land) = __band_int\n  let (lor) = __bor_int\n  let (lxor) = __bxor_int\n  let (lsl) = __bshl_int\n  let (lsr) = __bshr_int\n  let (lnot) = __bnot_int\nend\n\n;;\n\ninstance Show int =\n  let show = __show_int\nend\n;;\ninstance Show float =\n  let show = __show_float\nend\n;;\ninstance Show bool =\n  let show = __show_bool\nend\n;;\ninstance Show string =\n  let show = __show_string\nend\n;;\ninstance Show unit =\n  let show = __show_unit\nend\n;;\ninstance Show byte =\n  let show = __show_byte\nend\n;;\ninstance Show rune =\n  let show = __show_rune\nend\n\n;;\n\ninstance Index ('a array) int 'a =\n  let at = __index_at_array\nend\n;;\ninstance Index string int byte =\n  let at = __index_at_string\nend\n","stdlib/option_type.mml":"type 'a option = None | Some of 'a\n","stdlib/iter.mml":"instance Iter ('a list) 'a =\n  let fold f acc xs =\n    let rec go a l = match l with\n      | [] -> a\n      | x :: rest -> go (f a x) rest\n    in go acc xs\nend\n\ninstance Iter ('a array) 'a =\n  let fold = fn f -> fn acc -> fn arr ->\n    let rec go = fn a -> fn i ->\n      if i = array_length arr do a\n      else go (f a (array_get arr i)) (i + 1)\n    in go acc 0\nend\n","stdlib/map_class.mml":"class Map 'm 'k 'v where 'm -> 'k 'v =\n  of_list : ('k * 'v) list -> 'm\n  get     : 'k -> 'm -> 'v option\n  set     : 'k -> 'v -> 'm -> 'm\n  has     : 'k -> 'm -> bool\n  remove  : 'k -> 'm -> 'm\n  size    : 'm -> int\n  keys    : 'm -> 'k list\n  values  : 'm -> 'v list\n  to_list : 'm -> ('k * 'v) list\nend\n","stdlib/show.mml":"instance Show ('a list) where Show 'a =\n  let show xs = match xs with\n    | [] -> \"[]\"\n    | _ -> \"[\" ^ fold (fn acc x ->\n        if acc = \"\" do show x else acc ^ \"; \" ^ show x\n      ) \"\" xs ^ \"]\"\nend\n\ninstance Show ('a array) where Show 'a =\n  let show arr =\n    if array_length arr = 0 do \"#[]\"\n    else \"#[\" ^ fold (fn acc x ->\n      if acc = \"\" do show x else acc ^ \"; \" ^ show x\n    ) \"\" arr ^ \"]\"\nend\n\ninstance Show ('a option) where Show 'a =\n  let show opt = match opt with\n    | None -> \"None\"\n    | Some x -> \"Some \" ^ show x\nend\n\ninstance Show ('a * 'b) where Show 'a, Show 'b =\n  let show p =\n    let (a, b) = p in\n    \"(\" ^ show a ^ \", \" ^ show b ^ \")\"\nend\n\ninstance Show ('a * 'b * 'c) where Show 'a, Show 'b, Show 'c =\n  let show p =\n    let (a, b, c) = p in\n    \"(\" ^ show a ^ \", \" ^ show b ^ \", \" ^ show c ^ \")\"\nend\n","stdlib/byte.mml":"module Byte =\n  pub let to_int (b : byte) : int = __byte_to_int b\n  pub let of_int (n : int) : byte = __byte_of_int n\n  pub let to_string (b : byte) : string = __byte_to_string b\n  pub let is_alpha (b : byte) : bool =\n    let n = Byte.to_int b in\n    (n >= 65 && n <= 90) || (n >= 97 && n <= 122)\n  pub let is_digit (b : byte) : bool =\n    let n = Byte.to_int b in\n    n >= 48 && n <= 57\n  pub let is_space (b : byte) : bool =\n    let n = Byte.to_int b in\n    n = 32 || n = 9 || n = 10 || n = 13\n  pub let is_upper (b : byte) : bool =\n    let n = Byte.to_int b in\n    n >= 65 && n <= 90\n  pub let is_lower (b : byte) : bool =\n    let n = Byte.to_int b in\n    n >= 97 && n <= 122\n  pub let to_upper (b : byte) : byte =\n    let n = Byte.to_int b in\n    if n >= 97 && n <= 122 do Byte.of_int (n - 32) else b\n  pub let to_lower (b : byte) : byte =\n    let n = Byte.to_int b in\n    if n >= 65 && n <= 90 do Byte.of_int (n + 32) else b\nend\n","stdlib/rune.mml":"module Rune =\n  pub let to_int (r : rune) : int = __rune_to_int r\n  pub let of_int (n : int) : rune = __rune_of_int n\n  pub let to_string (r : rune) : string = __rune_to_string r\n  pub let is_alpha (r : rune) : bool =\n    let n = Rune.to_int r in\n    (n >= 65 && n <= 90) || (n >= 97 && n <= 122)\n  pub let is_digit (r : rune) : bool =\n    let n = Rune.to_int r in\n    n >= 48 && n <= 57\n  pub let is_space (r : rune) : bool =\n    let n = Rune.to_int r in\n    n = 32 || n = 9 || n = 10 || n = 13\n  pub let is_upper (r : rune) : bool =\n    let n = Rune.to_int r in\n    n >= 65 && n <= 90\n  pub let is_lower (r : rune) : bool =\n    let n = Rune.to_int r in\n    n >= 97 && n <= 122\nend\n","stdlib/math.mml":"module Math =\n  pub let abs (x : int) : int = if x < 0 do 0 - x else x\n  pub let min (a : int) (b : int) : int = if a < b do a else b\n  pub let max (a : int) (b : int) : int = if a > b do a else b\n  pub let pow (a : float) (b : float) : float = __math_pow a b\n  pub let sqrt (x : float) : float = __math_sqrt x\n  pub let floor (x : float) : int = __math_floor x\n  pub let ceil (x : float) : int = __math_ceil x\n  pub let round (x : float) : int = __math_round x\nend\n","stdlib/list.mml":"module List =\n  pub let fold (f: 'b -> 'a -> 'b) (acc: 'b) (xs: 'a list) : 'b =\n    let rec go a l =\n      match l with\n      | [] -> a\n      | x :: rest -> go (f a x) rest\n    in go acc xs\n\n  pub let length xs = List.fold (fn acc _ -> acc + 1) 0 xs\n\n  pub let rev xs = List.fold (fn acc x -> x :: acc) [] xs\n\n  pub let hd xs =\n    @partial\n    match xs with\n    | x :: _ -> x\n\n  pub let tl xs =\n    @partial\n    match xs with\n    | _ :: rest -> rest\n\n  pub let nth xs n =\n    let rec go l i =\n      @partial\n      match l with\n      | x :: rest -> if i = 0 do x else go rest (i - 1)\n    in go xs n\n\n  pub let concat a b = List.fold (fn acc x -> x :: acc) b (List.rev a)\n\n  pub let is_empty xs = match xs with\n    | [] -> true\n    | _ -> false\n\n  pub let flatten xss = List.fold (fn acc xs -> List.concat acc xs) [] xss\n\n  pub let map (f: 'a -> 'b) (xs: 'a list) : 'b list =\n    let rec go acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest -> go (f x :: acc) rest\n    in go [] xs\n\n  pub let filter (f: 'a -> bool) (xs: 'a list) : 'a list =\n    let rec go acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest ->\n        if f x do go (x :: acc) rest\n        else go acc rest\n    in go [] xs\n\n  pub let find (f: 'a -> bool) (xs: 'a list) : 'a option =\n    let rec go l =\n      match l with\n      | [] -> None\n      | x :: rest -> if f x do Some x else go rest\n    in go xs\n\n  pub let exists (f: 'a -> bool) (xs: 'a list) : bool =\n    let rec go l =\n      match l with\n      | [] -> false\n      | x :: rest -> if f x do true else go rest\n    in go xs\n\n  pub let forall (f: 'a -> bool) (xs: 'a list) : bool =\n    let rec go l =\n      match l with\n      | [] -> true\n      | x :: rest -> if f x do go rest else false\n    in go xs\n\n  pub let zip (xs: 'a list) (ys: 'b list) : ('a * 'b) list =\n    let rec go acc a b =\n      match a with\n      | [] -> List.rev acc\n      | x :: ra ->\n        @partial\n        match b with\n        | y :: rb -> go ((x, y) :: acc) ra rb\n    in go [] xs ys\n\n  pub let mapi (f: int -> 'a -> 'b) (xs: 'a list) : 'b list =\n    let rec go i acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest -> go (i + 1) (f i x :: acc) rest\n    in go 0 [] xs\n\n  pub let sort (cmp: 'a -> 'a -> int) (xs: 'a list) : 'a list =\n    let rec insert x sorted =\n      match sorted with\n      | [] -> [x]\n      | y :: rest ->\n        if cmp x y < 1 do x :: sorted\n        else y :: insert x rest\n    in\n    List.fold (fn acc x -> insert x acc) [] xs\n\n  pub let fold_right (f: 'a -> 'b -> 'b) (xs: 'a list) (acc: 'b) : 'b =\n    let rec go l =\n      match l with\n      | [] -> acc\n      | x :: rest -> f x (go rest)\n    in go xs\n\n  pub let find_map (f: 'a -> 'b option) (xs: 'a list) : 'b option =\n    let rec go l =\n      match l with\n      | [] -> None\n      | x :: rest ->\n        match f x with\n        | Some _ as result -> result\n        | None -> go rest\n    in go xs\n\n  pub let assoc_opt key xs =\n    let rec go l =\n      match l with\n      | [] -> None\n      | (k, v) :: rest ->\n        if k = key do Some v else go rest\n    in go xs\n\n  pub let init n f =\n    let rec go i acc =\n      if i < 0 do acc\n      else go (i - 1) (f i :: acc)\n    in go (n - 1) []\n\n  pub let concat_map f xs =\n    List.flatten (List.map f xs)\n\n  pub let iter2 f xs ys =\n    let rec go a b =\n      match a with\n      | [] -> ()\n      | x :: ra ->\n        @partial\n        match b with\n        | y :: rb -> f x y; go ra rb\n    in go xs ys\n\n  pub let map2 (f: 'a -> 'b -> 'c) (xs: 'a list) (ys: 'b list) : 'c list =\n    let rec go acc a b =\n      match a with\n      | [] -> List.rev acc\n      | x :: ra ->\n        @partial\n        match b with\n        | y :: rb -> go (f x y :: acc) ra rb\n    in go [] xs ys\n\n  pub let fold2 (f: 'c -> 'a -> 'b -> 'c) (acc: 'c) (xs: 'a list) (ys: 'b list) : 'c =\n    let rec go a l1 l2 =\n      match l1 with\n      | [] -> a\n      | x :: r1 ->\n        @partial\n        match l2 with\n        | y :: r2 -> go (f a x y) r1 r2\n    in go acc xs ys\n\n  pub let forall2 (f: 'a -> 'b -> bool) (xs: 'a list) (ys: 'b list) : bool =\n    let rec go a b =\n      match a with\n      | [] -> true\n      | x :: ra ->\n        @partial\n        match b with\n        | y :: rb -> if f x y do go ra rb else false\n    in go xs ys\n\n  pub let iteri (f: int -> 'a -> unit) (xs: 'a list) : unit =\n    let rec go i l =\n      match l with\n      | [] -> ()\n      | x :: rest -> f i x; go (i + 1) rest\n    in go 0 xs\n\n  pub let mem_assoc key xs =\n    let rec go l =\n      match l with\n      | [] -> false\n      | (k, _) :: rest ->\n        if k = key do true else go rest\n    in go xs\n\n  pub let assoc key xs =\n    match List.assoc_opt key xs with\n    | Some v -> v\n    | None -> failwith \"List.assoc: not found\"\n\n  pub let iter (f: 'a -> unit) (xs: 'a list) : unit =\n    let rec go xs =\n      match xs with\n      | [] -> ()\n      | x :: rest -> f x; go rest\n    in go xs\n\n  pub let mem x xs =\n    let rec go xs =\n      match xs with\n      | [] -> false\n      | y :: rest -> if x = y do true else go rest\n    in go xs\n\n  pub let rev_append xs ys =\n    let rec go xs acc =\n      match xs with\n      | [] -> acc\n      | x :: rest -> go rest (x :: acc)\n    in go xs ys\n\n  pub let nth_opt xs n =\n    let rec go xs i =\n      match xs with\n      | [] -> None\n      | x :: rest -> if i = 0 do Some x else go rest (i - 1)\n    in go xs n\n\n  pub let find_index f xs =\n    let rec go xs i =\n      match xs with\n      | [] -> None\n      | x :: rest -> if f x do Some i else go rest (i + 1)\n    in go xs 0\n\n  pub let filteri f xs =\n    let rec go xs i acc =\n      match xs with\n      | [] -> List.rev acc\n      | x :: rest ->\n        if f i x do go rest (i + 1) (x :: acc)\n        else go rest (i + 1) acc\n    in go xs 0 []\n\n  pub let filter_map (f: 'a -> 'b option) (xs: 'a list) : 'b list =\n    let rec go xs acc =\n      match xs with\n      | [] -> List.rev acc\n      | x :: rest ->\n        match f x with\n        | Some y -> go rest (y :: acc)\n        | None -> go rest acc\n    in go xs []\n\n  pub let sort_uniq cmp xs =\n    let sorted = List.sort cmp xs in\n    let rec dedup xs =\n      match xs with\n      | [] -> []\n      | x :: [] -> x :: []\n      | x :: y :: rest ->\n        if cmp x y = 0 do dedup (y :: rest)\n        else x :: dedup (y :: rest)\n    in dedup sorted\nend\n","stdlib/array_extra.mml":"module Array =\n  pub let init n f =\n    if n <= 0 do #[]\n    else\n      let arr = Array.make n (f 0) in\n      let rec go i =\n        if i >= n do arr\n        else (Array.set arr i (f i); go (i + 1))\n      in go 1\n\n  pub let map f arr =\n    let n = Array.length arr in\n    if n = 0 do #[]\n    else\n      let result = Array.make n (f (Array.get arr 0)) in\n      let rec go i =\n        if i >= n do result\n        else (Array.set result i (f (Array.get arr i)); go (i + 1))\n      in go 1\n\n  pub let iter f arr =\n    let n = Array.length arr in\n    let rec go i =\n      if i >= n do ()\n      else (f (Array.get arr i); go (i + 1))\n    in go 0\n\n  pub let iteri f arr =\n    let n = Array.length arr in\n    let rec go i =\n      if i >= n do ()\n      else (f i (Array.get arr i); go (i + 1))\n    in go 0\n\n  pub let forall f arr =\n    let n = Array.length arr in\n    let rec go i =\n      if i >= n do true\n      else if f (Array.get arr i) do go (i + 1)\n      else false\n    in go 0\n\n  pub let fold f acc arr =\n    let n = Array.length arr in\n    let rec go i a =\n      if i >= n do a\n      else go (i + 1) (f a (Array.get arr i))\n    in go 0 acc\nend\n","stdlib/result.mml":"module Result =\n  pub type ('a, 'b) t = Ok of 'a | Err of 'b\n  pub let map (f: 'a -> 'c) (r: ('a, 'b) t) : ('c, 'b) t =\n    match r with\n    | Ok v -> Ok (f v)\n    | Err e -> Err e\n  pub let bind (f: 'a -> ('c, 'b) t) (r: ('a, 'b) t) : ('c, 'b) t =\n    match r with\n    | Ok v -> f v\n    | Err e -> Err e\n  pub let unwrap (r: ('a, 'b) t) : 'a =\n    @partial\n    match r with\n    | Ok v -> v\nend\n;;\nopen Result\n","stdlib/option.mml":"module Option =\n  pub let map (f: 'a -> 'b) (opt: 'a option) : 'b option =\n    match opt with\n    | Some x -> Some (f x)\n    | None -> None\n  pub let bind (f: 'a -> 'b option) (opt: 'a option) : 'b option =\n    match opt with\n    | Some x -> f x\n    | None -> None\n  pub let unwrap (opt: 'a option) : 'a =\n    @partial\n    match opt with\n    | Some x -> x\n  pub let unwrap_or (default: 'a) (opt: 'a option) : 'a =\n    match opt with\n    | Some x -> x\n    | None -> default\n  pub let is_some (opt: 'a option) : bool =\n    match opt with\n    | Some _ -> true\n    | None -> false\n  pub let is_none (opt: 'a option) : bool =\n    match opt with\n    | Some _ -> false\n    | None -> true\n  pub let to_list (opt: 'a option) : 'a list =\n    match opt with\n    | Some x -> [x]\n    | None -> []\n  pub let iter (f: 'a -> unit) (opt: 'a option) : unit =\n    match opt with\n    | Some x -> f x\n    | None -> ()\n  pub let flat_map (f: 'a -> 'b option) (opt: 'a option) : 'b option =\n    match opt with\n    | Some x -> f x\n    | None -> None\nend\n","stdlib/buffer.mml":"module Buffer =\n  pub type t = { mut data: byte array; mut len: int }\n\n  pub let create (n: int) : t =\n    { data = Array.make (if n < 16 do 16 else n) #00; len = 0 }\n\n  pub let length (buf: t) : int = buf.len\n\n  pub let clear (buf: t) : unit =\n    buf.len := 0\n\n  pub let grow (buf: t) (needed: int) : unit =\n    let cap = Array.length buf.data in\n    if buf.len + needed > cap do\n      let new_cap = Math.max (cap * 2) (buf.len + needed) in\n      let new_data = Array.make new_cap #00 in\n      let rec copy i =\n        if i < buf.len do\n          Array.set new_data i (Array.get buf.data i);\n          copy (i + 1)\n        else ()\n      in\n      copy 0;\n      buf.data := new_data\n    else ()\n\n  pub let add_byte (buf: t) (b: byte) : unit =\n    Buffer.grow buf 1;\n    Array.set buf.data buf.len b;\n    buf.len := buf.len + 1\n\n  pub let add_string (buf: t) (s: string) : unit =\n    let bytes = String.to_byte_array s in\n    let n = Array.length bytes in\n    Buffer.grow buf n;\n    let rec copy i =\n      if i < n do\n        Array.set buf.data (buf.len + i) (Array.get bytes i);\n        copy (i + 1)\n      else ()\n    in\n    copy 0;\n    buf.len := buf.len + n\n\n  pub let sub (buf: t) (pos: int) (len: int) : string =\n    String.of_byte_array (Array.sub buf.data pos len)\n\n  pub let truncate (buf: t) (n: int) : unit =\n    buf.len := n\n\n  pub let contents (buf: t) : string =\n    String.of_byte_array (Array.sub buf.data 0 buf.len)\n\n  pub let add_buffer (dst: t) (src: t) : unit =\n    let n = src.len in\n    Buffer.grow dst n;\n    let rec copy i =\n      if i < n do\n        Array.set dst.data (dst.len + i) (Array.get src.data i);\n        copy (i + 1)\n      else ()\n    in\n    copy 0;\n    dst.len := dst.len + n\nend\n","stdlib/hash.mml":"class Hash 'a =\n  hash : 'a -> int\nend\n\ninstance Hash int =\n  let hash n = n\nend\ninstance Hash string =\n  let hash s =\n    let bytes = String.to_byte_array s in\n    fold (fn h b -> h * 31 + Byte.to_int b) 5381 bytes\nend\ninstance Hash bool =\n  let hash b = if b do 1 else 0\nend\ninstance Hash byte =\n  let hash b = Byte.to_int b\nend\ninstance Hash rune =\n  let hash r = Rune.to_int r\nend\n","stdlib/hashtbl.mml":"module Hashtbl =\n  pub type ('k, 'v) t = { mut buckets: ('k * 'v) list array; mut size: int }\n  pub let create (n: int) =\n    let cap = if n < 16 do 16 else n in\n    { buckets = Array.make cap []; size = 0 }\n\n  pub let clear tbl =\n    let cap = Array.length tbl.buckets in\n    tbl.buckets := Array.make cap [];\n    tbl.size := 0\n\n  pub let length tbl = tbl.size\n\n  pub let bucket_index tbl (key: 'k) where Hash 'k =\n    let h = hash key in\n    let h = if h < 0 do 0 - h else h in\n    h mod (Array.length tbl.buckets)\n\n  pub let to_list tbl =\n    let cap = Array.length tbl.buckets in\n    let rec collect i acc =\n      if i >= cap do acc\n      else\n        let bucket = Array.get tbl.buckets i in\n        collect (i + 1) (List.concat bucket acc)\n    in\n    collect 0 []\n\n  let rehash tbl hash_fn =\n    let entries = Hashtbl.to_list tbl in\n    let new_cap = Array.length tbl.buckets * 2 in\n    tbl.buckets := Array.make new_cap [];\n    tbl.size := 0;\n    List.fold (fn _ (k, v) ->\n      let h = hash_fn k in\n      let h = if h < 0 do 0 - h else h in\n      let idx = h mod new_cap in\n      let bucket = Array.get tbl.buckets idx in\n      Array.set tbl.buckets idx ((k, v) :: bucket);\n      tbl.size := tbl.size + 1\n    ) () entries\n\n  pub let set tbl (key: 'k) value where Hash 'k, Eq 'k =\n    let idx = Hashtbl.bucket_index tbl key in\n    let bucket = Array.get tbl.buckets idx in\n    let rec replace = fn\n      | [] -> [(key, value)]\n      | (k, v) :: rest ->\n        if k = key do (key, value) :: rest\n        else (k, v) :: replace rest\n    in\n    let new_bucket = replace bucket in\n    let grew = List.length new_bucket > List.length bucket in\n    Array.set tbl.buckets idx new_bucket;\n    if grew do do\n      tbl.size := tbl.size + 1;\n      if tbl.size > Array.length tbl.buckets * 2 do\n        Hashtbl.rehash tbl hash\n      else ()\n    end else ()\n\n  pub let get tbl (key: 'k) where Hash 'k, Eq 'k =\n    let idx = Hashtbl.bucket_index tbl key in\n    let bucket = Array.get tbl.buckets idx in\n    let rec find = fn\n      | [] -> None\n      | (k, v) :: rest ->\n        if k = key do Some v\n        else find rest\n    in\n    find bucket\n\n  pub let has tbl (key: 'k) where Hash 'k, Eq 'k =\n    match Hashtbl.get tbl key with\n    | Some _ -> true\n    | None -> false\n\n  pub let remove tbl (key: 'k) where Hash 'k, Eq 'k =\n    let idx = Hashtbl.bucket_index tbl key in\n    let bucket = Array.get tbl.buckets idx in\n    let new_bucket = List.filter (fn (k, _) -> k <> key) bucket in\n    do\n      if List.length new_bucket < List.length bucket do\n        tbl.size := tbl.size - 1\n      else ()\n    end;\n    Array.set tbl.buckets idx new_bucket\n\n  pub let find tbl key =\n    match Hashtbl.get tbl key with\n    | Some v -> v\n    | None -> failwith \"Hashtbl.find: key not found\"\n\n  pub let fold f tbl acc =\n    let entries = Hashtbl.to_list tbl in\n    List.fold (fn a (k, v) -> f k v a) acc entries\n\n  pub let iter f tbl =\n    let entries = Hashtbl.to_list tbl in\n    List.iter (fn (k, v) -> f k v) entries\n\n  pub let keys tbl =\n    List.map (fn (k, _) -> k) (Hashtbl.to_list tbl)\n\n  pub let values tbl =\n    List.map (fn (_, v) -> v) (Hashtbl.to_list tbl)\nend\n","stdlib/ref.mml":"module Ref =\n  pub type 'a t = { mut contents: 'a }\n  pub let create v = { contents = v }\n  pub let get r = r.contents\n  pub let set r v = r.contents := v\nend\n","stdlib/dynarray.mml":"module Dynarray =\n  pub type 'a t = { mut arr: 'a array; mut count: int }\n\n  pub let create n default =\n    { arr = Array.make (if n < 16 do 16 else n) default; count = 0 }\n\n  pub let length d = d.count\n\n  pub let get d i =\n    if i < 0 || i >= d.count do failwith \"Dynarray.get: index out of bounds\"\n    else Array.get d.arr i\n\n  pub let set d i v =\n    if i < 0 || i >= d.count do failwith \"Dynarray.set: index out of bounds\"\n    else Array.set d.arr i v\n\n  pub let grow d needed default =\n    let cap = Array.length d.arr in\n    if d.count + needed > cap do\n      let new_cap = Math.max (cap * 2) (d.count + needed) in\n      let new_arr = Array.make new_cap default in\n      let rec copy i =\n        if i < d.count do\n          Array.set new_arr i (Array.get d.arr i);\n          copy (i + 1)\n        else ()\n      in\n      copy 0;\n      d.arr := new_arr\n    else ()\n\n  pub let empty () =\n    { arr = #[]; count = 0 }\n\n  pub let push d v =\n    Dynarray.grow d 1 v;\n    Array.set d.arr d.count v;\n    d.count := d.count + 1\n\n  pub let pop d =\n    if d.count = 0 do failwith \"Dynarray.pop: empty\"\n    else\n      d.count := d.count - 1;\n      Array.get d.arr d.count\n\n  pub let clear d =\n    d.count := 0\n\n  pub let to_list d =\n    let rec collect i acc =\n      if i < 0 do acc\n      else collect (i - 1) (Dynarray.get d i :: acc)\n    in\n    collect (d.count - 1) []\n\n  pub let to_array d =\n    Array.sub d.arr 0 d.count\nend\n","stdlib/map.mml":"newtype ('k, 'v) map = MMap of ('k * 'v) list\n;;\nmodule Map =\n  pub let empty () : ('k, 'v) map = MMap []\n\n  pub let rec has k (MMap m) = match m with\n    | [] -> false\n    | (k2, _) :: rest -> if k = k2 do true else has k (MMap rest)\n\n  pub let rec get k (MMap m) = match m with\n    | [] -> None\n    | (k2, v) :: rest -> if k = k2 do Some v else get k (MMap rest)\n\n  pub let set k v (MMap m) =\n    let rec go acc lst = match lst with\n      | [] -> MMap (List.rev ((k, v) :: acc))\n      | (k2, _) :: rest when k = k2 -> MMap (List.rev_append ((k, v) :: acc) rest)\n      | entry :: rest -> go (entry :: acc) rest\n    in go [] m\n\n  pub let rec remove k (MMap m) = match m with\n    | [] -> MMap []\n    | (k2, _) :: rest when k = k2 -> MMap rest\n    | entry :: rest -> match remove k (MMap rest) with MMap r -> MMap (entry :: r)\n\n  pub let size (MMap m) = List.length m\n\n  pub let rec keys (MMap m) = match m with\n    | [] -> []\n    | (k, _) :: rest -> k :: keys (MMap rest)\n\n  pub let rec values (MMap m) = match m with\n    | [] -> []\n    | (_, v) :: rest -> v :: values (MMap rest)\n\n  pub let to_list (MMap m) : ('k * 'v) list = m\n\n  pub let of_list (pairs : ('k * 'v) list) : ('k, 'v) map =\n    List.fold (fn acc p -> match p with (k, v) -> set k v acc) (MMap []) pairs\nend\n;;\ninstance Map (('k, 'v) map) 'k 'v =\n  let of_list = Map.of_list\n  let get = Map.get\n  let set = Map.set\n  let has = Map.has\n  let remove = Map.remove\n  let size = Map.size\n  let keys = Map.keys\n  let values = Map.values\n  let to_list = Map.to_list\nend\n;;\ninstance Iter (('k, 'v) map) ('k * 'v) =\n  let fold f acc (MMap m) =\n    let rec go a l = match l with\n      | [] -> a\n      | x :: rest -> go (f a x) rest\n    in go acc m\nend\n;;\ninstance Show (('k, 'v) map) where Show 'k, Show 'v =\n  let show (MMap m) = match m with\n    | [] -> \"#{}\"\n    | _ ->\n      let inner = List.fold (fn acc kv -> match kv with (k, v) ->\n        let entry = show k ^ \": \" ^ show v in\n        if acc = \"\" do entry else acc ^ \"; \" ^ entry\n      ) \"\" m in\n      \"#{\" ^ inner ^ \"}\"\nend\n;;\ninstance Index (('k, 'v) map) 'k 'v =\n  let at k m = match Map.get k m with\n    | Some v -> v\n    | None -> failwith \"key not found in map\"\nend\n","stdlib/set.mml":"newtype 'a set = MSet of ('a, unit) map\n;;\nmodule Set =\n  pub let empty () : 'a set = MSet (Map.empty ())\n\n  pub let singleton (x : 'a) : 'a set = MSet (Map.set x () (Map.empty ()))\n\n  pub let of_list xs : 'a set =\n    MSet (List.fold (fn acc x -> Map.set x () acc) (Map.empty ()) xs)\n\n  pub let add elem (MSet s) : 'a set = MSet (Map.set elem () s)\n\n  pub let remove elem (MSet s) : 'a set = MSet (Map.remove elem s)\n\n  pub let mem elem (MSet s) = Map.has elem s\n\n  pub let size (MSet s) = Map.size s\n\n  pub let to_list (MSet s) = Map.keys s\n\n  pub let union (MSet s1) (MSet s2) : 'a set =\n    MSet (List.fold (fn acc x -> Map.set x () acc) s2 (Map.keys s1))\n\n  pub let inter (MSet s1) (MSet s2) : 'a set =\n    MSet (List.fold (fn acc x ->\n      if Map.has x s2 do Map.set x () acc else acc\n    ) (Map.empty ()) (Map.keys s1))\n\n  pub let diff (MSet s1) (MSet s2) : 'a set =\n    MSet (List.fold (fn acc x ->\n      if not (Map.has x s2) do Map.set x () acc else acc\n    ) (Map.empty ()) (Map.keys s1))\n\n  pub let is_empty (MSet s) = Map.size s = 0\n\n  pub let is_subset (MSet s1) (MSet s2) =\n    List.forall (fn x -> Map.has x s2) (Map.keys s1)\nend\n;;\ninstance Iter ('a set) 'a =\n  let fold f acc (MSet s) =\n    let rec go a l = match l with\n      | [] -> a\n      | x :: rest -> go (f a x) rest\n    in go acc (Map.keys s)\nend\n;;\ninstance Show ('a set) where Show 'a =\n  let show (MSet s) = match Map.keys s with\n    | [] -> \"#{}\"\n    | ks ->\n      let inner = List.fold (fn acc x ->\n        if acc = \"\" do show x else acc ^ \"; \" ^ show x\n      ) \"\" ks in\n      \"#{\" ^ inner ^ \"}\"\nend\n","stdlib/enum.mml":"module Enum =\n  pub let reduce f xs =\n    @partial\n    match xs with\n    | x :: rest -> List.fold f x rest\n\n  pub let sum xs = List.fold (fn a b -> a + b) 0 xs\n\n  pub let count f xs =\n    List.fold (fn acc x -> if f x do acc + 1 else acc) 0 xs\n\n  pub let take n xs =\n    let rec go i acc l =\n      if i >= n do List.rev acc\n      else match l with\n        | [] -> List.rev acc\n        | x :: rest -> go (i + 1) (x :: acc) rest\n    in go 0 [] xs\n\n  pub let drop n xs =\n    let rec go i l =\n      if i >= n do l\n      else match l with\n        | [] -> []\n        | _ :: rest -> go (i + 1) rest\n    in go 0 xs\n\n  pub let take_while f xs =\n    let rec go acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest ->\n        if f x do go (x :: acc) rest\n        else List.rev acc\n    in go [] xs\n\n  pub let drop_while f xs =\n    let rec go l =\n      match l with\n      | [] -> []\n      | x :: rest ->\n        if f x do go rest\n        else l\n    in go xs\n\n  pub let flat_map f xs = List.flatten (List.map f xs)\n\n  pub let each f xs = List.fold (fn _ x -> f x) () xs\n\n  pub let reject f xs = List.filter (fn x -> not (f x)) xs\n\n  pub let enumerate xs = List.mapi (fn i x -> (i, x)) xs\n\n  pub let join sep xs =\n    match xs with\n    | [] -> \"\"\n    | first :: rest ->\n      List.fold (fn acc x -> acc ^ sep ^ x) first rest\n\n  pub let chunk n xs =\n    let rec go acc l =\n      match l with\n      | [] -> List.rev acc\n      | _ -> go (Enum.take n l :: acc) (Enum.drop n l)\n    in go [] xs\n\n  pub let dedup xs =\n    let rec go prev acc l =\n      match l with\n      | [] -> List.rev acc\n      | x :: rest ->\n        if x = prev do go prev acc rest\n        else go x (x :: acc) rest\n    in match xs with\n      | [] -> []\n      | x :: rest -> go x [x] rest\n\n  pub let uniq xs =\n    List.rev (List.fold (fn acc x ->\n      if List.exists (fn y -> y = x) acc do acc\n      else x :: acc\n    ) [] xs)\n\n  pub let scan f init xs =\n    List.rev (List.fold (fn acc x ->\n      match acc with\n      | [] -> [f init x]\n      | prev :: _ -> f prev x :: acc\n    ) [init] xs)\n\n  pub let intersperse sep xs =\n    match xs with\n    | [] -> []\n    | first :: rest ->\n      List.fold (fn acc x -> List.concat acc [sep; x]) [first] rest\n\n  pub let zip_with f xs ys =\n    List.map (fn p -> match p with (a, b) -> f a b) (List.zip xs ys)\n\n  pub let min_by f xs =\n    @partial\n    match xs with\n    | x :: rest ->\n      List.fold (fn best y -> if f y < f best do y else best) x rest\n\n  pub let max_by f xs =\n    @partial\n    match xs with\n    | x :: rest ->\n      List.fold (fn best y -> if f y > f best do y else best) x rest\n\n  pub let group_by f xs =\n    List.fold (fn m x ->\n      let k = f x in\n      match get k m with\n      | None -> set k [x] m\n      | Some vs -> set k (List.concat vs [x]) m\n    ) #{} xs\nend\n","stdlib/seq.mml":"type 'a seq = ('a -> unit) -> unit\n;;\neffect SeqStop =\n  __seq_stop : unit -> unit\nend\nmodule Seq =\n  pub let range start stop : int seq = fn yield ->\n    let rec go i =\n      if i >= stop do ()\n      else (yield i; go (i + 1))\n    in go start\n\n  pub let of_list xs : 'a seq = fn yield ->\n    let rec go l =\n      match l with\n      | [] -> ()\n      | x :: rest -> yield x; go rest\n    in go xs\n\n  pub let repeat x : 'a seq = fn yield ->\n    let rec go u = yield x; go u\n    in go 0\n\n  pub let iterate seed step : 'a seq = fn yield ->\n    let rec go x = yield x; go (step x)\n    in go seed\n\n  pub let map f s : 'a seq = fn yield ->\n    s (fn x -> yield (f x))\n\n  pub let filter f s : 'a seq = fn yield ->\n    s (fn x -> if f x do yield x else ())\n\n  pub let take n (s : 'a seq) : 'a seq = fn yield ->\n    let mut i = 0 in\n    try\n      s (fn x ->\n        if i >= n do perform __seq_stop ()\n        else (yield x; i := i + 1))\n    with\n    | __seq_stop () -> ()\n\n  pub let take_while f (s : 'a seq) : 'a seq = fn yield ->\n    try\n      s (fn x ->\n        if f x do yield x\n        else perform __seq_stop ())\n    with\n    | __seq_stop () -> ()\n\n  pub let drop n (s : 'a seq) : 'a seq = fn yield ->\n    let mut i = 0 in\n    s (fn x ->\n      if i >= n do yield x\n      else i := i + 1)\n\n  pub let drop_while f (s : 'a seq) : 'a seq = fn yield ->\n    let mut dropping = true in\n    s (fn x ->\n      if dropping do\n        (if f x do () else (dropping := false; yield x))\n      else yield x)\n\n  pub let flat_map (f : 'a -> 'b seq) (s : 'a seq) : 'b seq = fn yield ->\n    s (fn x -> (f x) yield)\n\n  pub let enumerate (s : 'a seq) : 'b seq = fn yield ->\n    let mut i = 0 in\n    s (fn x ->\n      yield (i, x);\n      i := i + 1)\n\n  pub let chunk n (s : 'a seq) : 'b seq = fn yield ->\n    let mut buf = [] in\n    let mut count = 0 in\n    s (fn x ->\n      buf := List.concat buf [x];\n      count := count + 1;\n      if count >= n do\n        (yield buf; buf := []; count := 0)\n      else ());\n    if count > 0 do yield buf else ()\n\n  pub let to_list (s : 'a seq) =\n    let mut acc = [] in\n    s (fn x -> acc := x :: acc);\n    List.rev acc\n\n  pub let fold f init (s : 'a seq) =\n    let mut acc = init in\n    s (fn x -> acc := f acc x);\n    acc\n\n  pub let each (f : 'a -> unit) (s : 'a seq) = s f\n\n  pub let count (s : 'a seq) =\n    let mut n = 0 in\n    s (fn _ -> n := n + 1);\n    n\n\n  pub let sum (s : int seq) =\n    let mut total = 0 in\n    s (fn x -> total := total + x);\n    total\n\n  pub let find f (s : 'a seq) =\n    let mut result = None in\n    let _ = try\n      s (fn x ->\n        if f x do (result := Some x; perform __seq_stop ())\n        else ())\n    with\n    | __seq_stop () -> ()\n    in result\n\n  pub let any f (s : 'a seq) =\n    let mut result = false in\n    let _ = try\n      s (fn x ->\n        if f x do (result := true; perform __seq_stop ())\n        else ())\n    with\n    | __seq_stop () -> ()\n    in result\n\n  pub let all f (s : 'a seq) =\n    let mut result = true in\n    let _ = try\n      s (fn x ->\n        if f x do ()\n        else (result := false; perform __seq_stop ()))\n    with\n    | __seq_stop () -> ()\n    in result\nend\n","stdlib/fmt.mml":"module Fmt =\n  pub let pad_left (n: int) (c: string) (s: string) : string =\n    let len = String.length s in\n    if len >= n do s\n    else\n      let rec pad acc remaining =\n        if remaining <= 0 do acc ^ s\n        else pad (acc ^ c) (remaining - 1)\n      in\n      pad \"\" (n - len)\n\n  pub let pad_right (n: int) (c: string) (s: string) : string =\n    let len = String.length s in\n    if len >= n do s\n    else\n      let rec pad acc remaining =\n        if remaining <= 0 do s ^ acc\n        else pad (acc ^ c) (remaining - 1)\n      in\n      pad \"\" (n - len)\n\n  pub let int_to_hex (n: int) : string =\n    let digits = \"0123456789abcdef\" in\n    if n = 0 do \"0\"\n    else\n      let rec go num acc =\n        if num = 0 do acc\n        else\n          let d = num mod 16 in\n          let d = if d < 0 do d + 16 else d in\n          let ch = String.sub digits d 1 in\n          go (num / 16) (ch ^ acc)\n      in\n      let abs_n = if n < 0 do 0 - n else n in\n      let hex = go abs_n \"\" in\n      if n < 0 do \"-\" ^ hex else hex\n\n  pub let int_to_bin (n: int) : string =\n    if n = 0 do \"0\"\n    else\n      let rec go num acc =\n        if num = 0 do acc\n        else\n          let bit = if num mod 2 = 0 do \"0\" else \"1\" in\n          go (num / 2) (bit ^ acc)\n      in\n      let abs_n = if n < 0 do 0 - n else n in\n      let bin = go abs_n \"\" in\n      if n < 0 do \"-\" ^ bin else bin\n\n  pub let int_to_oct (n: int) : string =\n    if n = 0 do \"0\"\n    else\n      let rec go num acc =\n        if num = 0 do acc\n        else\n          let d = num mod 8 in\n          let d = if d < 0 do d + 8 else d in\n          go (num / 8) (show d ^ acc)\n      in\n      let abs_n = if n < 0 do 0 - n else n in\n      let oct = go abs_n \"\" in\n      if n < 0 do \"-\" ^ oct else oct\n\n  pub let zero_pad (width: int) (s: string) : string =\n    Fmt.pad_left width \"0\" s\nend\n","stdlib/compat.mml":"let compare a b =\n  if a < b do -1\n  else if a > b do 1\n  else 0\n\nlet int_of_string s =\n  match String.to_int s with\n  | Some n -> n\n  | None -> failwith $\"int_of_string: invalid argument \\\"{s}\\\"\"\n\nlet float_of_string s =\n  match String.to_float s with\n  | Some f -> f\n  | None -> failwith $\"float_of_string: invalid argument \\\"{s}\\\"\"\n\nlet max (a : int) (b : int) : int = if a > b do a else b\n\nlet min (a : int) (b : int) : int = if a < b do a else b\n\nlet fst (a, _) = a\n\nlet snd (_, b) = b\n\nlet list_find f xs =\n  match List.find f xs with\n  | Some x -> x\n  | None -> failwith \"list_find: not found\"\n"};
 
 // ---- Public API ----
 global.MiniML = {

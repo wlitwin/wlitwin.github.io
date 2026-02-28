@@ -526,7 +526,6 @@ let freshen_arrow_effects level ty =
     | Types.TArray t -> Types.TArray (go t)
     | Types.TRecord fs -> Types.TRecord (List.map (fun (n, t) -> (n, go t)) fs)
     | Types.TVariant (name, args) -> Types.TVariant (name, List.map go args)
-    | Types.TMap (k, v) -> Types.TMap (go k, go v)
     | t -> t
   in
   go ty
@@ -1387,8 +1386,7 @@ type ty_annot =
   | TyList of ty_annot                  (* int list *)
   | TyArray of ty_annot                 (* int array *)
   | TyTuple of ty_annot list            (* int * string *)
-  | TyApp of ty_annot list * string     (* ('a, 'b) result *)
-  | TyMap of ty_annot * ty_annot        (* (string, int) map *)
+  | TyApp of ty_annot list * string     (* ('a, 'b) result, ('k, 'v) map *)
   | TyQualified of string list * string (* Module.Type *)
   | TyWithEffect of ty_annot * eff_annot  (* return type / effect on let decls *)
 ```
@@ -1441,7 +1439,6 @@ let resolve_ty_annot_shared ctx level tvars (annot : Ast.ty_annot) : Types.ty =
     | Ast.TyTuple ts -> Types.TTuple (List.map go ts)
     | Ast.TyList t -> Types.TList (go t)
     | Ast.TyArray t -> Types.TArray (go t)
-    | Ast.TyMap (k, v) -> Types.TMap (go k, go v)
     | Ast.TyApp (args, name) -> (* parameterized type: expand synonym or build TVariant *)
       ...
     | Ast.TyRecord (fields, is_open) ->

@@ -247,7 +247,7 @@ class Map 'm 'k 'v =
 end
 ```
 
-**Instances:** `('k, 'v) map` (the built-in persistent map type)
+**Instances:** `('k, 'v) map` (defined as `newtype ('k, 'v) map = MMap of ('k * 'v) list` in the standard library)
 
 ```miniml
 let m = #{"a": 1; "b": 2}
@@ -829,8 +829,8 @@ Array.fold (fn acc x -> acc + x) 0 b  (* 6 *)
 
 ## Set Module
 
-Immutable sets, implemented on top of the built-in map type.
-The underlying representation is `type 'a set = ('a, unit) map`.
+Immutable sets, implemented as a newtype over the map type.
+The underlying representation is `newtype 'a set = MSet of ('a, unit) map`.
 
 ```
 Set.empty : unit -> 'a set

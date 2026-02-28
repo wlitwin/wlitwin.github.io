@@ -245,6 +245,38 @@ let rec fact n =
 in fact 10
 ```
 
+### Recursive value definitions
+
+`let rec` can also bind non-function values to create cyclic data structures.
+The expression must be *constructive* — built from data constructors (`::``,
+tuples, records, variants, arrays) rather than arbitrary function calls.
+
+```
+-- Infinite cyclic list: 1, 2, 1, 2, ...
+let rec cycle = 1 :: 2 :: cycle
+
+-- Mutual recursive values
+let rec ping = 1 :: pong
+and pong = 2 :: ping
+
+-- Cyclic variant
+type tree = Leaf | Node of int * tree
+let rec t = Node (1, t)
+
+-- Cyclic record
+type node = { value: string; next: node option }
+;;
+let rec self = { value = "loop"; next = Some self }
+```
+
+Under the hood, a placeholder value of the correct shape is allocated first,
+the recursive name is bound to it, the expression is compiled (with references
+to the name getting the placeholder), and then the placeholder is backpatched
+in-place — creating true cyclic structures.
+
+Non-constructive expressions like `let rec x = x + 1` or `let rec x = x` are
+rejected as type errors.
+
 ### Polymorphic recursion (`let rec (type 'a)`)
 
 When a recursive function needs to call itself at different type instantiations
@@ -1058,7 +1090,8 @@ Array.of_list [1; 2; 3]        -- #[1; 2; 3]
 
 ## Maps
 
-Maps are immutable associative data structures with key-value pairs.
+Maps are immutable associative data structures with key-value pairs, defined as
+a newtype in the standard library: `newtype ('k, 'v) map = MMap of ('k * 'v) list`.
 
 ### Creation
 
@@ -1122,7 +1155,8 @@ end
 
 ## Sets
 
-Sets are built on top of maps (as `('a, unit) map`).
+Sets are immutable collections of unique values, defined as a newtype in the
+standard library: `newtype 'a set = MSet of ('a, unit) map`.
 
 ### Creation
 
@@ -1327,6 +1361,43 @@ type 'a tree = Leaf | Node of 'a * 'a forest
 and 'a forest = Empty | Trees of 'a tree list
 ```
 
+### Newtypes
+
+Newtypes create distinct types from existing ones with a single constructor
+that is erased at runtime — zero overhead. They provide type safety without
+performance cost.
+
+```
+newtype email = Email of string
+newtype meters = Meters of float
+newtype ('k, 'v) map = MMap of ('k * 'v) list
+```
+
+Newtypes can derive type class instances:
+
+```
+newtype age = Age of int deriving Show, Eq
+```
+
+In modules, `opaque newtype` hides the constructor:
+
+```
+module Token =
+  opaque newtype t = Token of int
+  pub let make n = Token n
+  pub let unwrap (Token n) = n
+end
+
+Token.make 42          -- works
+Token.Token 42         -- type error: constructor is hidden
+```
+
+Pattern matching on newtypes works like any single-constructor variant:
+
+```
+let unwrap (Email s) = s
+```
+
 ### Deriving
 
 Automatically derive type class instances:
@@ -1335,9 +1406,11 @@ Automatically derive type class instances:
 type color = Red | Green | Blue deriving Show
 type point = {x: int; y: int} deriving Show, Eq
 type 'a box = Wrap of 'a deriving Show
+newtype age = Age of int deriving Show, Eq
 
 show Red                -- "Red"
 show {x = 1; y = 2}    -- "{ x = 1; y = 2 }"
+show (Age 25)           -- "Age(25)"
 ```
 
 Supported derivable classes: `Show`, `Eq`.

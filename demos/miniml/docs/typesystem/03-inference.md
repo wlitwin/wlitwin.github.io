@@ -1325,7 +1325,7 @@ against those types:
     let vt = check ctx level v v1_te.ty in
     (kt, vt)
   ) rest in
-  mk (TEMap ((k1_te, v1_te) :: rest_tes)) (Types.TMap (k1_te.ty, v1_te.ty))
+  mk (TEMap ((k1_te, v1_te) :: rest_tes)) (Types.TVariant ("map", [k1_te.ty; v1_te.ty]))
 ```
 
 ### Indexing

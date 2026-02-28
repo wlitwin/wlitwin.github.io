@@ -42,7 +42,6 @@ let rec unify t1 t2 =
     List.iter2 unify ts1 ts2
   | TList t1', TList t2' -> unify t1' t2'
   | TArray t1', TArray t2' -> unify t1' t2'
-  | TMap (k1, v1), TMap (k2, v2) -> unify k1 k2; unify v1 v2
   | TRecord r1, TRecord r2 -> unify_record_row r1 r2
   | TPolyVariant r1, TPolyVariant r2 -> unify_pv_row r1 r2
   | TInt, TInt | TFloat, TFloat | TBool, TBool
@@ -156,7 +155,6 @@ let rec occurs_check id level ty =
   | TTuple ts -> List.iter (occurs_check id level) ts
   | TList t -> occurs_check id level t
   | TArray t -> occurs_check id level t
-  | TMap (k, v) -> occurs_check id level k; occurs_check id level v
   | TRecord row -> occurs_check_rrow id level row
   | TPolyVariant row -> occurs_check_pvrow id level row
   | TVariant (_, args) -> List.iter (occurs_check id level) args

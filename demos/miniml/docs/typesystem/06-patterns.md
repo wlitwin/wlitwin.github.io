@@ -383,7 +383,7 @@ share the same type.
   | Ast.PatMap entries ->
     let key_ty = Types.new_tvar level in
     let val_ty = Types.new_tvar level in
-    try_unify ty (Types.TMap (key_ty, val_ty));
+    try_unify ty (Types.TVariant ("map", [key_ty; val_ty]));
     List.concat_map (fun (kpat, vpat) ->
       check_pattern ctx level kpat key_ty @
       check_pattern ctx level vpat val_ty
@@ -391,7 +391,7 @@ share the same type.
 ```
 
 Map patterns destructure map literals. Fresh type variables are created for the
-key and value types, the scrutinee is unified with `TMap(key_ty, val_ty)`, and
+key and value types, the scrutinee is unified with the map newtype, and
 each key-value pair's sub-patterns are checked against the corresponding types.
 
 
@@ -1057,8 +1057,6 @@ let rec types_compatible t1 t2 =
     List.length ts1 = List.length ts2 && List.for_all2 types_compatible ts1 ts2
   | TList t1, TList t2 -> types_compatible t1 t2
   | TArray t1, TArray t2 -> types_compatible t1 t2
-  | TMap (k1, v1), TMap (k2, v2) ->
-    types_compatible k1 k2 && types_compatible v1 v2
   | TVariant (a, args_a), TVariant (b, args_b) ->
     String.equal a b && List.length args_a = List.length args_b &&
     List.for_all2 types_compatible args_a args_b
@@ -1169,12 +1167,12 @@ it. Array matches almost always need a wildcard or variable catch-all.
 ### Other Types
 
 ```ocaml
-    | Types.TMap _ -> ["_"]
     | Types.TInt | Types.TFloat | Types.TString -> ["_"]
     | _ -> []
 ```
 
-Maps, integers, floats, and strings have effectively infinite value spaces.
+Integers, floats, and strings have effectively infinite value spaces. Map
+patterns (matched via the newtype variant) also fall into this category.
 Without a wildcard, they are always non-exhaustive. The checker reports `"_"`
 as the missing pattern, indicating that a catch-all is needed.
 

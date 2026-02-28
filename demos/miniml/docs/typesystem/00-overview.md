@@ -122,8 +122,7 @@ type ty =
   | TTuple of ty list              (* tuples: a * b * c *)
   | TList of ty                    (* lists: 'a list *)
   | TRecord of record_row          (* row-typed records: { x: int; y: string; .. } *)
-  | TVariant of string * ty list   (* named variants: 'a option, 'a list, etc. *)
-  | TMap of ty * ty                (* maps: (k, v) map *)
+  | TVariant of string * ty list   (* named variants: 'a option, ('k,'v) map, etc. *)
   | TArray of ty                   (* arrays: 'a array *)
   | TPolyVariant of pvrow          (* polymorphic variants: [`Foo | `Bar of int] *)
   | TVar of tvar ref               (* mutable type variable cell *)
@@ -315,6 +314,7 @@ type type_env = {
   modules: (string * module_info) list;           (* loaded modules *)
   type_aliases: (string * string) list;           (* short -> qualified name *)
   type_synonyms: (string * int * ty) list;        (* type synonyms *)
+  newtypes: string list;                           (* newtype names for constructor erasure *)
 }
 ```
 
