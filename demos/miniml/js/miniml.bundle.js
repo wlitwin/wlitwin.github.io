@@ -35,8 +35,10 @@ const vvariant = (tagN, name, payload) => ({ tag: "variant", tagN, name, payload
 const vclosure = (proto, upvalues) => ({ tag: "closure", proto, upvalues });
 const vpartial = (closure, args) => ({ tag: "partial", closure, args });
 const vexternal = (name, arity, fn, args) => ({ tag: "external", name, arity, fn, args: args || [] });
-const vcontinuation = (fiber, returnHandler, opHandlers) =>
-  ({ tag: "continuation", fiber, returnHandler, opHandlers, used: false });
+const vcontinuation = (fiber, returnHandler, opHandlers, bodyFiber, intermediateHandlers) =>
+  ({ tag: "continuation", fiber, returnHandler, opHandlers,
+     bodyFiber: bodyFiber || fiber, intermediateHandlers: intermediateHandlers || [],
+     used: false });
 const vref = (v) => ({ tag: "ref", v: [v] }); // use array for mutability
 const vmap = (pairs) => ({ tag: "map", v: pairs }); // pairs: [[k, v], ...]
 const varray = (elems) => ({ tag: "array", v: elems });
@@ -914,12 +916,24 @@ function run(vm) {
       case 63: { // PERFORM
         const opNameStr = op[1];
         const arg = fiber.stack[--fiber.sp];
-        const he = findHandler(vm, opNameStr);
+        // Find matching handler and its index
+        let matchIdx = -1;
+        let he = null;
+        for (let i = vm.handlerStack.length - 1; i >= 0; i--) {
+          const h = vm.handlerStack[i];
+          for (const [name] of h.ops) {
+            if (name === opNameStr) { matchIdx = i; he = h; break; }
+          }
+          if (he) break;
+        }
         if (!he) error(`unhandled effect operation: ${opNameStr}`);
         const handlerFn = he.ops.find(([name]) => name === opNameStr)[1];
-        const cont = vcontinuation(fiber, he.returnHandler, he.ops);
+        // Collect intermediate handlers (pushed after matched = more inner)
+        const intermediates = vm.handlerStack.slice(matchIdx + 1);
+        const cont = vcontinuation(fiber, he.returnHandler, he.ops, he.bodyFiber, intermediates);
         const pair = vtuple([arg, cont]);
-        removeHandler(vm, he);
+        // Remove matched handler and all intermediates
+        vm.handlerStack = vm.handlerStack.slice(0, matchIdx);
         fiber = he.parentFiber;
         vm.currentFiber = fiber;
         internalCall(fiber, asClosure(handlerFn), pair);
@@ -955,13 +969,15 @@ function run(vm) {
         cont.used = true;
         const bodyFiber = cont.fiber;
         bodyFiber.stack[bodyFiber.sp++] = v;
+        // Reinstall caught handler with original body fiber
         const he = {
           returnHandler: cont.returnHandler,
           ops: cont.opHandlers,
-          bodyFiber,
+          bodyFiber: cont.bodyFiber,
           parentFiber: fiber,
         };
-        vm.handlerStack.push(he);
+        // Reinstall caught handler then intermediates (innermost last = pushed last)
+        vm.handlerStack.push(he, ...cont.intermediateHandlers);
         fiber = bodyFiber;
         vm.currentFiber = fiber;
         break;
@@ -1502,11 +1518,14 @@ reg("__fmt_pad_right", 2, (args) => {
 // Copy (continuation)
 reg("copy_continuation", 1, (args) => {
   const cont = asContinuation(args[0]);
+  const newFiber = copyFiber(cont.fiber);
   return {
     tag: "continuation",
-    fiber: copyFiber(cont.fiber),
+    fiber: newFiber,
     returnHandler: cont.returnHandler,
     opHandlers: cont.opHandlers,
+    bodyFiber: cont.bodyFiber === cont.fiber ? newFiber : cont.bodyFiber,
+    intermediateHandlers: cont.intermediateHandlers || [],
     used: false,
   };
 });
