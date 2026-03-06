@@ -2129,6 +2129,12 @@ function formatFloat(f) {
   return s;
 }
 
+// No-op cache functions — used by the self-hosted compiler's extern declarations.
+// In the bytecode VM, caching is not needed (the JS compiler path handles it).
+reg("__cache_has", 1, (_args) => vbool(false));
+reg("__cache_get", 1, (_args) => VUNIT);
+reg("__cache_set", 2, (_args) => VUNIT);
+
 
 
 // ---- loader.js ----
