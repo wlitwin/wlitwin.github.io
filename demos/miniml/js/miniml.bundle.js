@@ -259,10 +259,31 @@ function ppValue(v) {
 }
 
 // --- Fiber ---
-const STACK_SIZE = 65536;
+// Fiber stacks grow on demand (mirrors the OCaml VM's growable stacks). Every
+// handle/try allocates a fresh fiber, so starting small instead of eagerly
+// allocating a fixed 64K-slot array (~the old cost) makes handler installation
+// dramatically cheaper; deep recursion grows by doubling. A generous cap turns
+// runaway non-tail recursion into a clean "stack overflow" instead of an OOM.
+const FIBER_STACK_INIT = 1024;
+const FIBER_STACK_MAX = 16 * 1024 * 1024;
 
 function makeFiber() {
-  return { stack: new Array(STACK_SIZE).fill(VUNIT), sp: 0, frames: [], extraArgs: [] };
+  return { stack: new Array(FIBER_STACK_INIT).fill(VUNIT), sp: 0, frames: [], extraArgs: [] };
+}
+
+// Ensure fiber stack holds at least `needed` slots, growing (doubling) and
+// filling new slots with VUNIT. JS arrays auto-grow on indexed write, but
+// frame setup uses Array.fill(start,end) which does NOT extend a short array,
+// so capacity must be ensured before filling a locals region.
+function ensureCap(f, needed) {
+  const cap = f.stack.length;
+  if (needed > cap) {
+    if (needed > FIBER_STACK_MAX) error("stack overflow");
+    let newCap = cap;
+    while (newCap < needed) newCap = Math.min(newCap * 2, FIBER_STACK_MAX);
+    f.stack.length = newCap;
+    f.stack.fill(VUNIT, cap, newCap);
+  }
 }
 
 function copyFiber(f) {
@@ -276,19 +297,23 @@ function copyFiber(f) {
 }
 
 // --- Top-level helper functions ---
-function findHandler(vm, opName) {
-  for (let i = vm.handlerStack.length - 1; i >= 0; i--) {
-    const he = vm.handlerStack[i];
-    for (const [name] of he.ops) {
-      if (name === opName) return he;
-    }
-  }
-  return null;
+// A handler entry is one of:
+//   {kind:"full", returnHandler, ops, bodyFiber, parentFiber} — fiber-based, HANDLE
+//   {kind:"try", fiber, frameDepth, stackDepth, control, ret, catch} — no-fiber
+//     lowering of non-resumptive handlers, TRY_BEGIN
+//   {kind:"provide", ops, fiber, frameDepth, stackDepth} — no-fiber lowering of
+//     tail-resumptive handlers, PROVIDE (body inline; PERFORM calls the arm on the
+//     current fiber and continues, reinstalling the marker when the arm returns).
+function heOpNames(he) {
+  return he.kind === "try"
+    ? he.catch.map(([name]) => name)
+    : he.ops.map(([name]) => name);
 }
 
 function findHandlerForFiber(vm, f) {
+  // Only full handlers own a body fiber; try/provide markers complete inline.
   for (const he of vm.handlerStack) {
-    if (he.bodyFiber === f) return he;
+    if (he.kind === "full" && he.bodyFiber === f) return he;
   }
   return null;
 }
@@ -297,10 +322,42 @@ function removeHandler(vm, he) {
   vm.handlerStack = vm.handlerStack.filter(h => h !== he);
 }
 
+// Drop inline try/provide markers opened at or above stackDepth on f (a non-local
+// jump leaving an inline body without running its TRY_END/PROVIDE_END).
+function dropTryMarkersAbove(vm, f, stackDepth) {
+  vm.handlerStack = vm.handlerStack.filter(h =>
+    !((h.kind === "try" || h.kind === "provide") &&
+      h.fiber === f && h.stackDepth >= stackDepth)
+  );
+}
+
+// Drop pending provide-resume entries on f whose recorded frame depth is at or above
+// frameDepth (frames unwound non-locally past a mid-flight provide arm).
+function dropProvideResumesAbove(vm, f, frameDepth) {
+  if (vm.provideResumes.length > 0) {
+    vm.provideResumes = vm.provideResumes.filter(
+      ([rf, rd]) => !(rf === f && rd >= frameDepth)
+    );
+  }
+}
+
+// When a provide arm just returned (the current fiber's frame depth dropped back to
+// where the arm was entered), reinstall the HProvide marker + intermediates that were
+// lifted off for the arm, so the resumed body sees the handler again.
+function reinstallProvideOnReturn(vm, fiber) {
+  if (vm.provideResumes.length > 0) {
+    const top = vm.provideResumes[vm.provideResumes.length - 1];
+    if (top[0] === fiber && top[1] === fiber.frames.length) {
+      vm.handlerStack = vm.handlerStack.concat(top[2]);
+      vm.provideResumes.pop();
+    }
+  }
+}
+
 function internalCall(fiber, cls, arg) {
   const base = fiber.sp;
   const numLocals = cls.proto.num_locals;
-  fiber.stack.fill(VUNIT, base, base + numLocals);
+  ensureCap(fiber, base + numLocals); fiber.stack.fill(VUNIT, base, base + numLocals);
   fiber.stack[base] = arg;
   fiber.sp = base + numLocals;
   fiber.frames.push({ closure: cls, ip: 0, baseSp: base });
@@ -335,7 +392,7 @@ function callWithArgs(vm, fiber, fnVal, args) {
     if (n === arity) {
       const base = fiber.sp;
       const numLocals = fnVal.proto.num_locals;
-      fiber.stack.fill(VUNIT, base, base + numLocals);
+      ensureCap(fiber, base + numLocals); fiber.stack.fill(VUNIT, base, base + numLocals);
       for (let i = 0; i < n; i++) fiber.stack[base + i] = args[i];
       fiber.sp = base + numLocals;
       fiber.frames.push({ closure: fnVal, ip: 0, baseSp: base });
@@ -349,7 +406,7 @@ function callWithArgs(vm, fiber, fnVal, args) {
       fiber.extraArgs.push(extra);
       const base = fiber.sp;
       const numLocals = fnVal.proto.num_locals;
-      fiber.stack.fill(VUNIT, base, base + numLocals);
+      ensureCap(fiber, base + numLocals); fiber.stack.fill(VUNIT, base, base + numLocals);
       for (let i = 0; i < arity; i++) fiber.stack[base + i] = useArgs[i];
       fiber.sp = base + numLocals;
       fiber.frames.push({ closure: fnVal, ip: 0, baseSp: base });
@@ -388,7 +445,7 @@ function processExtraArgs(vm, fiber, result) {
         if (remaining.length > 0) fiber.extraArgs.push(remaining);
         const base = fiber.sp;
         const numLocals = result.proto.num_locals;
-        fiber.stack.fill(VUNIT, base, base + numLocals);
+        ensureCap(fiber, base + numLocals); fiber.stack.fill(VUNIT, base, base + numLocals);
         for (let i = 0; i < arity; i++) fiber.stack[base + i] = useArgs[i];
         fiber.sp = base + numLocals;
         fiber.frames.push({ closure: result, ip: 0, baseSp: base });
@@ -663,7 +720,7 @@ function run(vm) {
           if (fnVal.proto.arity === 1) {
             const base = fiber.sp;
             const numLocals = fnVal.proto.num_locals;
-            fiber.stack.fill(VUNIT, base, base + numLocals);
+            ensureCap(fiber, base + numLocals); fiber.stack.fill(VUNIT, base, base + numLocals);
             fiber.stack[base] = arg;
             fiber.sp = base + numLocals;
             fiber.frames.push({ closure: fnVal, ip: 0, baseSp: base });
@@ -676,7 +733,7 @@ function run(vm) {
             const cls = fnVal.closure;
             const base = fiber.sp;
             const numLocals = cls.proto.num_locals;
-            fiber.stack.fill(VUNIT, base, base + numLocals);
+            ensureCap(fiber, base + numLocals); fiber.stack.fill(VUNIT, base, base + numLocals);
             for (let i = 0; i < newArgs.length; i++) fiber.stack[base + i] = newArgs[i];
             fiber.sp = base + numLocals;
             fiber.frames.push({ closure: cls, ip: 0, baseSp: base });
@@ -704,7 +761,7 @@ function run(vm) {
           if (fnVal.proto.arity === 1) {
             const currentBaseSp = f.baseSp;
             const numLocals = fnVal.proto.num_locals;
-            fiber.stack.fill(VUNIT, currentBaseSp, currentBaseSp + numLocals);
+            ensureCap(fiber, currentBaseSp + numLocals); fiber.stack.fill(VUNIT, currentBaseSp, currentBaseSp + numLocals);
             fiber.stack[currentBaseSp] = arg;
             fiber.sp = currentBaseSp + numLocals;
             fiber.frames[fiber.frames.length - 1] = { closure: fnVal, ip: 0, baseSp: currentBaseSp };
@@ -718,7 +775,7 @@ function run(vm) {
             const cls = fnVal.closure;
             const currentBaseSp = f.baseSp;
             const numLocals = cls.proto.num_locals;
-            fiber.stack.fill(VUNIT, currentBaseSp, currentBaseSp + numLocals);
+            ensureCap(fiber, currentBaseSp + numLocals); fiber.stack.fill(VUNIT, currentBaseSp, currentBaseSp + numLocals);
             for (let i = 0; i < newArgs.length; i++) fiber.stack[currentBaseSp + i] = newArgs[i];
             fiber.sp = currentBaseSp + numLocals;
             fiber.frames[fiber.frames.length - 1] = { closure: cls, ip: 0, baseSp: currentBaseSp };
@@ -739,6 +796,7 @@ function run(vm) {
         if (!tailEntered) {
           fiber.sp = f.baseSp;
           fiber.frames.pop();
+          reinstallProvideOnReturn(vm, fiber);
           let result2 = tailResult;
           if (fiber.extraArgs.length > 0) {
             const [res, entered2] = processExtraArgs(vm, fiber, tailResult);
@@ -765,6 +823,7 @@ function run(vm) {
         let result = fiber.stack[--fiber.sp];
         fiber.sp = fiber.frames[fiber.frames.length - 1].baseSp;
         fiber.frames.pop();
+        reinstallProvideOnReturn(vm, fiber);
         if (fiber.extraArgs.length > 0) {
           const [res, entered] = processExtraArgs(vm, fiber, result);
           result = res;
@@ -808,7 +867,7 @@ function run(vm) {
             if (nArgs === arity) {
               const baseSp = f.baseSp;
               const numLocals = fn.proto.num_locals;
-              fiber.stack.fill(VUNIT, baseSp, baseSp + numLocals);
+              ensureCap(fiber, baseSp + numLocals); fiber.stack.fill(VUNIT, baseSp, baseSp + numLocals);
               for (let i = 0; i < nArgs; i++) fiber.stack[baseSp + i] = remaining[i];
               fiber.sp = baseSp + numLocals;
               fiber.frames[fiber.frames.length - 1] = { closure: fn, ip: 0, baseSp };
@@ -821,7 +880,7 @@ function run(vm) {
               fiber.extraArgs.push(extra);
               const baseSp = f.baseSp;
               const numLocals = fn.proto.num_locals;
-              fiber.stack.fill(VUNIT, baseSp, baseSp + numLocals);
+              ensureCap(fiber, baseSp + numLocals); fiber.stack.fill(VUNIT, baseSp, baseSp + numLocals);
               for (let i = 0; i < arity; i++) fiber.stack[baseSp + i] = useArgs[i];
               fiber.sp = baseSp + numLocals;
               fiber.frames[fiber.frames.length - 1] = { closure: fn, ip: 0, baseSp };
@@ -848,6 +907,7 @@ function run(vm) {
         if (!tcnEntered) {
           fiber.sp = f.baseSp;
           fiber.frames.pop();
+          reinstallProvideOnReturn(vm, fiber);
           let result2 = tcnResult;
           if (fiber.extraArgs.length > 0) {
             const [res, entered2] = processExtraArgs(vm, fiber, tcnResult);
@@ -1004,27 +1064,54 @@ function run(vm) {
       case 61: { // PERFORM
         const opNameStr = op[1];
         const arg = fiber.stack[--fiber.sp];
-        // Find matching handler and its index
+        // Find the nearest handler (full or try) covering this op.
         let matchIdx = -1;
         let he = null;
         for (let i = vm.handlerStack.length - 1; i >= 0; i--) {
           const h = vm.handlerStack[i];
-          for (const [name] of h.ops) {
-            if (name === opNameStr) { matchIdx = i; he = h; break; }
-          }
-          if (he) break;
+          if (heOpNames(h).includes(opNameStr)) { matchIdx = i; he = h; break; }
         }
         if (!he) error(`unhandled effect operation: ${opNameStr}`);
-        const handlerFn = he.ops.find(([name]) => name === opNameStr)[1];
-        // Collect intermediate handlers (pushed after matched = more inner)
-        const intermediates = vm.handlerStack.slice(matchIdx + 1);
-        const cont = vcontinuation(fiber, he.returnHandler, he.ops, he.bodyFiber, intermediates);
-        const pair = vtuple([arg, cont]);
-        // Remove matched handler and all intermediates
-        vm.handlerStack = vm.handlerStack.slice(0, matchIdx);
-        fiber = he.parentFiber;
-        vm.currentFiber = fiber;
-        internalCall(fiber, asClosure(handlerFn), pair);
+        if (he.kind === "try") {
+          // No-fiber, non-resumptive handler: unwind to the TRY_BEGIN marker (on
+          // he.fiber, current or an enclosing fiber) and jump to the op's catch.
+          // The whole body is discarded, so restore the control/return snapshots.
+          const catchIp = he.catch.find(([name]) => name === opNameStr)[1];
+          vm.handlerStack = vm.handlerStack.slice(0, matchIdx);
+          const tf = he.fiber;
+          while (tf.frames.length > he.frameDepth) tf.frames.pop();
+          tf.sp = he.stackDepth;
+          tf.extraArgs = [];
+          vm.controlStack = he.control.slice();
+          vm.returnStack = he.ret.slice();
+          fiber = tf;
+          vm.currentFiber = tf;
+          tf.stack[tf.sp++] = arg;
+          tf.frames[tf.frames.length - 1].ip = catchIp;
+        } else if (he.kind === "provide") {
+          // No-fiber, tail-resumptive handler: call the op's arm closure
+          // (fun arg -> value) on the CURRENT fiber and continue the body with its
+          // result. Tail-resumption resumes exactly once, immediately, so no
+          // continuation is reified and the fiber is irrelevant. Lift the matched
+          // handler + inner intermediates off the stack while the arm runs; they are
+          // reinstalled by reinstallProvideOnReturn when the arm returns.
+          const arm = he.ops.find(([name]) => name === opNameStr)[1];
+          const removed = vm.handlerStack.slice(matchIdx);
+          vm.handlerStack = vm.handlerStack.slice(0, matchIdx);
+          vm.provideResumes.push([fiber, fiber.frames.length, removed]);
+          internalCall(fiber, asClosure(arm), arg);
+        } else {
+          const handlerFn = he.ops.find(([name]) => name === opNameStr)[1];
+          // Collect intermediate handlers (pushed after matched = more inner)
+          const intermediates = vm.handlerStack.slice(matchIdx + 1);
+          const cont = vcontinuation(fiber, he.returnHandler, he.ops, he.bodyFiber, intermediates);
+          const pair = vtuple([arg, cont]);
+          // Remove matched handler and all intermediates
+          vm.handlerStack = vm.handlerStack.slice(0, matchIdx);
+          fiber = he.parentFiber;
+          vm.currentFiber = fiber;
+          internalCall(fiber, asClosure(handlerFn), pair);
+        }
         break;
       }
       case 62: { // HANDLE
@@ -1039,6 +1126,7 @@ function run(vm) {
         const bodyThunk = fiber.stack[--fiber.sp];
         const bodyFiber = makeFiber();
         const he = {
+          kind: "full",
           returnHandler,
           ops,
           bodyFiber,
@@ -1056,9 +1144,11 @@ function run(vm) {
         if (cont.used) error("continuation already resumed");
         cont.used = true;
         const bodyFiber = cont.fiber;
+        ensureCap(bodyFiber, bodyFiber.sp + 1);
         bodyFiber.stack[bodyFiber.sp++] = v;
         // Reinstall caught handler with original body fiber
         const he = {
+          kind: "full",
           returnHandler: cont.returnHandler,
           ops: cont.opHandlers,
           bodyFiber: cont.bodyFiber,
@@ -1091,6 +1181,10 @@ function run(vm) {
         const ce = vm.controlStack.pop();
         const cf = ce.fiber;
         while (cf.frames.length > ce.frameDepth) cf.frames.pop();
+        // Drop inline try/provide markers opened inside the loop body (break skips
+        // TRY_END/PROVIDE_END).
+        dropTryMarkersAbove(vm, cf, ce.stackDepth);
+        dropProvideResumesAbove(vm, cf, ce.frameDepth);
         cf.sp = ce.stackDepth;
         vm.currentFiber = cf;
         fiber = cf;
@@ -1102,6 +1196,10 @@ function run(vm) {
         const target = op[1];
         if (vm.controlStack.length === 0) error("LOOP_CONTINUE: no control entry");
         const ce = vm.controlStack[vm.controlStack.length - 1];
+        // Drop inline try/provide markers opened in the body (continue skips
+        // TRY_END/PROVIDE_END).
+        dropTryMarkersAbove(vm, ce.fiber, ce.stackDepth);
+        dropProvideResumesAbove(vm, ce.fiber, ce.frameDepth);
         ce.fiber.sp = ce.stackDepth;
         f.ip = target;
         break;
@@ -1114,6 +1212,57 @@ function run(vm) {
         if (fiber.frames.length <= 1) error("FOLD_CONTINUE: no frame to return from");
         fiber.frames.pop();
         fiber.stack[fiber.sp++] = continueValue;
+        break;
+      }
+      case 83: { // TRY_BEGIN
+        vm.handlerStack.push({
+          kind: "try",
+          fiber: fiber,
+          frameDepth: fiber.frames.length,
+          stackDepth: fiber.sp,
+          control: vm.controlStack.slice(),
+          ret: vm.returnStack.slice(),
+          catch: op[1],
+        });
+        break;
+      }
+      case 84: { // TRY_END
+        // Normal completion of a try body: pop the nearest try-marker.
+        for (let i = vm.handlerStack.length - 1; i >= 0; i--) {
+          if (vm.handlerStack[i].kind === "try") {
+            vm.handlerStack.splice(i, 1);
+            break;
+          }
+        }
+        break;
+      }
+      case 85: { // PROVIDE
+        // Install a no-fiber tail-resumptive handler; the body runs inline. Pop the
+        // n (opName, armClosure) pairs pushed by the compiler.
+        const nOps85 = op[1];
+        const ops85 = [];
+        for (let i = 0; i < nOps85; i++) {
+          const arm = fiber.stack[--fiber.sp];
+          const opStr = asString(fiber.stack[--fiber.sp]);
+          ops85.push([opStr, arm]);
+        }
+        vm.handlerStack.push({
+          kind: "provide",
+          ops: ops85,
+          fiber: fiber,
+          frameDepth: fiber.frames.length,
+          stackDepth: fiber.sp,
+        });
+        break;
+      }
+      case 86: { // PROVIDE_END
+        // Normal completion of a provide body: pop the nearest provide-marker.
+        for (let i = vm.handlerStack.length - 1; i >= 0; i--) {
+          if (vm.handlerStack[i].kind === "provide") {
+            vm.handlerStack.splice(i, 1);
+            break;
+          }
+        }
         break;
       }
       case 44: { // ENTER_FUNC
@@ -1145,6 +1294,13 @@ function run(vm) {
         vm.controlStack = vm.controlStack.filter(ce =>
           !(ce.fiber === fiber && ce.frameDepth >= targetDepth)
         );
+        // Drop inline try/provide markers opened inside the returned-from frames (a
+        // `return` inside such a body skips its TRY_END/PROVIDE_END).
+        vm.handlerStack = vm.handlerStack.filter(h =>
+          !((h.kind === "try" || h.kind === "provide") &&
+            h.fiber === fiber && h.frameDepth >= targetDepth)
+        );
+        dropProvideResumesAbove(vm, fiber, targetDepth);
         // Restore stack pointer and pop the target function's frame
         const baseSp = fiber.frames[fiber.frames.length - 1].baseSp;
         fiber.sp = baseSp;
@@ -1202,7 +1358,7 @@ function run(vm) {
           if (fnVal.proto.arity === 1) {
             const base = fiber.sp;
             const numLocals = fnVal.proto.num_locals;
-            fiber.stack.fill(VUNIT, base, base + numLocals);
+            ensureCap(fiber, base + numLocals); fiber.stack.fill(VUNIT, base, base + numLocals);
             fiber.stack[base] = arg;
             fiber.sp = base + numLocals;
             fiber.frames.push({ closure: fnVal, ip: 0, baseSp: base });
@@ -1215,7 +1371,7 @@ function run(vm) {
             const cls = fnVal.closure;
             const base = fiber.sp;
             const numLocals = cls.proto.num_locals;
-            fiber.stack.fill(VUNIT, base, base + numLocals);
+            ensureCap(fiber, base + numLocals); fiber.stack.fill(VUNIT, base, base + numLocals);
             for (let i = 0; i < newArgs.length; i++) fiber.stack[base + i] = newArgs[i];
             fiber.sp = base + numLocals;
             fiber.frames.push({ closure: cls, ip: 0, baseSp: base });
@@ -1274,7 +1430,7 @@ function run(vm) {
           if (fnVal.proto.arity === 1) {
             const base = fiber.sp;
             const numLocals = fnVal.proto.num_locals;
-            fiber.stack.fill(VUNIT, base, base + numLocals);
+            ensureCap(fiber, base + numLocals); fiber.stack.fill(VUNIT, base, base + numLocals);
             fiber.stack[base] = arg;
             fiber.sp = base + numLocals;
             fiber.frames.push({ closure: fnVal, ip: 0, baseSp: base });
@@ -1287,7 +1443,7 @@ function run(vm) {
             const cls = fnVal.closure;
             const base = fiber.sp;
             const numLocals = cls.proto.num_locals;
-            fiber.stack.fill(VUNIT, base, base + numLocals);
+            ensureCap(fiber, base + numLocals); fiber.stack.fill(VUNIT, base, base + numLocals);
             for (let i = 0; i < newArgs.length; i++) fiber.stack[base + i] = newArgs[i];
             fiber.sp = base + numLocals;
             fiber.frames.push({ closure: cls, ip: 0, baseSp: base });
@@ -1366,6 +1522,7 @@ function executeProto(vm, proto) {
   const fiber = makeFiber();
   const closure = vclosure(proto, []);
   const numLocals = proto.num_locals;
+  ensureCap(fiber, numLocals);
   fiber.stack.fill(VUNIT, 0, numLocals);
   fiber.sp = numLocals;
   fiber.frames.push({ closure, ip: 0, baseSp: 0 });
@@ -1394,6 +1551,7 @@ function createVM(globalNames) {
     handlerStack: [],
     controlStack: [],
     returnStack: [],
+    provideResumes: [],
     globals: new Map(),
     globalNames,
   };
@@ -1411,6 +1569,7 @@ function callClosure(vmInst, closure, arg) {
   vmInst.handlerStack = [];
   vmInst.controlStack = [];
   vmInst.returnStack = [];
+  vmInst.provideResumes = [];
   return run(vmInst);
 }
 
@@ -2185,6 +2344,8 @@ const OPCODE_NAMES = [
   "GET_GLOBAL_CALL", "GET_GLOBAL_FIELD",
   "CALL_N", "TAIL_CALL_N",
   "UPDATE_REC",
+  "TRY_BEGIN", "TRY_END",
+  "PROVIDE", "PROVIDE_END",
 ];
 
 // Map string opcode names to numeric tags for the VM switch
@@ -2300,6 +2461,7 @@ const U32_OPCODES = new Set([
   73, // RECORD_UPDATE_DYN
   80, // CALL_N
   81, // TAIL_CALL_N
+  85, // PROVIDE
 ]);
 
 function loadBundleBinary(arrayBuffer) {
@@ -2412,6 +2574,8 @@ function loadBundleBinary(arrayBuffer) {
       case 42: case 43: case 44: case 45:
       case 52: case 53: case 55: case 56: case 57: case 58:
       case 59: case 63: case 65: case 66: case 70: case 71:
+      case 84: // TRY_END
+      case 86: // PROVIDE_END
         return [tag];
 
       case 38: { // CLOSURE
@@ -2483,6 +2647,16 @@ function loadBundleBinary(arrayBuffer) {
         const idx = readU32();
         const name = strs[readU32()];
         return [79, idx, name];
+      }
+      case 83: { // TRY_BEGIN
+        const count = readU32();
+        const catchTable = new Array(count);
+        for (let i = 0; i < count; i++) {
+          const op = strs[readU32()];
+          const ip = readU32();
+          catchTable[i] = [op, ip];
+        }
+        return [83, catchTable];
       }
       default:
         throw new Error(`unknown opcode tag: ${tag}`);
